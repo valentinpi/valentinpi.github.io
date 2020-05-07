@@ -1,0 +1,13 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Segoe UI, Helvetica, Arial, sans-serif, Segoe UI Emoji, Segoe UI Symbol;
+}
+
+header, main {
+    margin: 10px;
+    text-align: center;
+}

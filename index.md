@@ -1,1 +1,0 @@
-# Valentin's Blog
