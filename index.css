@@ -1,4 +1,4 @@
-/* Remove default margin */
+/* Adjust default margin */
 body {
     margin: 8px;
 }
@@ -10,4 +10,5 @@ header {
 
 main {
     font-family: Arial, Helvetica, sans-serif;
+    text-align: left;
 }
