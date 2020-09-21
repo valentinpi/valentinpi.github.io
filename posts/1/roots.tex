@@ -1,0 +1,195 @@
+\documentclass[a4paper, 10pt]{article}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{biblatex}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{mdframed}
+\usepackage{wasysym}
+
+\hypersetup{
+    % See https://tex.stackexchange.com/a/51349
+    colorlinks   = true, %Colours links instead of ugly boxes
+    urlcolor     = blue, %Colour for external hyperlinks
+    linkcolor    = blue, %Colour of internal links
+    citecolor    = red   %Colour of citations
+}
+
+\addbibresource{roots.bib}
+
+\theoremstyle{definition}
+\newtheorem*{statement}{Statement}
+\theoremstyle{definition}
+\newtheorem*{definition}{Definition}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+    \title{
+        \vspace{-5ex}
+        \large Computing roots with interval nestings
+    }
+    \author{
+        \normalsize valentinpi
+    }
+    \date{
+        \normalsize \today\\
+        (newest version)
+    }
+    \maketitle
+
+    \begin{abstract}
+        Computing roots of positive reals using a calculator is quite easy, but implementing it? In this paper, I discuss a quick way (not as in \emph{efficient}) of approximating roots of any real number. Then I present a small implementation in the Python programming language. Much of the work here is taken from \cite{analysiskoenigsberger}.
+    \end{abstract}
+
+    \begin{center}
+        \huge
+        BLOG PREVIEW, NOT FINISHED
+    \end{center}
+    
+    \tableofcontents
+
+    \section{Introduction}
+    
+    \subsection{Notation}
+    
+    I denote the set of natural numbers with \(\mathbb{N}\), the set of real numbers with \(\mathbb{R}\) and the set of positive reals with \(\mathbb{R}_+\). I also assume basic knowledge in set theory and notation, mathematical proofs and notation and fields.
+    
+    \section{Construction of roots}
+    
+    \subsection{Completeness of \texorpdfstring{\(\mathbb{R}\)}{R}}
+    The real numbers \(\mathbb{R}\) are structured in three ways:
+    \begin{itemize}
+        \item Field structure through it's axioms and all derivable calculation rules
+        \item Ordering of real numbers with the property of positivity
+        \item Completeness
+    \end{itemize}
+    
+    We will take a look at the latter. With the rational numbers, we are not able to describe every point in a unit line
+    \[
+        \{\,x \in \mathbb{R} \mid 0 \leq x \leq 1 \,\}
+    \]
+    One famous example for this is the reciprocal of the golden ratio. For the irrationality proof, consider reading \cite{analysiskoenigsberger}.
+
+    There are multiple ways of introducing the completeness of the field \(\mathbb{R}\). \cite{analysiskoenigsberger} introduces this concept using so-called interval nestings.
+
+    \begin{definition}
+        Let \(a, b \in \mathbb{R}\) with \(a < b\). We define the \emph{closed interval}
+        \[
+            [a; b] \coloneqq \{\, x \in \mathbb{R} \mid a \leq x \leq b \,\}
+        \]
+        with the \emph{boundaries} \(a, b\). The number \(b - a = |[a; b]|\) is called \emph{length} of the interval. Closed intervals are also commonly known as \emph{compact}.
+    \end{definition}
+
+    This definition should be well-known. Now to interval nestings.
+
+    \newcommand{\intv}{\text{I}}
+    \begin{definition}
+        An \emph{interval nesting} is a series of compact intervals \(\intv_1, \intv_2, ...\), short \((\intv_n)\) that satisfy the following two properties
+
+        \item[\hspace{0.5cm}(I.1)] \(\intv_{n+1} \supset \intv_n\)
+        
+        \item[\hspace{0.5cm}(I.2)] \(\forall \, \varepsilon > 0 \, \exists \, n \in \mathbb{N}\colon |\intv_n| < \varepsilon\)
+    \end{definition}
+
+    The latter property (I.2) can be interpreted as that the intervals can get arbitrarily small. We can define interval nestings using induction.
+
+    The completeness of \(\mathbb{R}\) is founded on the following statement.
+
+    \begin{mdframed}[innertopmargin=0]
+        \begin{statement}
+            For every interval nesting \((\intv_n)\) in the \(\mathbb{R}\), there exists a real number \(s\), which is included in every interval.
+        \end{statement}
+    \end{mdframed}
+
+    We assume the truth of this statement without proof. The statement itself does not exclude multiple numbers \(s\), but the following proof will rule that out.
+
+    \begin{statement}
+        The number \(s\) is unique.
+    \end{statement}
+
+    \begin{proof}
+        Let's say two numbers \(s \neq t\) are included in every interval. Without loss of generality, say \(s < t\). Then every interval is of length \(\geq t - s\), which contradicts (I.2). \lightning
+    \end{proof}
+
+    \subsection{Existence of roots}
+
+    With the introduction of interval nestings, we can now prove a theorem that directly constructs roots. Some prerequisites first, which we will use.
+
+    %\begin{lemma}
+        
+    %\end{lemma}
+
+    Now for the main part.
+
+    \begin{statement}
+        For every real number \(x > 0\) and every \(k \in \mathbb{N}\), there is one and only one real number \(y > 0\) with \(y^k = x\). We call it the \(k\)th root of \(x\), in symbols \(y = x^\frac{1}{x}, y = \sqrt[k]{x}\).
+    \end{statement}
+
+    \begin{proof} We consider the case \(x > 1\), since for \(x < 1\) we can make the transition \(x' \coloneqq 1/x\), which complies with the ordering of \(\mathbb{R}\). And for \(x = 1\) it holds that \(y = 1\).\\
+
+    First, we construct an interval nesting \((I_n)\) in the \(\mathbb{R}_+\).
+    
+    We begin with the properties our nesting should hold. For every interval \(I_n = [a_n; b_n], n \in \mathbb{N}\), the following should hold\\
+
+    \item{\hspace{0.5cm}(\(1_n\))} \(a_n^k \leq x \leq b_n^k\)
+    
+    \item{\hspace{0.5cm}(\(2_n\))} \(|\intv_n| = \left(\frac{1}{2}\right)^{n-1}\cdot|\intv_1|\)\\
+
+    So every interval interval \(\intv_{n + 1}\) is half the length of the previous interval \(\intv_n\) and we can already see that the number included in every interval is \(x\).\\
+
+    Now for the construction we use induction. We declare the first interval and then, by the properties of the natural numbers, declare the next ones.
+
+    Let \(\intv_1 \coloneqq [1; x]\). We verify that the properties (\(1_1\)) and (\(2_1\)) hold.
+    
+    Now let \(n\) be arbitrary, but fixed, with \(\intv_n = [a_n; b_n]\) holding the properties (\(1_n\)) and (\(2_n\)).
+    
+    We construct the next interval \(n + 1\) by cutting the \(n\)th one in half. Let \(m \coloneqq \frac{b_n - a_n}{2}\) be the center of the interval. We then define
+    \[
+        \intv_{n+1} \coloneqq \begin{cases}
+            [a_n; m] & m \geq x\\
+            [m; b_n] & m < x
+        \end{cases}
+    \]
+
+    Due to our construction, (\(1_{n+1}\)) and (\(2_{n+1}\)) both hold, since
+    
+    \[
+        \begin{cases}
+            a_{n+1} = a_n \leq x \leq m < b_n = b_{n+1} \Rightarrow [a_{n+1};b_{n+1}] \supset [a_n;b_n] & m \geq x\\
+            a_n < a_{n+1} = m < x \leq b_n = b_{n+1} \Rightarrow [a_{n+1};b_{n+1}] \supset [a_n;b_n] & m < x
+        \end{cases}
+    \]
+
+    and
+    
+    \[
+        |\intv_{n+1}| = \frac{1}{2} \cdot |I_n| = \frac{1}{2} \cdot \left(\frac{1}{2}\right)^{n-1} \cdot |I_1| = \left(\frac{1}{2}\right)^{n+1-1} \cdot |I_1|
+    \]
+
+    We must now still prove that both (I.1) and (I.2) hold.
+
+    \item{\hspace{0.5cm}(I.1)} See above. % TODO: Add refs
+    
+    \item{\hspace{0.5cm}(I.2)} With \((2_n)\) consider
+    \[
+        \left(\frac{1}{2}\right)^{n-1=n'} < \varepsilon' = \varepsilon \cdot |\intv_1|^{-1}
+    \]
+    With the lemma we have proven above, there exists such an integer \(n'\) and therefore
+    \[
+        \left(\frac{1}{2}\right)^{n-1} \cdot |\intv_1| < \varepsilon 
+    \]
+    which satisfies the property.
+
+    Let \(y\) be the number that is included  in all intervals \((\intv_n)\). We will now show that \(y^k = x\).
+
+    \end{proof}
+
+    \section{Implementation}
+
+    \printbibliography
+\end{document}
+    
