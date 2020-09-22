@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{biblatex}
+\usepackage{enumitem}
 \usepackage{fullpage}
 \usepackage{hyperref}
 \usepackage{mathtools}
@@ -20,10 +21,13 @@
 
 \addbibresource{roots.bib}
 
+\theoremstyle{remark}
+\newtheorem{lemma}{Lemma}
+
 \theoremstyle{definition}
-\newtheorem*{statement}{Statement}
-\theoremstyle{definition}
-\newtheorem*{definition}{Definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{theorem*}{Theorem}
 
 \setlength{\parindent}{0pt}
 
@@ -56,7 +60,9 @@
     
     \subsection{Notation}
     
-    I denote the set of natural numbers with \(\mathbb{N}\), the set of real numbers with \(\mathbb{R}\) and the set of positive reals with \(\mathbb{R}_+\). I also assume basic knowledge in set theory and notation, mathematical proofs and notation and fields.
+    I denote the set of natural numbers with \(\mathbb{N}\), the set of real numbers with \(\mathbb{R}\) and the set of positive reals with \(\mathbb{R}_+\). I also assume basic knowledge in set theory and notation, mathematical proofs and notation and fields.\\
+
+    There are a few things which need to be known about the field \(\mathbb{R}\), but I will try to keep this paper short and only mention the most important ones for the most important proofs.
     
     \section{Construction of roots}
     
@@ -72,44 +78,47 @@
     \[
         \{\,x \in \mathbb{R} \mid 0 \leq x \leq 1 \,\}
     \]
-    One famous example for this is the reciprocal of the golden ratio. For the irrationality proof, consider reading \cite{analysiskoenigsberger}.
+    One famous example for this is the reciprocal of the golden ratio. For the irrationality proof, consider reading \cite{analysiskoenigsberger}. While the rational numbers therefore are, in a sense, incomplete, the real numbers do not have this issue.
 
-    There are multiple ways of introducing the completeness of the field \(\mathbb{R}\). \cite{analysiskoenigsberger} introduces this concept using so-called interval nestings.
+    There are multiple ways of introducing the completeness of the field \(\mathbb{R}\). \cite{analysiskoenigsberger} introduces this concept, for one, using so-called interval nestings.
 
     \begin{definition}
         Let \(a, b \in \mathbb{R}\) with \(a < b\). We define the \emph{closed interval}
         \[
             [a; b] \coloneqq \{\, x \in \mathbb{R} \mid a \leq x \leq b \,\}
         \]
-        with the \emph{boundaries} \(a, b\). The number \(b - a = |[a; b]|\) is called \emph{length} of the interval. Closed intervals are also commonly known as \emph{compact}.
+        with the \emph{boundaries} \(a, b\). The number \(b - a \eqqcolon |[a; b]|\) is called \emph{length} of the interval. Closed intervals are also commonly known as \emph{compact}.
     \end{definition}
 
     This definition should be well-known. Now to interval nestings.
 
     \newcommand{\intv}{\text{I}}
     \begin{definition}
-        An \emph{interval nesting} is a series of compact intervals \(\intv_1, \intv_2, ...\), short \((\intv_n)\) that satisfy the following two properties
+        An \emph{interval nesting} is a series of compact intervals \(\intv_1, \intv_2, ...\), short \((\intv_n)\), that satisfy the following two properties
 
-        \item[\hspace{0.5cm}(I.1)] \(\intv_{n+1} \supset \intv_n\)
-        
-        \item[\hspace{0.5cm}(I.2)] \(\forall \, \varepsilon > 0 \, \exists \, n \in \mathbb{N}\colon |\intv_n| < \varepsilon\)
+        \begin{itemize}[label={}]
+            \item[(I.1)] \(\intv_{n+1} \supset \intv_n\)
+            
+            \item[(I.2)] \(\forall \, \varepsilon > 0 \, \exists \, n \in \mathbb{N}\colon |\intv_n| < \varepsilon\)
+        \end{itemize}
+
     \end{definition}
 
     The latter property (I.2) can be interpreted as that the intervals can get arbitrarily small. We can define interval nestings using induction.
 
-    The completeness of \(\mathbb{R}\) is founded on the following statement.
+    The completeness of \(\mathbb{R}\) is founded on the following theorem.
 
     \begin{mdframed}[innertopmargin=0]
-        \begin{statement}
+        \begin{theorem*}[Principle of Interval Nesting]
             For every interval nesting \((\intv_n)\) in the \(\mathbb{R}\), there exists a real number \(s\), which is included in every interval.
-        \end{statement}
+        \end{theorem*}
     \end{mdframed}
 
-    We assume the truth of this statement without proof. The statement itself does not exclude multiple numbers \(s\), but the following proof will rule that out.
+    The theorem itself does not exclude multiple numbers \(s\), but the following proof will rule that out.
 
-    \begin{statement}
+    \begin{theorem}
         The number \(s\) is unique.
-    \end{statement}
+    \end{theorem}
 
     \begin{proof}
         Let's say two numbers \(s \neq t\) are included in every interval. Without loss of generality, say \(s < t\). Then every interval is of length \(\geq t - s\), which contradicts (I.2). \lightning
@@ -119,27 +128,95 @@
 
     With the introduction of interval nestings, we can now prove a theorem that directly constructs roots. Some prerequisites first, which we will use.
 
-    %\begin{lemma}
+    \begin{theorem}[Archimedes Axiom]
+        For every \(x \in \mathbb{R}\), there is a \(n \in \mathbb{N}\), so that
+        \[
+            n > x
+        \]
+    \end{theorem}
+
+    The statement of this axiom is clear. It goes along with two more axioms in the ordering of the real numbers, which is not mentioned here.
+
+    \begin{lemma}
+        %\label{lemma1}
+        Let \(a > b\). Then
+        \[
+            \frac{1}{a} < \frac{1}{b}
+        \]
+        for the reciprocals.
+    \end{lemma}
+
+    This is a well known theorem. We will not prove it here, but it is important for the following proofs.
+
+    \begin{lemma}[Bernoulli's Inequality]
+        Let \(x \in \mathbb{R}\) with \(x \neq 0, x > -1\) and \(n \in \mathbb{N}, n \geq 2\). Then the following holds
+        \[
+            (1+x)^n > 1 + nx
+        \]
+    \end{lemma}
+
+    \begin{proof}[Proof by induction after \(n\).] \phantom{}\\
+        \emph{Base case})
+            Let \(n = 2\). Then
+            \[
+                (1+x)^2 \geq 1 + 2x \Leftrightarrow x^2+2x+1 \geq 1 + 2x
+            \]
+            which holds for every \(x\) specified.
         
-    %\end{lemma}
+        \(n \leadsto n + 1\))
+            Consider the following
+            \begin{align*}
+                (1+x)^{n+1} &= (1+x)^n \cdot (1+x)\\
+                            &\geq (1+nx) \cdot (1+x) & \text{True for} < n + 1\\
+                            &\geq 1+(n+1)x
+            \end{align*}
+            By the principle of induction, the statement is true.
+    \end{proof}
+
+    This lemma will be useful for the next one, which we will use later to prove (I.2) for constructed interval nestings.
+
+    \begin{lemma}
+        Let \(0 < q < 1\). For every \(\varepsilon > 0\), there exists an \(n \in \mathbb{N}\) so that the following holds
+        \[
+            q^n < \varepsilon
+        \]
+    \end{lemma}
+
+    \begin{proof}
+        Write \(q' \coloneqq q^{-1}\) and \(\varepsilon' \coloneqq \varepsilon^{-1}\). Since \(q' > 1\) due to the ordering in \(\mathbb{R}\), we can write \(q' = 1 + x\) for \(x \coloneqq q' - 1\). Therefore we can use Bernoulli's Inequality above:
+        \[
+            (1+x)^n > 1 + nx \text{ for one } n \geq 2
+        \]
+        Which \(n\) do we choose? We use the Archimedes Axiom. There is a natural \(n \geq 2\) such that \(n > \frac{\varepsilon'}{x}\) and therefore
+        \[
+            (q')^n > 1 + nx > nx > \varepsilon'
+        \]
+        Now we have \((q')^n > \varepsilon'\). If we take the reciprocals, then according to the lemma above, we get the theorem.
+        \[
+            q^n < \varepsilon
+        \]
+    \end{proof}
 
     Now for the main part.
 
-    \begin{statement}
+    \begin{theorem}
         For every real number \(x > 0\) and every \(k \in \mathbb{N}\), there is one and only one real number \(y > 0\) with \(y^k = x\). We call it the \(k\)th root of \(x\), in symbols \(y = x^\frac{1}{x}, y = \sqrt[k]{x}\).
-    \end{statement}
+    \end{theorem}
 
-    \begin{proof} We consider the case \(x > 1\), since for \(x < 1\) we can make the transition \(x' \coloneqq 1/x\), which complies with the ordering of \(\mathbb{R}\). And for \(x = 1\) it holds that \(y = 1\).\\
+    \begin{proof}
+    We consider the case \(x > 1\), since for \(x < 1\) we can make the transition \(x' \coloneqq 1/x\), which complies with the ordering of \(\mathbb{R}\). And for \(x = 1\) it holds that \(y = 1\).\\
 
     First, we construct an interval nesting \((I_n)\) in the \(\mathbb{R}_+\).
     
-    We begin with the properties our nesting should hold. For every interval \(I_n = [a_n; b_n], n \in \mathbb{N}\), the following should hold\\
+    We begin with the properties our nesting should hold. For every interval \(I_n = [a_n; b_n], n \in \mathbb{N}\), the following should hold
 
-    \item{\hspace{0.5cm}(\(1_n\))} \(a_n^k \leq x \leq b_n^k\)
-    
-    \item{\hspace{0.5cm}(\(2_n\))} \(|\intv_n| = \left(\frac{1}{2}\right)^{n-1}\cdot|\intv_1|\)\\
+    \begin{itemize}[label={}]
+        \item[(\(1_n\))] \(a_n^k \leq x \leq b_n^k\)
+        
+        \item[(\(2_n\))] \(|\intv_n| = \left(\frac{1}{2}\right)^{n-1}\cdot|\intv_1|\)
+    \end{itemize}
 
-    So every interval interval \(\intv_{n + 1}\) is half the length of the previous interval \(\intv_n\) and we can already see that the number included in every interval is \(x\).\\
+    So every interval interval \(\intv_{n + 1}\) is half the length of the previous interval \(\intv_n\).\\
 
     Now for the construction we use induction. We declare the first interval and then, by the properties of the natural numbers, declare the next ones.
 
@@ -155,40 +232,40 @@
         \end{cases}
     \]
 
-    Due to our construction, (\(1_{n+1}\)) and (\(2_{n+1}\)) both hold, since
-    
-    \[
-        \begin{cases}
-            a_{n+1} = a_n \leq x \leq m < b_n = b_{n+1} \Rightarrow [a_{n+1};b_{n+1}] \supset [a_n;b_n] & m \geq x\\
-            a_n < a_{n+1} = m < x \leq b_n = b_{n+1} \Rightarrow [a_{n+1};b_{n+1}] \supset [a_n;b_n] & m < x
-        \end{cases}
-    \]
-
-    and
-    
-    \[
-        |\intv_{n+1}| = \frac{1}{2} \cdot |I_n| = \frac{1}{2} \cdot \left(\frac{1}{2}\right)^{n-1} \cdot |I_1| = \left(\frac{1}{2}\right)^{n+1-1} \cdot |I_1|
-    \]
+    Due to our construction, (\(1_{n+1}\)) and (\(2_{n+1}\)) both hold, since the newly constructed interval is in the bounds of \(\intv_n\) and therefore included. And because the new interval is exactly half the previous one.\\
 
     We must now still prove that both (I.1) and (I.2) hold.
 
-    \item{\hspace{0.5cm}(I.1)} See above. % TODO: Add refs
-    
-    \item{\hspace{0.5cm}(I.2)} With \((2_n)\) consider
-    \[
-        \left(\frac{1}{2}\right)^{n-1=n'} < \varepsilon' = \varepsilon \cdot |\intv_1|^{-1}
-    \]
-    With the lemma we have proven above, there exists such an integer \(n'\) and therefore
-    \[
-        \left(\frac{1}{2}\right)^{n-1} \cdot |\intv_1| < \varepsilon 
-    \]
-    which satisfies the property.
+    \begin{itemize}[label={}]
+        \item[(I.1)]
+        See above. % TODO: Add refs
 
-    Let \(y\) be the number that is included  in all intervals \((\intv_n)\). We will now show that \(y^k = x\).
+        \item[(I.2)]
+        With \((2_n)\) consider
+        \[
+            \left(\frac{1}{2}\right)^{n-1=n'} < \varepsilon' = \varepsilon \cdot |\intv_1|^{-1}
+        \]
+        With the lemma we have proven above, there exists such an integer \(n'\) and therefore
+        \[
+            \left(\frac{1}{2}\right)^{n-1} \cdot |\intv_1| < \varepsilon 
+        \]
+        which satisfies the property.
+    \end{itemize}
+
+    Let \(y\) be the number that is included  in all intervals \((\intv_n)\). We will now show that \(y^k = x\).\\
+
+    For that, we first prove that the intervals \(([a_n^k; b_n^k])\) also form an interval nesting.\\
+    
+    
+    Since the first intervals all include \(y\), these ones include \(y^k\), which is in the bounds of the \(a_n^k, b_n^k\). We also know, that all these intervals include the number \(x\). Due to the uniqueness of the contained number, we derive that \(x = y^k\) and therefore \(y = \sqrt[k]{x}\).
 
     \end{proof}
 
     \section{Implementation}
+
+    \subsection{Algorithm design}
+
+    \subsection{Complexity considerations}
 
     \printbibliography
 \end{document}
