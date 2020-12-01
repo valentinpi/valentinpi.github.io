@@ -1,0 +1,438 @@
+% Useful links
+% List of math symbols: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+% Font sizes: http://www.sascha-frank.com/latex-font-size.html
+
+\documentclass[10pt,fleqn]{article}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[english, ngerman]{babel}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{wasysym}
+\usepackage{wrapfig}
+\usepackage{xcolor}
+
+% https://tex.stackexchange.com/questions/89166/centering-in-tabularx-and-x-columns
+% and https://tex.stackexchange.com/questions/257128/how-does-the-newcolumntype-command-work
+% Combines c + X in tabularx environments.
+% Inserts centering command after the entry in the cell to center it.
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\hypersetup{
+    colorlinks   = true,
+    urlcolor     = blue,
+    linkcolor    = blue,
+    citecolor    = red
+}
+
+\setlength{\parindent}{0pt}
+
+% I do not really like the plain style
+%\theoremstyle{plain}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{remark}
+\newtheorem{fact}{Fact}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Task}{x}
+\newcommand{\Authors}{valentinpi}
+\newcommand{\task}[1]{\item{\bfseries #1}}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+\newcommand{\hampathprob}{\text{HAMPATH}}
+\newcommand{\compositesprob}{\text{COMPOSITES}}
+\newcommand{\cliqueprob}{\text{CLIQUE}}
+\newcommand{\subsetsumprob}{\text{SUBSET-SUM}}
+\newcommand{\satprob}{\text{SAT}}
+\newcommand{\threesatprob}{\text{3SAT}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp}
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\begin{document}
+\selectlanguage{ngerman}
+\pagenumbering{arabic}
+\title{
+    \vspace*{-12ex}
+    \phantom{}\\
+    \normalsize Handout\\
+    \phantom{}\\
+    \large The Complexity Class NP and NP-Completeness\\
+    \phantom{}\\
+    \normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+    \normalsize Institut für Informatik\\
+    \normalsize Freie Universität Berlin
+}
+\author{\normalsize \Authors}
+\date{
+    \normalsize \today\\
+    (neueste Version)
+    \rule{\textwidth}{0.1pt}
+}
+\selectlanguage{english}
+\maketitle
+
+\begin{abstract}
+    \noindent This handout presents basic definitions and problems of the complexity class NP. It will then give a short insight into the importance of P=NP and NP-completeness.
+\end{abstract}
+
+\paragraph*{NTIME, The Class NP and Verifiers} Following the polynomial time class for deterministic computation, this handout now introduces the same class for the concept of nondeterministic machines.
+
+\begin{remark} The \emph{nondeterministic} definition of the Turing machine mainly differs in the state transitioning function \( \delta\colon Q \times \Gamma \rightarrow \mathcal{P}(Q \times \Gamma \times \{\; L, N, R\;\}) \).
+\end{remark}
+
+\begin{definition} In analogy to the class TIME, the class \emph{NTIME} of \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) is defined as all languages computable by a nondeterministic Turing machine in \(\onot{(f(n))}\) time:
+    \[
+        \text{NTIME}(f(n)) \coloneqq \{ \; L \mid \text{There is a nondeterministic TM that decides } L \text{ in } \onot{(f(n))} \text{ time for an input of size } n \; \}
+    \]
+\end{definition}
+
+There are two ways to introduce the class NP, both of which are equivalent (proof see resources):
+\begin{itemize}
+    \item Through nondeterminstic Turing machines (our approach)
+    \item Through polynomial verifiers (an example is included in the following pages)
+\end{itemize}
+\begin{definition} An algorithm \(V\) is called a \emph{verifier} for a language \(L\), if:
+    \[
+        L = \{\; w \mid \exists \; c \in \Sigma^*\colon V \text{ accepts } \enc{w, c} \; \}
+    \]
+    \(V\) is called a \emph{polynomial verifier}, if it runs in polynomial time in terms of \(|w|\). \(L\) is called \emph{polynomially verifiable}, if such a polynomial verifier exists. \(c\) is called \emph{certificate}.
+\end{definition}
+\textbf{Example:} For the PATH problem (see handout P), a verifier could take a directed graph, two nodes and a sequence of edges as an input and check whether the edges match to a path between the nodes.
+\begin{definition} The class NP is the class of languages computable by nondeterministic TMs in polynomial time.
+    \[
+        \npclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{NTIME}((n^k))
+    \]
+\end{definition}
+And from the equivalence of both concepts it follows:
+\begin{fact}
+\(
+    \npclass = \{\; L \mid L \text{ has a polynomial time verifier}\;\}
+\)
+\end{fact}
+\begin{minipage}{\linewidth}
+    \centering
+    \begin{tikzpicture}[
+        thick
+    ]
+        \node (M) at (-2.5, 0) {Machines};
+        \node (V) at (2.5, 0) {Verifiers};
+        \path (M) edge[->, bend left] node[above] {Guess certificate} (V);
+        \path (V) edge[->, bend left] node[below] {Use certificate as step description} (M);
+    \end{tikzpicture}
+\end{minipage}
+
+\newpage
+
+\paragraph*{NP Problems} First, some important terms:\\
+
+\begin{minipage}{0.7\linewidth}
+    \begin{itemize}
+        \item A \emph{hamiltonian path} between two nodes is a directed path that visits each node exactly once.
+        \item \(n \in \mathbb{N}\) is called \emph{composite}, if it is the product of two numbers \(> 1\).
+        \item A \emph{clique} is a subgraph of an undirected graph, where every two nodes are connected. A \emph{\(k\)-clique} is a clique of \(k\) nodes.
+    \end{itemize}
+\end{minipage}
+\begin{minipage}{0.3\linewidth}
+    \begin{tikzpicture}[
+            scale=1,
+            semithick
+        ]
+        \node[label=135:\(s\)] (s) at (0, 0) [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (0) at (1, -1)   [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (1) at (1,  1)   [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (2) at (2, -0.5) [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (3) at (2,  0.5) [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (4) at (3,  1)   [circle, fill=black, inner sep=0.5mm] {};
+        \node                  (5) at (3, -1)   [circle, fill=black, inner sep=0.5mm] {};
+        \node[label=45:\(t\)]  (t) at (4, 0) [circle, fill=black, inner sep=0.5mm] {};
+        \draw[->, thick] (s) -- (0);
+        \draw[->, thick] (0) -- (1);
+        \draw[->, thick] (1) -- (2);
+        \draw[->, thick] (2) -- (3);
+        \draw[->, thick] (3) -- (4);
+        \draw[->, thick] (4) -- (5);
+        \draw[->, thick] (5) -- (t);
+
+        \draw[->, draw=gray] (1) -- (s);
+        \draw[->, draw=gray] (3) -- (5);
+        \draw[->, draw=gray] (t) -- (4);
+        \draw[->, draw=gray] (0) -- (5);
+        \draw[->, draw=gray] (4) -- (1);
+    \end{tikzpicture}
+\end{minipage}\\
+
+Now consider the following problems:
+\begin{theorem}
+    \(
+    \hampathprob \coloneqq \{ \; \enc{G, s, t} \mid \text{There is a hamiltonian path between } s \text{ and } t \; \} \in \npclass
+    \)
+\end{theorem}
+\begin{proof} The proof is different from e.g. the PATH problem, since one can now nondeterministically guess a possible path. The following algorithm performs this guess in polynomial time:
+
+    \begin{description}
+        \item[Input:] \(\enc{G, s, t}\), where \(G = (V, E)\) is a directed graph with nodes \(s, t\).
+        \item[Function:] \phantom{}
+              \begin{algorithmic}[1]
+                  \State Index the nodes from 1 to \(m \coloneqq |V|\) (number of nodes). Nondeterministically write a list of \(m\) numbers \(p_1, ..., p_m\), where \(p_i \in \{1, ..., m\}\).
+                  \State Check for repetitions. If any are found, reject.
+                  \State Check if \(p_1, p_m\) correspond to the node indices of \(s, t\). If not, reject.
+                  \For{each \(1 \leq i \leq m - 1\)}
+                  \State Check if \((p_i, p_{i+1}) \in E\). If not, reject
+                  \EndFor
+                  \State Accept.
+              \end{algorithmic}
+    \end{description}
+    Stage 1 runs in polynomial time due to the nondeterministic choices performed. Stages 2-6 are simple checks.
+\end{proof}
+\begin{theorem}
+    \(
+    \subsetsumprob \coloneqq \{\; \enc{S, t} \mid S = \{x_1, ..., x_n\} \land \exists \; \{y_1,...,y_k\} \subseteq S\colon \textstyle\sum y_i = t  \;\} \in \npclass
+    \)
+
+    where \(\{x_1, ..., x_n\}, \{y_1, ..., y_k\}\) are multisets.
+\end{theorem}
+We give an alternative proof to demonstrate the concept of verifiers.
+\begin{proof}[Proof (alternative)] We give a polynomial time verifier \(V\). The certificate is the subset.
+    \begin{description}
+        \item[Input:] \(\enc{\enc{S, t}, C}\) with \(S, C\) finite set of numbers and \(c\) number.
+        \item[Function:] \phantom{}
+              \begin{algorithmic}[1]
+                  \State Test if \(\textstyle\sum c_i = t\) with \(C = \{c_1, ..., c_k\}\).
+                  \State Test if \(C \subseteq S\).
+                  \State Accept if both pass, otherwise reject at one stage.
+              \end{algorithmic}
+    \end{description}
+    The checks can be implemented in polynomial time.
+\end{proof}
+Two additional, very similar, problems which have been proven to be in NP:
+\[
+    \compositesprob = \{ \; \enc{n} \mid n = pq \text{ with } p, q > 1 \text{ natural numbers} \; \}
+\]
+\[
+    \cliqueprob = \{ \; \enc{G, k} \mid G \text{ is an undirected graph with a } k\text{-clique} \; \}
+\]
+
+\newpage
+
+\paragraph*{P=NP Question, Polynomial Time Reduciblity} We have observed that:
+\begin{itemize}
+    \item P is the class of languages in which membership can be \emph{decided} efficiently.
+    \item NP is the class of languages in which membership can be \emph{verified} efficiently.
+\end{itemize}
+
+Researchers have been unable to prove the existence of a single language in NP that is not in P. Important questions are:
+
+\begin{itemize}
+
+    \item With nondeterministic behavior, it seems brute-forcing can be avoided. Are there problems which are inherently difficult to solve? Or are researchers not capable to find the polynomial time algorithms for them?
+
+    \item Even if one could prove that a specific language is in P and NP, how does that influence the P=NP question?
+
+\end{itemize}
+
+The following concepts of polynomial time reducibility and then NP-completeness give some insight to these questions.
+
+\begin{definition} A language \(A\) is \emph{polynomial time reducible} to a language \(B\), written \(A \leq_p B\), if there is a polynomial time computable function \(f\colon \Sigma^* \rightarrow \Sigma^*\), where for every \(w \in \Sigma^*\):
+    \[
+        w \in A \leftrightarrow f(w) \in B
+    \]
+\end{definition}
+For our first example of polynomial time reduction consider the problem:
+\[
+    \threesatprob = \{ \; \enc{\phi} \mid \phi \text{ is a satisfiable 3cnf-formula} \; \}
+\]
+
+\begin{theorem} \(\threesatprob \leq_p \cliqueprob\)
+\end{theorem}
+
+\begin{proof} We present the polynomial reduction by generating an undirected graph \(G\) out of the input 3cnf-formula \(\phi\) given.
+
+    \begin{minipage}{0.6\linewidth}
+        Let
+        \[
+            \phi = (a_1 \lor b_1 \lor c_1) \land (a_2 \lor b_2 \lor c_2) \land ... \land (a_k \lor b_k \lor c_k)
+        \]
+        be the input 3cnf-formula with exactly \(k\) clauses.
+
+        Each node is a literal from \(\phi\)'s clausels. They are organized in literal groups, corresponding to the clausels, called the \emph{triples} \(t_1, ..., t_k\). Two nodes are connected if and only if they are not in the same triple and if they are not contradictory, e.g. \(x\) and \(\overline{x}\).
+
+        An example of this construction for the 3cnf-formula \[\phi = (x_1 \lor \overline{x_1} \lor \overline{x_2}) \land (\overline{x_1} \lor x_2 \lor \overline{x_2}) \land (\overline{x_2} \lor x_1 \lor \overline{x_2})\] is illustrated on the right.
+    \end{minipage}
+    \begin{minipage}{0.4\linewidth}
+        \centering
+        \begin{tikzpicture}
+            \node[draw, circle] (8) at (4, 0) {\(\overline{x_2}\)};
+            \node[draw, circle] (7) at (4, 1) {\(x_1\)};
+            \node[draw, circle] (6) at (4, 2) {\(\overline{x_2}\)};
+            \node[draw, circle] (5) at (3, 3) {\(\overline{x_2}\)};
+            \node[draw, circle] (4) at (2, 3) {\(x_2\)};
+            \node[draw, circle] (3) at (1, 3) {\(\overline{x_1}\)};
+            \node[draw, circle] (2) at (0, 2) {\(x_1\)};
+            \node[draw, circle] (1) at (0, 1) {\(\overline{x_1}\)};
+            \node[draw, circle] (0) at (0, 0) {\(\overline{x_2}\)};
+            \draw (0) -- (5);
+            \draw (0) -- (6);
+            \draw (0) -- (8);
+            \draw (1) -- (3);
+            \draw (2) -- (7);
+            \draw (5) -- (6);
+            \draw (5) -- (8);
+        \end{tikzpicture}
+    \end{minipage}\\
+
+    We argue that \(\phi\) is satisfiable, if and only if \(G\) has a \(k\)-clique.\\
+
+    \((\Rightarrow)\) Suppose \(\phi\) has a satisfying assignment. Then at least one literal is assigned to true in every clause of \(\phi\). These literals correspond to nodes of \(G\). So by choosing one true literal in every clause of \(\phi\), a corresponding node is also selected. These nodes form a \(k\)-clique, because these \(k\) literals form an undirected subgraph.
+
+    Now the argument that there are edges between each of these nodes. Contradictory literals are not connected and all literals chosen must be assigned to true. So no contradictory nodes are connected. Also, it is not allowed for nodes of the same triple to be connected, which is impossible in this case, since the triples correspond to the clausels and are chosen from different ones.\\
+
+    \((\Leftarrow)\) Suppose \(G\) has a \(k\)-clique. The clique must meet the conditions that no contradictory nodes are connected and each node is from a different triple. Therefore, one can assign each variable in the clique a value so that the literal contained is true. So each clausel gets assigned \(true\), what satisfies the formula.\\
+
+    By that, the reduction is complete.
+\end{proof}
+
+Although these problems are quite different, one can observe similar structures in both that allow the reduction. Through reduction their complexities can be linked.
+
+\paragraph{NP-Completeness} It turns out, that the complexities of all NP problems are linked by some languages.
+
+\begin{definition} A language \(L\) is called \emph{NP-complete}, if it satisfies two conditions:
+    \begin{enumerate}
+
+        \item \(L \in \npclass\)
+
+        \item \(L \leq_p X\) for every language \(X\), also called \emph{NP-hard}
+
+    \end{enumerate}
+\end{definition}
+
+The first language proven to be NP-complete was the SAT problem:
+\[
+    \satprob = \{ \;\enc{\phi} \mid \phi \text{ has a satisfying assignment} \; \}
+\]
+\begin{fact}[\emph{Cook-Levin Theorem}]
+    \(\satprob \text{ is NP-complete}\)
+\end{fact}
+\begin{proof}[Proof idea] Showing that \(\satprob \in \npclass\) is done by nondeterministically choosing an assignment and checking whether it satisfies the formula.
+
+    For the next part it must be shown that any language in NP is polynomial time reducible to SAT. This is done by simulating the turing machine, that computes the language, using a boolean formula. If this formula is satisfiable, the machine can reach an accepting state on the input. This is fundamentally easy to do, but one has to keep track of a lot of details of the simulation, which is why the proof is not discussed here.
+    \renewcommand{\qedsymbol}{}
+\end{proof}
+
+By modifying the proof of the Cook-Levin Theorem, one can show that 3SAT is NP-complete. NP-completeness is relevant, because:
+\begin{itemize}
+
+    \item By proving NP-completeness, one may not waste time searching for a polynomial algorithm that may not exist.
+
+    \item A lot of practical problems have been proven to be NP-complete.
+
+\end{itemize}
+
+\begin{corollary}
+    If \(B\) is NP-complete and \(B \in \pclass\), then \(\pclass=\npclass\).
+\end{corollary}
+This corollary is the reason, why reduction can be used to easily prove NP-completeness for a lot of languages. 
+\begin{corollary}
+    If \(B\) is NP-complete and \(B \leq_p C\) for any \(C \in \npclass\), then \(C\) is NP-complete.
+\end{corollary}
+\begin{proof}
+    Since \(C \in \npclass\), it must be shown that any \(A\) is polynomially reducible to \(C\). Since \(A \leq_p B\) and \(B \leq_p C\), the composition of the polynomial reduction functions lead to \(A \leq_p C\). The composition runtime is the sum of two polynomials, so the runtime of the reduction is, again, polynomial.
+\end{proof}
+\begin{corollary}
+    CLIQUE is NP-complete.
+\end{corollary}
+
+\newpage
+
+\paragraph*{The New Landscape} There are two possibilities.
+\begin{figure}[!htbp]
+    \large
+    \centering
+    \begin{tikzpicture}[
+            semithick,
+            scale=0.5
+        ]
+        \footnotesize
+        \draw (-7, -5) rectangle (7, 5);
+        \draw (0, 0) ellipse (6.5cm and 4cm);
+        \draw (-3.0, -1.5) ellipse (2cm and 1cm);
+        \draw (2.5, -1) ellipse (2.5cm and 1.75cm);
+
+        \node at (0.0, 4.5) {Decidable};
+        \node at (0.0, 3.5) {P = NP};
+        \node at (2.6, 0) {NP-Complete};
+        \node at (-4.5, 0.5) {\pathprob};
+        \node at (-2.5, 2.0) {\relprimeprob};
+        \node at (-3.0, -1.5) {\cflclass};
+        \node at (2, 2.75) {\hampathprob};
+        \node at (3, 2) {\compositesprob};
+        \node at (2, 1.25) {\subsetsumprob};
+        \node at (3, -2) {\cliqueprob};
+        \node at (1.5, -0.75) {\satprob};
+        \node at (3.5, -1) {\threesatprob};
+    \end{tikzpicture}
+    \hspace{0.5cm}
+    \begin{tikzpicture}[
+            semithick,
+            scale=0.5
+        ]
+        \footnotesize
+        \draw (-7, -5) rectangle (7, 5);
+        \draw (-3, 0) ellipse (3cm and 3cm);
+        \draw (0.0, 0) ellipse (6.5cm and 4cm);
+        \draw (-3, -1.5) ellipse (2cm and 1cm);
+        \draw (2.5, -1) ellipse (2.5cm and 1.75cm);
+
+        \node at (0.0, 4.5) {Decidable};
+        \node at (-3, 2.5) {P};
+        \node at (0, 3.5) {NP};
+        \node at (2.6, 0) {NP-Complete};
+        \node at (-3.5, 0.5) {\pathprob};
+        \node at (-3.25, 1.5) {\relprimeprob};
+        \node at (-3, -1.5) {\cflclass};
+        \node at (2, 2.75) {\hampathprob};
+        \node at (3, 2) {\compositesprob};
+        \node at (3.25, 1.25) {\subsetsumprob};
+        \node at (3, -2) {\cliqueprob};
+        \node at (1.5, -0.75) {\satprob};
+        \node at (3.5, -1) {\threesatprob};
+    \end{tikzpicture}
+\end{figure}
+
+\nocite{*}
+\renewcommand{\refname}{\normalsize References}
+\bibliography{np_handout}
+\bibliographystyle{plain}
+
+All the illustrations were made by myself using \emph{LaTex/Tikz}.
+\end{document}

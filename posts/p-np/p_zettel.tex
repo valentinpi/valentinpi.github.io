@@ -1,0 +1,136 @@
+% Useful links
+% List of math symbols: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+% Font sizes: http://www.sascha-frank.com/latex-font-size.html
+
+\documentclass[10pt,fleqn]{article}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+%\usepackage[ngerman]{babel}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{wasysym}
+\usepackage{xcolor}
+
+% https://tex.stackexchange.com/questions/89166/centering-in-tabularx-and-x-columns
+% and https://tex.stackexchange.com/questions/257128/how-does-the-newcolumntype-command-work
+% Combines c + X in tabularx environments.
+% Inserts centering command after the entry in the cell to center it.
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\hypersetup{
+    colorlinks   = true,
+    urlcolor     = blue,
+    linkcolor    = blue,
+    citecolor    = red
+}
+
+\setlength{\parindent}{0pt}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{fact}{Fact}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Task}{x}
+\newcommand{\Authors}{valentinpi}
+\newcommand{\task}[1]{\item{\bfseries #1}}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp}
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\begin{document}
+\pagenumbering{arabic}
+\title{
+    \vspace*{-12ex}
+    \phantom{}\\
+    \normalsize Task Sheet\\
+    \phantom{}\\
+    \large The Complexity Class P\\
+    \phantom{}\\
+    \normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+    \normalsize Institut für Informatik\\
+    \normalsize Freie Universität Berlin
+}
+\author{\normalsize \Authors}
+\date{
+    \normalsize \today\\
+    (neueste Version)\\
+    \phantom{}\\
+    Due to December 10, 2020 (12 AM)
+    \rule{\textwidth}{0.1pt}
+}
+\maketitle
+\begin{enumerate}
+
+    \item{\textbf{TIME Classes} \hfill \emph{(5 pt.)}}
+    
+    Given the definition of the TIME class, give equivalent definitions for the class SPACE. How can nondeterminism play a role at analyzing complexity?
+
+    \item{\textbf{Problems in P} \hfill \emph{(15 pt.)}}
+    
+    \begin{enumerate}
+        \item Research further problems in P. Is the problem
+        \(
+            \text{PRIMES} \coloneqq \{ \; \enc{x} \mid x \text{ is prime} \; \}
+        \)
+        in P?
+        \item Prove whether the following problems are in P or SPACE (Check both).
+        \[
+            \text{H} \coloneqq \{\;\enc{M, w} \mid M \text{ is a TM that will halt on the input } w\;\}
+        \]
+        \[
+            \text{TREES} \coloneqq \{\; \enc{G} \mid G \text{ is an undirected graph and a tree} \;\}
+        \]
+        \[
+            \text{HOARE} \coloneqq \{\; \enc{w} \mid w \text{ is a correctly functioning iterative program} \;\}
+        \]
+        \[
+            \text{BINOMIALCOEFF} \coloneqq \left\{ \; \enc{x} \mid \text{There are natural numbers } n \text{, } k \text{ so that } x = \binom{n}{k} \; \right\}
+        \]
+        \[
+            \text{LINES}_3 \coloneqq \{\; \enc{L_1, ..., L_k} \mid L_1, ..., L_n \subset \mathbb{R}^3 \text{ are lines that pairwise intersect} \;\}
+        \]
+        \item Update the landscape of languages according to your new knowledge.
+    \end{enumerate}
+
+    \item{\textbf{Reducibility in the Context of P} \hfill \emph{(10 pt.)}}
+    
+    Consider the following problem for any fixed \(n \in \mathbb{N}\):
+    \[
+        \text{PLANES}_n \coloneqq \{\; \enc{P_1, ..., P_m} \mid P_1, ..., P_m \subset \mathbb{R}^n \text{ are planes that pairwise intersect} \;\}
+    \]
+    Perform a reduction to another problem that seems suitable, so that you can show that:
+    \[
+        \text{PLANES}_n \in \pclass
+    \]
+
+\end{enumerate}
+\end{document}

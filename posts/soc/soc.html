@@ -1,0 +1,285 @@
+<h1 id="editing-stalker-soc-save-files">Editing STALKER SOC save files</h1>
+<h2 id="motivation">Motivation</h2>
+<p>I was doing a 100% run of the game S.T.A.L.K.E.R.: Shadow Of Chernobyl with the <a href="https://www.moddb.com/mods/autumn-aurora-compilation-mod">Autumn Aurora 2.1 mod</a>, when I started a side quest to kill the so-called &quot;sales representative&quot;, a loner who scams others for their money. Due to him being in a more advanced area of the game at the time, I was not able to complete the quest until later on. I only then noticed, that the quest has a time limit. The quest has to be done and the award aquired in too short of a time. I started thinking about what to do: I did not want to retake the quest, but for that I would need to edit the time to finish the quest.</p>
+<p><img src="img/screen_1.jpg" alt="screen_1"></p>
+<p>There is no save game editor out for this game, so we have handle this manually with the binary representation of our saves.</p>
+<h2 id="first-thoughts-and-observations">First thoughts and observations</h2>
+<p>So our overall goal is to increase the time left. First, I looked into the game files. AA (Autumn Aurora) added a gamedata folder, in which scripts and other altered content of the game is included. First, I tried to track down the internal name of the quest, which might prove to be useful later on.</p>
+<pre><code class="language-sh">valentin@debian:.../STALKER Shadow of Chernobyl/gamedata$ grep -aiHr &quot;sales representative&quot;
+&lt;No result&gt;</code></pre>
+<p>Searching multiple other strings game me some success though, since I found the <code>task_manager.ltx</code> file, where all the quests and their settings are saved. But without any obvious relation to my current save. So from there, there was no way to track down the related quest.</p>
+<p>I assumed AA mostly includes modified files from the mod, not all of the content in the game.</p>
+<p>To overcome this, I downloaded an <a href="https://www.moddb.com/games/stalker/downloads/stalker-extractor">unpacker</a> for the .db*-archives in the root directory of the folder:</p>
+<pre><code>gamedata.db0
+gamedata.db1
+gamedata.db2
+gamedata.db3
+gamedata.db4
+gamedata.db5
+gamedata.db6
+gamedata.db7
+gamedata.db8
+gamedata.db9
+gamedata.dba
+gamedata.dbb
+gamedata.dbc
+gamedata.dbd</code></pre>
+<p>The unpacker is very self-explanatory. We choose the game directory and the output location. Using the same command from above we now get:</p>
+<pre><code class="language-sh">.../unpacked$ grep -aiHr &quot;sales representative&quot;
+config/text/eng/stable_task_manager.xml:        &lt;text&gt;Kill the &quot;sales representative&quot;&lt;/text&gt;
+config/text/eng/stable_task_manager.xml:        &lt;text&gt;Kill the &quot;sales representative&quot;. The trader is looking after his reputation&lt;/text&gt;
+config/text/eng/stable_task_manager.xml:        &lt;text&gt;Imagine this: there&#39;s some weirdo running around here who introduces himself as my sales representative, uses my reputation, and then tries to hand off second-rate stuff! Broken barrells, the armor that&#39;s falling apart, expired canned goods. I&#39;ve already had to deal with a few unhappy clients. Bottom line, I need a man to have a little chat with that &quot;sales representative&quot;, whatever it takes.&lt;/text&gt;</code></pre>
+<p>Looking into the first result, we find the following XML entry:</p>
+<pre><code class="language-xml">&lt;string id=&quot;tm_kill_stalker_6&quot;&gt;
+    &lt;text&gt;Kill the &quot;sales representative&quot;&lt;/text&gt;
+&lt;/string&gt;</code></pre>
+<p>So the quest is named <code>tm_kill_stalker_6</code>. Looking into the <code>task_manager.ltx</code> file:</p>
+<pre><code>[tm_kill_stalker_6]
+type = kill_stalker
+community = actor
+text = tm_kill_stalker_6_text
+description = tm_kill_stalker_6_descr
+parent = trader
+target = sim_stalker_novice
+;reward_money = 1000
+reward_reputation = +3
+reward_rank = 2
+reward_item = af_vyvert, conserva
+time = 72000
+prior = 1</code></pre>
+<p>The <code>type</code> attribute will prove to be successful later on, but I did not know that at the time. We can edit the quest time, but it does not affect our save, as we can see when changing it and loading the game.</p>
+<h2 id="openxray-lzo-and-broken-headers">OpenXRAY, LZO and broken headers</h2>
+<p>The <code>.sav</code> files, that represent our savegames, are not very readable when read into a hex editor like <a href="https://mh-nexus.de/en/hxd/">HxD</a>. To understand how the save mechanic works, we would need to disassemble the games binary. Luckily though, there do exist <a href="https://www.betaarchive.com/forum/viewtopic.php?t=35135">source code leaks</a> of the game. We can search for the <code>sav</code> string to find the <code>SAVE_EXTENSION</code> macro, which is also used in the <code>alife_storage_manager.cpp</code> file. There, the <code>CALifeStorageManager::save</code> method is implemented.</p>
+<p>We can assume that the method implements the save-functionality of the game. Lines that stand out are for instance:</p>
+<pre><code class="language-cpp">{
+    CMemoryWriter            stream;
+    header().save            (stream);
+    time_manager().save        (stream);
+    spawns().save            (stream);
+    objects().save            (stream);
+    registry().save            (stream);
+
+    source_count            = stream.tell();
+    void                    *source_data = stream.pointer();
+    dest_count                = rtc_csize(source_count);
+    dest_data                = xr_malloc(dest_count);
+    dest_count                = rtc_compress(dest_data,dest_count,source_data,source_count);
+}</code></pre>
+<p>So the save-implementation first saves the game and all it&#39;s objects, spawns etc. into memory, compresses it and then flushes it into a <code>.sav</code> file. It compresses the data using the <code>rtc_compress</code> function:</p>
+<pre><code class="language-cpp">u32        rtc_compress    (void *dst, u32 dst_len, const void* src, u32 src_len)
+{
+    u32        out_size    = dst_len;
+    int r = lzo1x_1_compress    ( 
+        (const lzo_byte *) src, (lzo_uint)    src_len, 
+        (lzo_byte *) dst,        (lzo_uintp) &amp;out_size, 
+        rtc_wrkmem);
+    VERIFY    (r==LZO_E_OK);
+    return    out_size;
+}</code></pre>
+<p>We see, the compression algorithm used is LZO1X-1, where 1 is the compression level used. One tool for decompressing these files is <code>lzop</code>, but apparently you need a proper LZO header, which does not exist in the <code>.sav</code> file, when looking at it with a hex editor like <code>HxD</code> or <code>xxd</code>:</p>
+<pre><code class="language-sh">valentin@debian:~$ xxd -l 48 36.sav 
+00000000: ffff ffff 0300 0000 d9eb 3a00 0e00 0000  ..........:.....
+00000010: 0004 0000 0003 0000 0005 0000 0010 4c00  ..............L.
+00000020: 0318 ca6a 18c5 3940 010a 0020 4100 0020  ...j..9@... A.. </code></pre>
+<p>A proper header looks like this:</p>
+<pre><code class="language-sh">(sav) valentin@debian:~$ lzop -1v 36.sav
+compressing 36.sav into 36.sav.lzo
+(sav) valentin@debian:~c$ xxd -l 48 36.sav.lzo 
+00000000: 894c 5a4f 000d 0a1a 0a10 3020 a009 4002  .LZO......0 ..@.
+00000010: 0103 0000 0100 0081 ed5f 7738 6b00 0000  ........._w8k...
+00000020: 0006 3336 2e73 6176 55e8 061f 0004 0000  ..36.savU.......</code></pre>
+<p>Also standing out are the lines, in which the compressed data gets flushed into the file:</p>
+<pre><code class="language-cpp">string_path                    temp;
+FS.update_path                (temp,&quot;$game_saves$&quot;,m_save_name);
+IWriter                        *writer = FS.w_open(temp);
+writer-&gt;w_u32                (u32(-1));
+writer-&gt;w_u32                (ALIFE_VERSION);
+
+writer-&gt;w_u32                (source_count);
+writer-&gt;w                    (dest_data,dest_count);
+xr_free                        (dest_data);
+FS.w_close                    (writer);</code></pre>
+<p>Where <code>ALIFE_VERSIOn = 0x0003</code>. So apparently, the first 12 bytes are not LZO-data. The data corresponds to what we have read. The first 4 bytes are the <code>u32</code> constant <code>-1</code>, which is the maximum number a <code>u32</code> can be assigned to (see Two&#39;s Complement). Then the Alife version number and the decompressed size, which depends on the size of our save.</p>
+<p>For editing the save file, we will need the following procedure:</p>
+<pre><code>36.sav - cut 12 bytes    -&gt; 36.sav_c
+       - decompress      -&gt; 36.sav_d
+       - edit            -&gt; 36_edited.sav_d
+       - compress        -&gt; 36_edited.sav_c
+       - append 12 bytes -&gt; 36_edited.sav</code></pre>
+<p>We can do the first with <code>tail</code>:</p>
+<pre><code class="language-sh">valentin@debian:~$ tail -c +13 36.sav &gt; 36.sav_c
+valentin@debian:~$ xxd -l 48 36.sav_c
+00000000: 0e00 0000 0004 0000 0003 0000 0005 0000  ................
+00000010: 0010 4c00 0318 ca6a 18c5 3940 010a 0020  ..L....j..9@... 
+00000020: 4100 0020 4101 0000 00c4 0e74 0000 0800  A.. A......t....</code></pre>
+<p>For the LZO decompression: One solution might be to write a small C program that utilizes the lzo-library, which is quite easy to do. But I will use Python for this, since I want to get it done more quickly.</p>
+<p>I will use Python 3 and the <a href="https://github.com/jd-boyd/python-lzo">python-lzo package</a>. On Debian based systems, one can install the C dependencies, pip and the venv package to create a virtual environment. We use a virtual environment, so that we do not affect our system wide Python installation. So to set everything up we do:</p>
+<pre><code class="language-sh">valentin@debian:~$ sudo apt install liblzo2-dev zlib1g-dev python3-pip python3-venv
+valentin@debian:~$ python3 -m venv sav
+valentin@debian:~$ cd sav
+valentin@debian:~/sav$ source bin/activate</code></pre>
+<p>Now for the script, we just read our savefile and output the decompressed version. It&#39;s very simple to do with Python (the complete script looks different and is attached):</p>
+<pre><code class="language-python">save = io.open(&quot;36.sav_c&quot;, &quot;rb&quot;)
+data = save.read()
+save.close()
+
+decompressed = lzo.decompress(data, False, 3861465)
+
+out = io.open(&quot;36.sav_d&quot;, &quot;wb&quot;)
+out.write(decompressed)
+out.close()</code></pre>
+<p><code>3861465</code> is the value of the source_data variable in the C code we saw above. It corresponds to <code>0x003aebd9</code>, which is stored in Little Endian since the save was created on Windows. Now we run it:</p>
+<pre><code class="language-sh">valentin@debian:~$ chmod +x decompress.py
+valentin@debian:~$ ./decompress.py</code></pre>
+<p>Before continuing, I wanted to make sure the compression process will be as easy as the decompression process. So we first write a <code>compress.py</code> script and make sure the files are equivalent:</p>
+<pre><code class="language-sh">-rw-r--r-- 1 valentin valentin 1001317 Okt  2 14:08 36.sav_c
+-rw-r--r-- 1 valentin valentin 1041563 Okt  2 15:32 36.sav_cc</code></pre>
+<p>I will append improved versions of the Python and Shell scripts (which read the decompressed size automatically, for instance) I use to the post. The files are not equivalent. This does not necessarily mean that we can not load the game anymore though. We append the data we cut off before:</p>
+<pre><code class="language-sh">(sav) valentin@debian:~/sav$ { head -c 12 36.sav; cat 36.sav_cc; } &gt; 36_cc.sav</code></pre>
+<p>We load it into the game and it actually works, which is great! Now we take a look at the <code>36.sav_d</code>-file which we worked so hard for. We can easily automate this process now too.</p>
+<h2 id="game-code-lua-and-finding-the-actual-timing-values">Game code, Lua and finding the actual timing values</h2>
+<p>Remember the quests name we discovered? <code>tm_kill_stalker_6</code> We now skim through the files, which is still in great parts binary data, but much more readable, and try to find the statistics of this running task.</p>
+<p>My next thought was to look for the according location of &quot;Remaining&quot;, from the above screenshot.</p>
+<pre><code class="language-sh">valentin@debian:/media/sf_D_DRIVE/unpacked$ grep -aiHr Remaining
+config/text/eng/ui_st_mp.xml:    &lt;text&gt;Time remaining: %d:%d; Agreed %.2f&lt;/text&gt;
+config/text/eng/ui_st_other.xml:        &lt;text&gt;Remaining&lt;/text&gt;</code></pre>
+<p>We discover the two tags in the <code>ui_st_other</code> and the corresponding time locales:</p>
+<pre><code class="language-xml">&lt;string id=&quot;ui_st_time_remains&quot;&gt;
+    &lt;text&gt;Remaining&lt;/text&gt;
+&lt;/string&gt;</code></pre>
+<pre><code class="language-xml">&lt;string id=&quot;ui_st_mins&quot;&gt;
+    &lt;text&gt;mins&lt;/text&gt;
+&lt;/string&gt;</code></pre>
+<p>-- GREAT TILL HERE</p>
+<p>When searching after these symbols, we discover the task class in <code>GameTask.h</code>:</p>
+<pre><code class="language-cpp">class CGameTask
+{
+    ...
+    TASK_ID                    m_ID;
+    shared_str                m_Title;
+    OBJECTIVE_VECTOR        m_Objectives;
+    ALife::_TIME_ID            m_ReceiveTime;
+    ALife::_TIME_ID            m_FinishTime;
+    ALife::_TIME_ID            m_TimeToComplete;
+    u32                        m_priority;
+    ...
+};</code></pre>
+<p>We see that it is serializable, as in it gets probably saved. The <code>save</code> function that saves these members is:</p>
+<pre><code class="language-cpp">void SGameTaskKey::save(IWriter &amp;stream)
+{
+    save_data(task_id,                        stream);
+    save_data(game_task-&gt;m_ReceiveTime,        stream);
+    save_data(game_task-&gt;m_FinishTime,        stream);
+    save_data(game_task-&gt;m_TimeToComplete,    stream);
+    save_data(game_task-&gt;m_Title,            stream);
+
+    u32 cnt    = game_task-&gt;m_Objectives.size();
+    save_data(cnt, stream);
+
+    OBJECTIVE_VECTOR_IT it        = game_task-&gt;m_Objectives.begin();
+    OBJECTIVE_VECTOR_IT it_e    = game_task-&gt;m_Objectives.end();
+    for(;it!=it_e;++it)
+        save_data(*it, stream);
+
+}</code></pre>
+<blockquote>
+<p><code>NOTE:</code> Now we know the order in which the information of objectives stored in memory! Great.</p>
+</blockquote>
+<blockquote>
+<p><code>NOTE:</code> The game implements custom write functions, inspectable in<code>FS.h</code>.</p>
+</blockquote>
+<p>The value we want to manipulate is the one from <code>m_TimeToComplete</code>.</p>
+<p>We search our <code>36.sav_d</code> file for, for instance, the title of the quest, or a part of it. <code>sales representative</code> should do. There are six occurencies of that though (with a search in HxD for instance), with only one having a following description text. But this is presumably from log entries, not from actual game data:</p>
+<p><img src="img/screen_2.jpg" alt="screen_2"></p>
+<p>My approach is to find either the <code>idx</code>, <code>title</code> or <code>description</code> values for our task and then track down the timing in the previous bytes.</p>
+<p>The title gets set in the <code>SetTitle_script</code> function, which gets binded to Lua:</p>
+<pre><code class="language-cpp">auto GetTitle_script() const { return m_Title.c_str(); }
+void SetTitle_script(pcstr title) { m_Title = title; }</code></pre>
+<pre><code class="language-cpp">module(luaState)
+    [
+        ...
+        class_&lt;SGameTaskObjective&gt;(&quot;SGameTaskObjective&quot;)
+            .def(constructor&lt;CGameTask*, int&gt;())
+            .def(&quot;get_title&quot;, &amp;SGameTaskObjective::GetTitle_script)
+            .def(&quot;set_title&quot;, &amp;SGameTaskObjective::SetTitle_script)
+        ...
+    ];</code></pre>
+<p>We take a look at the unpacked game files again. We discover the file <code>task_manager.script</code> by searching for the Lua function <code>set_title</code>. We also see that AA wrote this file in our game files too, so we inspect that one.</p>
+<pre><code class="language-lua">function CRandomTask:action_give_task(actor, npc, p1, p2)
+    local task = CGameTask()
+
+    -- printf(&quot;p1 = %s p2 = %s&quot;, tostring(p1), tostring(p2))
+    -- dbglog(&quot;task_manager.script:action_give_task():  p1 = %s p2 = %s&quot;, tostring(p1), tostring(p2))
+
+    local task_desc = self.task_info[self.task_id_by_yes_phrase_id[p2]]
+
+    task:load(task_desc.complex_type)
+    task:set_title(task_desc.type)
+    ...</code></pre>
+<p>The <code>task_info</code> table seems to contain all descriptions. Let us take a look at how it gets loaded:</p>
+<pre><code class="language-lua">self.task_info = {}
+
+for i=0,n-1 do
+    result, id, value    = self.task_ini:r_line(&quot;list&quot;,i,&quot;&quot;,&quot;&quot;)
+
+    if not self.task_ini:section_exist(id) then
+        abort(&quot;There is no section [%s] in task_manager.ltx&quot;, id)
+    end        
+
+    self.task_info[id]            = {}
+    local curr_task_info        = self.task_info[id]
+...</code></pre>
+<p>So this confirms the assumption that these descriptions get loaded from the <code>task_manager.ltx</code> file. For the class that gets serializes, we find the initialization of the <code>SGameTaskObjective</code> class from C++ below:</p>
+<pre><code class="language-lua">local objective = SGameTaskObjective(task,1)
+objective:set_description(task_desc.name)
+--&#39; Тћсш№рхь ђхъѓљѓў іхыќ ътхёђр
+if task_desc.target_objects ~= nil then
+    self.task_info[self.task_id_by_yes_phrase_id[p2]].selected_target = task_desc.target_objects[math.random(#task_desc.target_objects)]
+    -- printf(&quot;TARGET DEBUG INFO&quot;)
+    -- printf(&quot;selected = %s&quot;, tostring(self.task_info[self.task_id_by_yes_phrase_id[p2]].selected_target))
+    -- print_table(task_desc.target_objects)
+end
+...</code></pre>
+<p>I could now reiterate the whole script, but rather than doing that <a href="misc/task_manager.script">I will append it to this blog post</a>. I skimmed through it and found the string we need to search for might be:</p>
+<pre><code>kill_stalker_location</code></pre>
+<p>But this also leads to nothing. However, I found these lines:</p>
+<pre><code class="language-cpp">GetGameTasks().push_back(SGameTaskKey(t-&gt;m_ID));
+GetGameTasks().back().game_task = t;
+t-&gt;m_ReceiveTime = Level().GetGameTime();
+t-&gt;m_TimeToComplete = t-&gt;m_ReceiveTime + timeToComplete * 1000; // ms
+t-&gt;m_timer_finish = t-&gt;m_ReceiveTime + timer_ttl * 1000; // ms</code></pre>
+<p>in the <code>GametaskManager.cpp</code> file. My next approach is to track down this value in the hex file. For that, we must calculate the <code>m_TimeToComplete</code> value.</p>
+<blockquote>
+<p><code>NOTE:</code> I discovered the <code>quest_time_factor</code> variable in the <code>task_manager.script</code> file, but it does not accomplish what we are trying to do.</p>
+</blockquote>
+<p>To finish this off, I will now present two scripts, with which we can decompress and compress these <code>sav</code> files. I will also append my <a href="misc/36.sav">savegame</a>.</p>
+<!--
+After cloning, we can initialize the submodules in the xray-16 repository
+
+```sh
+PS ...\xray-16> git submodule update --init --recursive
+```
+-->
+
+<p>Got the time changed!</p>
+<p>Observations:</p>
+<ul>
+<li>When browsing the code, we discover the GameTask class and its members</li>
+<li>The set function for the title gets exportet into Lua</li>
+<li>The script sets the title to a type, in this case <code>kill_stalker</code></li>
+<li>Therefore, search for <code>kill_stalker</code> in the hex file</li>
+<li>Discover one line with 24 prev bytes, change last 8 to a higher value</li>
+<li>=&gt; Recompress, load and see: Time changed ingame</li>
+</ul>
+<p>TODO: Proofread this
+TODO: Update the code samples with code from the actual leaked SOC source 1.0004 and the mod scripts</p>
+<pre><code class="language-sh">valentin@debian:~$ xxd -l 64 -s +3855360 36_edited.sav_d.backup
+003ad400: 0000 0000 6b69 6c6c 5f73 7461 6c6b 6572  ....kill_stalker
+003ad410: 5f74 7261 6465 7200 f478 b50b c539 0000  _trader..x...9..
+003ad420: 0000 0000 0000 0000 f45e 9518 c539 0000  .........^...9..
+003ad430: 6b69 6c6c 5f73 7461 6c6b 6572 0003 0000  kill_stalker....</code></pre>
+<pre><code class="language-sh">valentin@debian:~$ xxd -l 64 -s +3855360 36_edited.sav_d.new
+003ad400: 0000 0000 6b69 6c6c 5f73 7461 6c6b 6572  ....kill_stalker
+003ad410: 5f74 7261 6465 7200 f478 b50b c539 0000  _trader..x...9..
+003ad420: 0000 0000 0000 0000 ffff ffff c539 0000  .............9..
+003ad430: 6b69 6c6c 5f73 7461 6c6b 6572 0003 0000  kill_stalker....</code></pre>

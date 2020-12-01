@@ -1,0 +1,322 @@
+\documentclass[notheorems]{beamer}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[english, ngerman]{babel}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{arrows}
+
+\usetheme{metropolis}
+
+\setlength{\parindent}{0pt}
+
+% I do not really like the plain style
+%\theoremstyle{plain}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{remark}
+\newtheorem{fact}{Fact}
+\newtheorem{remark}{Remark}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp }
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\selectlanguage{ngerman}
+\title{The Complexity Class P}
+\author{valentinpi}
+\institute{\normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+Institut für Informatik\\
+Freie Universität Berlin}
+\date{\today\\(neueste Version)}
+\selectlanguage{english}
+
+\begin{document}
+    \frame{\titlepage}
+
+    \begin{frame}
+        \begin{center}
+            Computability versus Complexity
+
+            \pause
+
+            What kind of efficiency?
+        \end{center}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Complexity classes}
+
+        \begin{definition}
+            Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) contains all languages that are computable in \(\onot{(f(n))}\) time for an input of size \(n\).
+            \begin{align*}
+                \text{TIME}(f(n)) \coloneqq \{ \; L \mid &\text{There is a deterministic TM that decides } L \text{ in }\\&\onot{(f(n))} \text{ time for an input of size } n \; \}
+            \end{align*}
+        \end{definition}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The Class P}
+    
+        \begin{definition}
+            \emph{P} is the class of languages decidable in polynomial time on a deterministic single-tape TM.
+            \[
+                \pclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{TIME}(n^k)
+            \]
+        \end{definition}
+    
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The PATH Problem}
+        \begin{align*}
+            \pathprob \coloneqq \{ \; \enc{G, s, t} \mid &G \text{ is a directed graph and there is a}\\
+            &\text{path between nodes } s \text{ and } t \; \}
+        \end{align*}
+        \begin{figure}[!htbp]
+            \centering
+            \begin{tikzpicture}[
+                semithick
+            ]
+                \tikzset{every node/.style={fill, circle, minimum size=3pt, inner sep=1pt}}
+                \node[label=above left:{\(s\)}] (0) at (0.0, 0.0) {};
+                \node (1) at (1.0, 0.5) {};
+                \node (2) at (0.5, -0.5) {};
+                \node[fill=none, inner sep=1pt] (3) at (1.75, 0.25) {\(\stackrel{?}{...}\)};
+                \node (4) at (2.5, 0.25) {};
+                \node[label=above right:{\(t\)}] (5) at (3.5, 0.5) {};
+                \node (6) at (-0.75, 0.5) {};
+                \node (7) at (1.2, 1.0) {};
+                \node (8) at (1.8, 1.3) {};
+                \draw[->] (0) -- (1);
+                \draw[->] (0) -- (2);
+                \draw[->] (1) -- (3);
+                \draw[->] (3) -- (4);
+                \draw[->] (4) -- (5);
+                \draw[->] (8) -- (7);
+                \draw (1.75, 0.25) ellipse (3.0cm and 2cm);
+                \node[fill=none] at (-1.25, 1.75) {\(G\)};
+            \end{tikzpicture}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{\(\pathprob \in \pclass\)}
+        \begin{theorem}
+            \(\pathprob \in \pclass\)
+        \end{theorem}
+        \pause
+        \begin{proof}
+            \begin{description}
+                \item[Input:] \(\enc{G, s, t}\), where \(G\) is a directed graph with nodes \(s, t\).
+                \item[Function:] \phantom{} \begin{enumerate}[label=\arabic*.]
+                    \item Mark \(s\).
+                    \item Repeat until no more nodes are marked:
+                    \begin{enumerate}[label=2.\arabic*.]
+                        \item Search through edges \(E\). If an edge \((u, v)\) is found with \(u\) marked and \(v\) not marked, mark \(v\).
+                    \end{enumerate}
+                    \item If \(t\) is marked, accept. Otherwise, reject.
+                \end{enumerate}
+            \end{description}
+        \end{proof}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The RELPRIME Problem}
+        If two natural integers have the greatest common divisor (GCD) 1, they are called \emph{relatively prime}. 
+        \pause
+        \[
+            \relprimeprob \coloneqq \{ \; \enc{x, y} \mid x \text{ and } y \text{ are relatively prime} \; \}
+        \]
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The Euclidian Algorithm}
+    
+        \begin{figure}[!htbp]
+            \centering
+            \scriptsize
+            \begin{tikzpicture}[
+                scale=18/14*0.25,
+                very thin
+            ]
+                \draw[fill=red!50] (0, 0) -- (14, 0) node[midway, above] {\(14\)} -- (14, -9) -- (0, -9) -- (0, 0) node[midway, left] {\(9\)};
+                \draw[fill=green!50] (0, -9) -- (9, -9) -- (9, -14) -- (0, -14) node[midway, below] {\(9\)} -- (0, -9) node[midway, left] {\(5\)};
+                \draw[fill=blue!50] (9, -9) -- (14, -9) -- (14, -13) node[midway, right] {\(4\)} -- (9, -13) node[midway, above, text=white] {\(5\)} -- (9, -9);
+                \draw[fill=yellow!50] (9, -13) -- (13, -13) -- (13, -14) -- (9, -14) node[midway, below] {\(4\)} -- (9, -13) node[midway, left] {\(1\)};
+                \draw[fill=gray!50] (13, -13) -- (14, -13) -- (14, -14) node[midway, right] {\(1\)} -- (13, -14) node[midway, below] {\(1\)} -- (13, -13);
+            \end{tikzpicture}
+            \begin{tikzpicture}[
+                scale=0.25,
+                very thin
+            ]
+                \draw[fill=green!50] (0, 0) -- (18, 0) node[midway, above] {\(18\)} -- (18, -12) -- (0, -12) -- (0, 0) node[midway, left] {\(12\)};
+                \draw[fill=blue!50] (0, -12) -- (12, -12) -- (12, -18) -- (0, -18) node[midway, below] {\(12\)} -- (0, -12) node[midway, left] {\(6\)};
+                \draw[fill=gray!50] (12, -12) -- (18, -12) -- (18, -18) node[midway, right] {\(6\)} -- (12, -18) node[midway, below] {\(6\)} -- (12, -12);
+            \end{tikzpicture}
+        \end{figure}
+    
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The RELPRIME Problem}
+
+        \begin{theorem}
+            \(\relprimeprob \in \pclass\)
+        \end{theorem}
+
+        \pause
+    
+        \begin{proof}
+            \begin{description}
+                \item[Input:] \(\enc{x, y}\), where \(x, y \in \mathbb{N}\).
+                \item[Function:] \phantom{}
+                \begin{algorithmic}[1]
+                    \While{\(y > 0\)}
+                        \State \(x \gets x\bmod{y}\)
+                        \State Swap \(x\) and \(y\)
+                    \EndWhile
+                    \State If \(x = 1\), accept. Otherwise, reject.
+                \end{algorithmic}
+            \end{description}
+        \end{proof}
+    
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Context-Free Languages}
+    
+        \begin{theorem}
+            Every context-free language \(L \in \cflclass\) is in P.
+        \end{theorem}
+
+        \begin{itemize}
+            \item[\(\Rightarrow\)] CYK algorithm
+        \end{itemize}
+    
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Reminder: CYK Algorithm}
+
+        Follows the principle of dynamic programming. Recursion from last semester: \(V[i, j] = \{\; A \in V \mid A \rightarrow^* \sigma_i...\sigma_j\;\}\)
+
+        \begin{figure}[!hbtp]
+            \centering
+            \begin{tikzpicture}[
+                scale=0.85
+            ]
+                \def\x{0};
+                \foreach \y in {0, 0, 1, ..., 5}
+                {
+                    \draw[very thin] (\x, 0) -- (\x, \numexpr6-\y);
+                    \pgfmathparse{\x+1};
+                    \xdef\x{\pgfmathresult};
+                }
+                
+                \def\y{0};
+                \foreach \x in {0, 0, 1, ..., 5}
+                {
+                    \draw[very thin] (0, \y) -- (\numexpr6-\x, \y);
+                    \pgfmathparse{\y+1};
+                    \xdef\y{\pgfmathresult};
+                }
+        
+                \draw[fill=gray!25, draw=none] (1.5, 3.25) -- (1.75, 3.25) -- (4.33, -0.25) -- (1.5, -0.25) -- cycle;
+                \node at (2.25, 1) {\(\rightarrow^*\)};
+                \node (A) at (1.5,  3.5) {\(A\)};
+                \node (1) at (0.5, -0.5) {\(\sigma_1\)};
+                \node (2) at (1.5, -0.5) {\(\sigma_2\)};
+                \node (3) at (2.5, -0.5) {\(\sigma_3\)};
+                \node (4) at (3.5, -0.5) {\(\sigma_4\)};
+                \node (5) at (4.5, -0.5) {\(\sigma_5\)};
+                \node (6) at (5.5, -0.5) {\(\sigma_6\)};
+                \draw[thick] (A) -- (2);
+                \draw[thick] (A) -- (5);
+            \end{tikzpicture}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{\(CFL \subset\pclass\)}
+
+        \begin{proof}
+            \begin{description} \footnotesize
+                \item[Input:] \(w \in \Sigma^*\), for \(w \neq \varepsilon\) write \(w = \sigma_1\sigma_2...\sigma_n\).
+                \item[Function:] \phantom{}
+                    \begin{algorithmic}[1]
+                        \State For \(w = \varepsilon\), if \(S \rightarrow \varepsilon\) is production, accept. Otherwise, reject.
+                        \For{\(i = 1\) to \(n\)}
+                            \For{each variable \(A\)}
+                                \State If \(A \rightarrow \sigma_i\) is a rule, place \(A\) in \(table(i, i)\).
+                            \EndFor
+                        \EndFor
+                        \For{\(l = 2\) to \(n\)} \Comment{Substring length}
+                            \For{\(i = 1\) to \(n-l+1\)} \Comment{Starting position}
+                                \State \(j \gets i + l - 1\) \Comment{End position}
+                                \For{\(k = i\) to \(j - 1\)} \Comment{Split position}
+                                    \For{each rule \(A \rightarrow BC\)}
+                                        \State If \(B \in table(i, k)\) and \(C \in table(k + 1, j)\), put \(A\) in \(table(i, j)\).
+                                    \EndFor
+                                \EndFor
+                            \EndFor
+                        \EndFor
+                        \State If \(S \in table(1, n)\), accept. Else, reject.
+                    \end{algorithmic}
+            \end{description}
+        \end{proof}
+
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Final Landscape of Languages}
+        \begin{figure}[!htbp]
+            \begin{tikzpicture}[
+                semithick,
+                scale=0.8
+            ]
+                \draw (-6.5, -4.5) rectangle (6.5, 5);
+                \draw (0.0, 0.0) ellipse (6cm and 4cm);
+                \draw (0.0, -1.5) ellipse (2cm and 1cm);
+        
+                \node at (0.0, 4.5) {Decidable};
+                \node at (0.0, 3.5) {\pclass};
+                \node at (-3.25, 0.5) {\pathprob};
+                \node at (2.0, 1.0) {\relprimeprob};
+                \node at (0.0, -1.5) {\cflclass};
+            \end{tikzpicture}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Resources}
+        \nocite{*}
+        \renewcommand{\refname}{\normalsize References} 
+        \bibliography{p_presentation}
+        \bibliographystyle{plain}
+    \end{frame}
+\end{document}
