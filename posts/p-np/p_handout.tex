@@ -1,0 +1,344 @@
+% Useful links
+% List of math symbols: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+% Font sizes: http://www.sascha-frank.com/latex-font-size.html
+
+\documentclass[10pt,fleqn]{article}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[english, ngerman]{babel}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{wasysym}
+\usepackage{xcolor}
+
+% https://tex.stackexchange.com/questions/89166/centering-in-tabularx-and-x-columns
+% and https://tex.stackexchange.com/questions/257128/how-does-the-newcolumntype-command-work
+% Combines c + X in tabularx environments.
+% Inserts centering command after the entry in the cell to center it.
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\hypersetup{
+    colorlinks   = true,
+    urlcolor     = blue,
+    linkcolor    = blue,
+    citecolor    = red
+}
+
+\setlength{\parindent}{0pt}
+
+% I do not really like the plain style
+%\theoremstyle{plain}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{remark}
+\newtheorem{fact}{Fact}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Task}{x}
+\newcommand{\Authors}{valentinpi}
+\newcommand{\task}[1]{\item{\bfseries #1}}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp}
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\begin{document}
+\selectlanguage{ngerman}
+\pagenumbering{arabic}
+\title{
+    \vspace*{-12ex}
+    \phantom{}\\
+    \normalsize Handout\\
+    \phantom{}\\
+    \large The Complexity Class P\\
+    \phantom{}\\
+    \normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+    \normalsize Institut für Informatik\\
+    \normalsize Freie Universität Berlin
+}
+\author{\normalsize \Authors}
+\date{
+    \normalsize \today\\
+    (neueste Version)
+    \rule{\textwidth}{0.1pt}
+}
+\selectlanguage{english}
+\maketitle
+\begin{abstract}
+    \noindent This handout gives an introduction to complexity theory and the complexity class P. It presents the most important definitions, discusses why polynomial computation time is of practical interest and then presents a handful of algorithmic problems and shows that they are in P.
+\end{abstract}
+\paragraph{Computability and Complexity} Coming from the bachelor class "Foundations of Theoretical Computer Science", complexity theory has not been formally introduced yet.
+\begin{itemize}
+    \item \emph{Computability theory} discusses the \emph{possibilities} of computational models
+    \item \emph{Complexity theory}, however, discusses the \emph{efficiency} of computation
+\end{itemize}
+Efficiency can be viewed from multiple perspectives. For instance, time or space (memory usage). Time might be the number of steps that the computational model has to take in order to decide a problem. For instance the number of left or right moves on a TM.
+\begin{definition}
+    Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) contains all languages that are computable in \(\onot{(f(n))}\) time for an input of size \(n\).
+    \[
+        \text{TIME}(f(n)) \coloneqq \{ \; L \mid \text{There is a deterministic TM that decides } L \text{ in } \onot{(f(n))} \text{ time for an input of size } n \; \}
+    \]
+\end{definition}
+We only consider decidable problems, as Turing machines of semi-decidable problems may not halt. There are problems that might require Turing machines running in exponential time or \emph{polynomial time}.
+\begin{itemize}
+    \item All versions of Turing machines (single-tape, multi-tape, multi-head, ...) are computationally, but also \emph{polynomially equivalent}
+    \item Polynomial differences are important, but in some cases avoiding exponential growth outweighs these differences, we merely focus on one part of the problem here
+    \item[\(\Rightarrow\)] A polynomial time of e.g. \(n^{100}\) might not be practical, but focusing on finding polynomial solutions for exponential problems has proven to be useful for further reduction
+    \item Most exponential approaches to problem solving involve iterating through exponentially many tests for a solution, also called \emph{brute-force}
+\end{itemize}
+\paragraph*{The Class P}
+\begin{definition}
+    \emph{P} is the class of languages decidable in polynomial time on a deterministic single-tape TM.
+    \[
+        \pclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{TIME}(n^k)
+    \]
+\end{definition}
+\begin{itemize}
+    \item P is invariant in terms of the Turing machine version which solves a problem in polynomial time
+    \item Algorithms that utilize certain data structures (integers etc.) must have a representation that allows for polynomial reading, editing time (polynomial time encodings)
+\end{itemize}
+\newpage
+\paragraph{The PATH Problem} We now take a look at the problem \emph{PATH}. Let \(G = (V, E)\) be a directed graph. Every edge \((u, v) \in E\) is an ordered touple representing a direction from one node to another. For two nodes \(s, t\), we want to find an algorithm which decides whether a path, i.e. a sequence of edges that connect these points, exist.
+\[
+    \pathprob \coloneqq \{ \; \enc{G, s, t} \mid G \text{ is a directed graph and there is a path between nodes } s \text{ and } t \; \}
+\]
+\begin{figure}[!htbp]
+    \centering
+    \begin{tikzpicture}[
+        semithick
+    ]
+        \tikzset{every node/.style={fill, circle, minimum size=3pt, inner sep=1pt}}
+        \node[label=above left:{\(s\)}] (0) at (0.0, 0.0) {};
+        \node (1) at (1.0, 0.5) {};
+        \node (2) at (0.5, -0.5) {};
+        \node[fill=none, inner sep=1pt] (3) at (1.75, 0.25) {\(\stackrel{?}{...}\)};
+        \node (4) at (2.5, 0.25) {};
+        \node[label=above right:{\(t\)}] (5) at (3.5, 0.5) {};
+        \node (6) at (-0.75, 0.5) {};
+        \node (7) at (1.2, 1.0) {};
+        \node (8) at (1.8, 1.3) {};
+        \draw[->] (0) -- (1);
+        \draw[->] (0) -- (2);
+        \draw[->] (1) -- (3);
+        \draw[->] (3) -- (4);
+        \draw[->] (4) -- (5);
+        \draw[->] (8) -- (7);
+        \draw (1.75, 0.25) ellipse (3.0cm and 2cm);
+        \node[fill=none] at (-1.25, 1.75) {\(G\)};
+    \end{tikzpicture}
+    \caption{Small illustration of the PATH problem}
+\end{figure}
+\begin{theorem}
+    \(\pathprob \in \pclass\)
+\end{theorem}
+\begin{proof} To prove the theorem, we need to find an algorithm that decides PATH in polynomial time.\\
+    
+To brute-force, we can attempt to calculate every possible path inside of the graph and then check for one that connects \(s\) and \(t\). Any path is at most \(|V|\) nodes long (or longer, but that can be neglected in this context). If all nodes are connected, as in complete graphs, for instance, we can choose one of the \(|V|\) nodes for each of the \(|V|\) connections made, including duplicates. Therefore the runtime is \(\onot{(|V|^{|V|})}\) and exponential.\\
+
+Alternatively we can use a \emph{breadth-first-search (BFS)} approach: We begin by placing a mark on the first node \(s\), then mark its neighbors, then further those neighbors' neighbors and so on. By that, we ultimately mark each node that we can reach from \(s\). If there are no further possible marks to be made our search is finished and we can check if \(t\) is marked, which leads to the following Turing machine \(M\) that decides PATH:
+
+\begin{description}
+    \item[Input:] \(\enc{G, s, t}\), where \(G\) is a directed graph with nodes \(s, t\).
+    \item[Function:] \phantom{}
+    \begin{algorithmic}[1]
+        \State Mark \(s\)
+        \While{nodes got marked}
+            \State Search all edges in \(E\). If an edge \((u, v)\) is found with \(u\) marked and \(v\) not marked, mark \(v\).
+        \EndWhile
+    \end{algorithmic}
+\end{description}
+
+Step 1 runs in \(\onot{(1)}\) time. The loop of 2 and 3 runs in \(\onot{(|V|)}\) time, since we can only mark as many times as we have nodes. For implementations, efficient data structures can store unmarked nodes and edges and thereby decrease runtime, but that is of no interest here. The runtime is \(\onot{(|V| + 2)}\), which is a polynomial runtime and therefore \(\pathprob \in \pclass\).
+\end{proof}
+As a practical example, consider BFS for finding a route between two points in a city.
+\newpage
+\paragraph*{Relatively Prime Integers} If two natural integers have the greatest common divisor (GCD) 1, they are called \emph{relatively prime}. This leads us to the next algorithmic problem.
+\[
+    \relprimeprob \coloneqq \{ \; \enc{x, y} \mid x \text{ and } y \text{ are relatively prime} \; \}
+\]
+\begin{theorem}
+    \(\relprimeprob \in \pclass\)
+\end{theorem}
+\begin{proof} We can try to compute all possible divisors of \(x\) and \(y\). If the numbers are encoded in binary, for instance, with the MSB (Most Significant Bit) of \(k\), we would need to compute the divisibility test for at least \(2^k\) values. This also applies to any other base \(b\). The brute-force approach is exponential and therefore not feasible.\\
+
+The \emph{Euclidian Algorithm} gives us a polynomial solution to this problem. The correctness will not be proven here, but the algorithm complexity will be analyzed. The idea is that for any \(x, y \in \mathbb{N}\) it holds that \(\gcd{(x, y) = \gcd{(y, x\bmod{y})}}\) and when \(y\) reaches zero, the GCD is calculated. Using the euclidian algorithm, we directly construct a Turing machine \(M\) which decides RELPRIME:
+
+\begin{description}
+    \item[Input:] \(\enc{x, y}\), where \(x, y \in \mathbb{N}\).
+    \item[Function:] \phantom{}
+    \begin{algorithmic}[1]
+        \While{\(y > 0\)}
+            \State \(x \gets x\bmod{y}\)
+            \State Swap \(x\) and \(y\)
+        \EndWhile
+        \State If \(x = 1\), accept. Otherwise, reject.
+    \end{algorithmic}
+\end{description}
+
+Step 4 runs in \(\onot{(1)}\) time. For the loop in 1 with steps 2, 3, we are going to show that each iteration cuts the value of \(x\) in at least a half. If \(x < y\) initially, the algorithm essentially swaps \(x\) and \(y\), so we start off with \(x > y\) after this possible initial swap. After 2 is executed, it holds \(x < y\) and after the swap in 3 \(x > y\) again. We take a look at \(\frac{x}{2}\):
+
+\emph{First case:} \(\frac{x}{2} \geq y\). Then by the laws of the modulo operation, \(x\bmod{y}<y\leq\frac{x}{2}\) and \(x\) is cut by at least half.
+
+\emph{Second case:} \(\frac{x}{2} < y\). Then either \(x = y\) or \(2y>x>y\). Either way \(x\bmod{y}=x-y\) per application of the modulo, but also \(x-y<\frac{x}{2}\). Therefore, the value of \(x\) gets cut by at least half.
+
+Since \(x\) and \(y\) get swapped in each iteration, both of them get reduced by at least half every time. It is not important which of the variables gets cut first and by that the maximum number of iterations is \(\min{(2\log_2{x}, 2\log_2{y})}\), which is polynomial due to \(\onot{(n)}\) being an upper bound of these complexities.
+\end{proof}
+\begin{figure}[!htbp]
+    \centering
+    \scriptsize
+    \begin{tikzpicture}[
+        scale=18/14*0.25,
+        very thin
+    ]
+        \draw[fill=red!50] (0, 0) -- (14, 0) node[midway, above] {\(14\)} -- (14, -9) -- (0, -9) -- (0, 0) node[midway, left] {\(9\)};
+        \draw[fill=green!50] (0, -9) -- (9, -9) -- (9, -14) -- (0, -14) node[midway, below] {\(9\)} -- (0, -9) node[midway, left] {\(5\)};
+        \draw[fill=blue!50] (9, -9) -- (14, -9) -- (14, -13) node[midway, right] {\(4\)} -- (9, -13) node[midway, above, text=white] {\(5\)} -- (9, -9);
+        \draw[fill=yellow!50] (9, -13) -- (13, -13) -- (13, -14) -- (9, -14) node[midway, below] {\(4\)} -- (9, -13) node[midway, left] {\(1\)};
+        \draw[fill=gray!50] (13, -13) -- (14, -13) -- (14, -14) node[midway, right] {\(1\)} -- (13, -14) node[midway, below] {\(1\)} -- (13, -13);
+    \end{tikzpicture}
+    \begin{tikzpicture}[
+        scale=0.25,
+        very thin
+    ]
+        \draw[fill=green!50] (0, 0) -- (18, 0) node[midway, above] {\(18\)} -- (18, -12) -- (0, -12) -- (0, 0) node[midway, left] {\(12\)};
+        \draw[fill=blue!50] (0, -12) -- (12, -12) -- (12, -18) -- (0, -18) node[midway, below] {\(12\)} -- (0, -12) node[midway, left] {\(6\)};
+        \draw[fill=gray!50] (12, -12) -- (18, -12) -- (18, -18) node[midway, right] {\(6\)} -- (12, -18) node[midway, below] {\(6\)} -- (12, -12);
+    \end{tikzpicture}
+    \caption{Rectangle visualisation of the Euclidian algorithm for \(\gcd{(14, 9)}\) and \(\gcd{(18, 12)}\)}
+\end{figure}
+
+\newpage
+
+\paragraph*{Context-Free Languages} It has been shown that every context free language is decidable (CYK-algorithm). The following analysis shows that due to this method all of them are also in P.
+
+\begin{theorem}
+    Every context-free language \(L \in \cflclass\) is in P.
+\end{theorem}
+
+\begin{proof} Let \(G\) be a CNF grammar (Chomsky Normal Form) for \(L\) with variables \(V\) and start variable \(S \in V\). \(G\) only consists of productions in the form \(A \rightarrow a, A \rightarrow BC\) with \(S \rightarrow \varepsilon\) allowed as an exception case. We use the CYK algorithm. The idea is to setup a table of grammar variables in the form factor \(n \times n\). If \(w = \sigma_1...\sigma_n \neq \varepsilon\) is the word, then each entry holds \(table(i, j) = \{ A \in V | A \rightarrow^* \sigma_i...\sigma_j  \}\). So if \(S \in table(1, n)\), the word is derivable from \(G\).
+
+The following Turing machine for \(L\) decides it in polynomial time using the CYK algorithm:
+
+\begin{description}
+    \item[Input:] \(w \in \Sigma^*\), for \(w \neq \varepsilon\) write \(w = \sigma_1\sigma_2...\sigma_n\).
+    \item[Function:] \phantom{}
+        \begin{algorithmic}[1]
+            \State For \(w = \varepsilon\), if \(S \rightarrow \varepsilon\) is production, accept. Otherwise, reject.
+            \For{\(i = 1\) to \(n\)}
+                \For{each variable \(A\)}
+                    \State If \(A \rightarrow \sigma_i\) is a rule, place \(A\) in \(table(i, i)\).
+                \EndFor
+            \EndFor
+            \For{\(l = 2\) to \(n\)} \Comment{Substring length}
+                \For{\(i = 1\) to \(n-l+1\)} \Comment{Starting position}
+                    \State \(j \gets i + l - 1\) \Comment{End position}
+                    \For{\(k = i\) to \(j - 1\)} \Comment{Split position}
+                        \For{each rule \(A \rightarrow BC\)}
+                            \State If \(B \in table(i, k)\) and \(C \in table(k + 1, j)\), put \(A\) in \(table(i, j)\).
+                        \EndFor
+                    \EndFor
+                \EndFor
+            \EndFor
+            \State If \(S \in table(1, n)\), accept. Else, reject.
+        \end{algorithmic}
+\end{description}
+
+Steps 1 and 11 run in \(\onot{(1)}\) time. Let \(v = |V|\) be the number of variables, then the steps 2, 3, 4 run in \(nv \in \onot{(n)}\) time, since \(v\) is a fixed constant for \(G\). Stage 5 runs \(n-1\in\onot{(n)}\) times, stages 6 and 7 also, as well as stages 8-10. Stages 9-10 however, run \(v\) times. We conclude a runtime of \(\onot{(n^3)}\), since these loops are nested. Therefore the runtime is \(\onot{(n^3)}\), which is polynomial.
+\end{proof}
+\begin{figure}[!hbtp]
+    \centering
+    \begin{tikzpicture}
+        \def\x{0};
+        \foreach \y in {0, 0, 1, ..., 5}
+        {
+            \draw[very thin] (\x, 0) -- (\x, \numexpr6-\y);
+            \pgfmathparse{\x+1};
+            \xdef\x{\pgfmathresult};
+        }
+        
+        \def\y{0};
+        \foreach \x in {0, 0, 1, ..., 5}
+        {
+            \draw[very thin] (0, \y) -- (\numexpr6-\x, \y);
+            \pgfmathparse{\y+1};
+            \xdef\y{\pgfmathresult};
+        }
+
+        \draw[fill=gray!25, draw=none] (1.5, 3.25) -- (1.75, 3.25) -- (4.33, -0.25) -- (1.5, -0.25) -- cycle;
+        \node at (2.25, 1) {\(\rightarrow^*\)};
+        \node (A) at (1.5,  3.5) {\(A\)};
+        \node (1) at (0.5, -0.5) {\(\sigma_1\)};
+        \node (2) at (1.5, -0.5) {\(\sigma_2\)};
+        \node (3) at (2.5, -0.5) {\(\sigma_3\)};
+        \node (4) at (3.5, -0.5) {\(\sigma_4\)};
+        \node (5) at (4.5, -0.5) {\(\sigma_5\)};
+        \node (6) at (5.5, -0.5) {\(\sigma_6\)};
+        \draw[thick] (A) -- (2);
+        \draw[thick] (A) -- (5);
+    \end{tikzpicture}
+    \caption{\(table\) and the concept of the CYK subproblems, \(n = 6\) for illustration}
+\end{figure}
+
+\newpage
+
+\paragraph*{Conclusion} The landscape of decidable languages has changed since the last time we saw a diagram of it. This sketch shows the new classes.
+\begin{figure}[!htbp]
+    \large
+    \centering
+    \begin{tikzpicture}[
+        semithick,
+        scale=0.9
+    ]
+        \draw (-6.5, -4.5) rectangle (6.5, 5);
+        \draw (0.0, 0.0) ellipse (6cm and 4cm);
+        \draw (0.0, -1.5) ellipse (2cm and 1cm);
+
+        \node at (0.0, 4.5) {Decidable};
+        \node at (0.0, 3.5) {\pclass};
+        \node at (-3.25, 0.5) {\pathprob};
+        \node at (2.0, 1.0) {\relprimeprob};
+        \node at (0.0, -1.5) {\cflclass};
+    \end{tikzpicture}
+    \caption{The landscape of decidable languages by now}
+\end{figure}
+
+\nocite{*}
+\renewcommand{\refname}{\normalsize References} 
+\bibliography{p_handout}
+\bibliographystyle{plain}
+
+All the illustrations were made by myself using \emph{LaTex/Tikz}.
+
+The webpage I linked was inspiration for the GCD visualisation.
+
+\end{document}

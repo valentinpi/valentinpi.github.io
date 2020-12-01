@@ -1,0 +1,382 @@
+\documentclass[notheorems]{beamer}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[english, ngerman]{babel}
+%\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{arrows, calc}
+
+\usetheme{metropolis}
+
+\setlength{\parindent}{0pt}
+
+% I do not really like the plain style
+%\theoremstyle{plain}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{remark}
+\newtheorem{fact}{Fact}
+\newtheorem{remark}{Remark}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+\newcommand{\hampathprob}{\text{HAMPATH}}
+\newcommand{\compositesprob}{\text{COMPOSITES}}
+\newcommand{\cliqueprob}{\text{CLIQUE}}
+\newcommand{\subsetsumprob}{\text{SUBSET-SUM}}
+\newcommand{\satprob}{\text{SAT}}
+\newcommand{\threesatprob}{\text{3SAT}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp}
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\selectlanguage{ngerman}
+\title{The Complexity Class NP and NP-Completeness}
+\author{valentinpi}
+\institute{\normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+Institut für Informatik\\
+Freie Universität Berlin}
+\date{\today\\(neueste Version)}
+\selectlanguage{english}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}
+    \frametitle{Nondeterminism}
+
+    \begin{remark} The \emph{nondeterministic} definition of the Turing machine mainly differs in the state transitioning function \( \delta\colon Q \times \Gamma \rightarrow \mathcal{P}(Q \times \Gamma \times \{\; L, N, R\;\}) \).
+    \end{remark}
+
+    \pause
+
+    \begin{definition} In analogy to the class TIME, the class \emph{NTIME} of \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) is defined as all languages computable by a nondeterministic Turing machine in \(\onot{(f(n))}\) time:
+        \begin{align*}
+            \text{NTIME}(f(n)) \coloneqq \{ \; L \mid & \text{There is a nondeterministic TM that decides } L \text{ in } \\&\onot{(f(n))} \text{ time for an input of size } n \; \}
+        \end{align*}
+    \end{definition}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Verifiers}
+
+    \begin{definition} An algorithm \(V\) is called a \emph{verifier} for a language \(L\), if:
+        \[
+            L = \{\; w \mid \exists \; c \in \Sigma^*\colon V \text{ accepts } \enc{w, c} \; \}
+        \]
+        \(V\) is called a \emph{polynomial verifier}, if it runs in polynomial time in terms of \(|w|\). \(L\) is called \emph{polynomially verifiable}, if such a polynomial verifier exists. \(c\) is called \emph{certificate}.
+    \end{definition}
+
+    \pause
+
+    \textbf{Example:} Path for the PATH problem
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Machines and Verifiers}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tikzpicture}[
+            thick
+        ]
+            \node (M) at (-2.5, 0) {Machines};
+            \node (V) at (2.5, 0) {Verifiers};
+            \pause
+            \path (M) edge[->, bend left] node[above] {Guess certificate} (V);
+            \pause
+            \path (V) edge[->, bend left] node[below] {Use certificate as step description} (M);
+        \end{tikzpicture}
+    \end{minipage}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{NP and Equivalence}
+
+    \begin{definition} The class NP is the class of languages computable by nondeterministic TMs in polynomial time.
+        \[
+            \npclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{NTIME}((n^k))
+        \]
+    \end{definition}
+
+    \pause
+
+    \begin{fact}
+        \(
+        \npclass = \{\; L \mid L \text{ has a polynomial time verifier}\;\}
+        \)
+    \end{fact}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{The HAMPATH Problem}
+
+    \[
+        \hampathprob \coloneqq \{ \; \enc{G, s, t} \mid \text{There is a hamiltonian path between } s \text{ and } t \; \} \in \npclass
+    \]
+
+    \vspace{0.5cm}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tikzpicture}[
+                scale=1,
+                semithick
+            ]
+            \node[label=135:\(s\)] (s) at (0, 0) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (0) at (1, -1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (1) at (1,  1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (2) at (2, -0.5) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (3) at (2,  0.5) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (4) at (3,  1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (5) at (3, -1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node[label=45:\(t\)]  (t) at (4, 0) [circle, fill=black, inner sep=0.5mm] {};
+            \draw[->, thick] (s) -- (0);
+            \draw[->, thick] (0) -- (1);
+            \draw[->, thick] (1) -- (2);
+            \draw[->, thick] (2) -- (3);
+            \draw[->, thick] (3) -- (4);
+            \draw[->, thick] (4) -- (5);
+            \draw[->, thick] (5) -- (t);
+
+            \draw[->, draw=gray] (1) -- (s);
+            \draw[->, draw=gray] (3) -- (5);
+            \draw[->, draw=gray] (t) -- (4);
+            \draw[->, draw=gray] (0) -- (5);
+            \draw[->, draw=gray] (4) -- (1);
+        \end{tikzpicture}
+    \end{minipage}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{\(\hampathprob \in \npclass\)}
+    \begin{theorem}
+        \(\hampathprob \in \npclass\)
+    \end{theorem}
+
+    \pause
+
+    \begin{proof}
+        \scriptsize
+        \begin{description}
+            \item[Input:] \(\enc{G, s, t}\), where \(G = (V, E)\) is a directed graph with nodes \(s, t\).
+            \item[Function:] \phantom{}
+                  \begin{algorithmic}[1]
+                      \State Index the nodes from 1 to \(m \coloneqq |V|\) (number of nodes). Nondeterministically write a list of \(m\) numbers \(p_1, ..., p_m\), where \(p_i \in \{1, ..., m\}\).
+                      \State Check for repetitions. If any are found, reject.
+                      \State Check if \(p_1, p_m\) correspond to the node indices of \(s, t\). If not, reject.
+                      \For{each \(1 \leq i \leq m - 1\)}
+                      \State Check if \((p_i, p_{i+1}) \in E\). If not, reject
+                      \EndFor
+                      \State Accept.
+                  \end{algorithmic}
+        \end{description}
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{The SUBSET-SUM Problem}
+
+    \begin{align*}
+        \subsetsumprob \coloneqq \{\; \enc{S, t} \mid \; & S = \{x_1, ..., x_n\} \land \\&\exists \; \{y_1,...,y_k\} \subseteq S\colon \textstyle\sum y_i = t  \;\}
+    \end{align*}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{\(\subsetsumprob \in \npclass\)}
+
+    \begin{theorem}
+        \(\subsetsumprob \in \npclass\)
+    \end{theorem}
+
+    \pause
+
+    \begin{proof} Construct a polynomial time verifier.
+
+        \pause
+
+        \begin{description}
+            \small
+            \item[Input:] \(\enc{\enc{S, t}, C}\) with \(S, C\) finite set of numbers and \(c\) number.
+            \item[Function:] \phantom{}
+                  \begin{algorithmic}[1]
+                      \State Test if \(\textstyle\sum c_i = t\) with \(C = \{c_1, ..., c_k\}\).
+                      \State Test if \(C \subseteq S\).
+                      \State Accept if both pass, otherwise reject at one stage.
+                  \end{algorithmic}
+        \end{description}
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Additional NP Problems}
+
+    \pause
+    \[
+        \compositesprob = \{ \; \enc{n} \mid n = pq \text{ with } p, q > 1 \text{ natural numbers} \; \}
+    \]
+    \pause
+    \[
+        \cliqueprob = \{ \; \enc{G, k} \mid G \text{ is an undirected graph with a } k\text{-clique} \; \}
+    \]
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Polynomial Time Reducibility}
+
+    \begin{definition} A language \(A\) is \emph{polynomial time reducible} to a language \(B\), written \(A \leq_p B\), if there is a polynomial time computable function \(f\colon \Sigma^* \rightarrow \Sigma^*\), where for every \(w \in \Sigma^*\):
+        \[
+            w \in A \leftrightarrow f(w) \in B
+        \]
+    \end{definition}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{SAT, 3SAT}
+
+    \pause
+
+    \[
+        \satprob = \{ \;\enc{\phi} \mid \phi \text{ has a satisfying assignment} \; \}
+    \]
+
+    \pause
+
+    \[
+        \threesatprob = \{ \; \enc{\phi} \mid \phi \text{ is a satisfiable 3cnf-formula} \; \}
+    \]
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{\(\threesatprob \leq_p \cliqueprob\)}
+
+    \begin{theorem}
+        \(\threesatprob \leq_p \cliqueprob\)
+    \end{theorem}
+
+    \pause
+
+    \begin{proof} Present reduction as function \(f\): Generate an undirected graph \(G\) out from the input 3cnf-formula \(\phi\) given. Let \(\phi\) have \(k\) clausels.
+
+        \begin{itemize}
+            \item Organize clausels in triples \(t_1, ..., t_k\)
+            \item Connect nodes if not from the same triple
+            \item Or if not contradicting (e.g. \(x\) and \(\neg x\) are not connected)
+        \end{itemize}
+
+
+        
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{NP-Completeness}
+
+    \begin{definition} A language \(L\) is called \emph{NP-complete}, if it satisfies two conditions:
+        \begin{enumerate}
+    
+            \item \(L \in \npclass\)
+    
+            \item \(L \leq_p X\) for every language \(X\), also called \emph{NP-hard}
+    
+        \end{enumerate}
+    \end{definition}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{The New Landscape}
+    \pause
+    \begin{tikzpicture}[
+            semithick,
+            scale = 0.35
+        ]
+        \tiny
+        \draw (-7, -5) rectangle (7, 5);
+        \draw (0, 0) ellipse (6.5cm and 4cm);
+        \draw (-3.0, -1.5) ellipse (2cm and 1cm);
+        \draw (2.5, -1) ellipse (2.5cm and 1.75cm);
+
+        \node at (0.0, 4.5) {Decidable};
+        \node at (0.0, 3.5) {P = NP};
+        \node at (2.6, 0) {NP-Complete};
+        \node at (-4.5, 0.5) {\pathprob};
+        \node at (-2.5, 2.0) {\relprimeprob};
+        \node at (-3.0, -1.5) {\cflclass};
+        \node at (2, 2.75) {\hampathprob};
+        \node at (3, 2) {\compositesprob};
+        \node at (2, 1.25) {\subsetsumprob};
+        \node at (3, -2) {\cliqueprob};
+        \node at (1.5, -0.75) {\satprob};
+        \node at (3.5, -1) {\threesatprob};
+    \end{tikzpicture}
+    \pause
+    \begin{tikzpicture}[
+            semithick,
+            scale=0.35
+        ]
+        \tiny
+        \draw (-7, -5) rectangle (7, 5);
+        \draw (-3, 0) ellipse (3cm and 3cm);
+        \draw (0.0, 0) ellipse (6.5cm and 4cm);
+        \draw (-3, -1.5) ellipse (2cm and 1cm);
+        \draw (2.5, -1) ellipse (2.5cm and 1.75cm);
+
+        \node at (0.0, 4.5) {Decidable};
+        \node at (-3, 2.5) {P};
+        \node at (0, 3.5) {NP};
+        \node at (2.6, 0) {NP-Complete};
+        \node at (-3.5, 0.5) {\pathprob};
+        \node at (-3.25, 1.5) {\relprimeprob};
+        \node at (-3, -1.5) {\cflclass};
+        \node at (2, 2.75) {\hampathprob};
+        \node at (3, 2) {\compositesprob};
+        \node at (3.25, 1.25) {\subsetsumprob};
+        \node at (3, -2) {\cliqueprob};
+        \node at (1.5, -0.75) {\satprob};
+        \node at (3.5, -1) {\threesatprob};
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Resources}
+    \nocite{*}
+    \renewcommand{\refname}{\normalsize References}
+    \bibliography{np_presentation}
+    \bibliographystyle{plain}
+\end{frame}
+\end{document}
+
