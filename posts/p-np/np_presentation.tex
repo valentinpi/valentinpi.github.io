@@ -25,8 +25,8 @@
 \newtheorem{proposition}{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}{Corollary}
-\theoremstyle{remark}
 \newtheorem{fact}{Fact}
+\theoremstyle{remark}
 \newtheorem{remark}{Remark}
 
 \newcommand{\pclass}{\text{P}}
@@ -51,27 +51,29 @@
 
 \renewcommand{\qedsymbol}{\(\blacksquare\)}
 
-\selectlanguage{ngerman}
 \title{The Complexity Class NP and NP-Completeness}
 \author{valentinpi}
 \institute{\normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
 Institut für Informatik\\
 Freie Universität Berlin}
-\date{\today\\(neueste Version)}
-\selectlanguage{english}
+\date{15. Dezember 2020{ }(neueste Version)}
 
 \begin{document}
+\selectlanguage{ngerman}
 \frame{\titlepage}
+\selectlanguage{english}
 
 \begin{frame}
     \frametitle{Nondeterminism}
+
+    \pause
 
     \begin{remark} The \emph{nondeterministic} definition of the Turing machine mainly differs in the state transitioning function \( \delta\colon Q \times \Gamma \rightarrow \mathcal{P}(Q \times \Gamma \times \{\; L, N, R\;\}) \).
     \end{remark}
 
     \pause
 
-    \begin{definition} In analogy to the class TIME, the class \emph{NTIME} of \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) is defined as all languages computable by a nondeterministic Turing machine in \(\onot{(f(n))}\) time:
+    \begin{definition} In analogy to the class TIME, the class \emph{NTIME} of \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) is defined as:
         \begin{align*}
             \text{NTIME}(f(n)) \coloneqq \{ \; L \mid & \text{There is a nondeterministic TM that decides } L \text{ in } \\&\onot{(f(n))} \text{ time for an input of size } n \; \}
         \end{align*}
@@ -81,6 +83,8 @@ Freie Universität Berlin}
 
 \begin{frame}
     \frametitle{Verifiers}
+
+    \pause
 
     \begin{definition} An algorithm \(V\) is called a \emph{verifier} for a language \(L\), if:
         \[
@@ -97,6 +101,8 @@ Freie Universität Berlin}
 
 \begin{frame}
     \frametitle{Machines and Verifiers}
+
+    \pause
 
     \begin{minipage}{\linewidth}
         \centering
@@ -115,21 +121,64 @@ Freie Universität Berlin}
 \end{frame}
 
 \begin{frame}
-    \frametitle{NP and Equivalence}
+    \frametitle{NP and Equivalence of Concepts}
 
-    \begin{definition} The class NP is the class of languages computable by nondeterministic TMs in polynomial time.
+    \pause
+
+    \begin{definition} The class \emph{NP} is the class of languages computable by nondeterministic turing machines in polynomial time.
         \[
-            \npclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{NTIME}((n^k))
+            \npclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{NTIME}(n^k)
         \]
     \end{definition}
 
     \pause
 
-    \begin{fact}
+    \begin{corollary}
         \(
         \npclass = \{\; L \mid L \text{ has a polynomial time verifier}\;\}
         \)
-    \end{fact}
+    \end{corollary}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{The HAMPATH Problem}
+
+    \[
+        \hampathprob \coloneqq \{ \; \enc{G, s, t} \mid \text{There is a hamiltonian path between } s \text{ and } t \; \} \in \npclass
+    \]
+
+    \vspace{0.5cm}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tikzpicture}[
+                scale=1,
+                semithick
+            ]
+            \node[label=135:\(s\)] (s) at (0, 0) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (0) at (1, -1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (1) at (1,  1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (2) at (2, -0.5) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (3) at (2,  0.5) [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (4) at (3,  1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node                  (5) at (3, -1)   [circle, fill=black, inner sep=0.5mm] {};
+            \node[label=45:\(t\)]  (t) at (4, 0) [circle, fill=black, inner sep=0.5mm] {};
+            \draw[->, draw=gray] (s) -- (0);
+            \draw[->, draw=gray] (0) -- (1);
+            \draw[->, draw=gray] (1) -- (2);
+            \draw[->, draw=gray] (2) -- (3);
+            \draw[->, draw=gray] (3) -- (4);
+            \draw[->, draw=gray] (4) -- (5);
+            \draw[->, draw=gray] (5) -- (t);
+
+            \draw[->, draw=gray] (1) -- (s);
+            \draw[->, draw=gray] (3) -- (5);
+            \draw[->, draw=gray] (t) -- (4);
+            \draw[->, draw=gray] (0) -- (5);
+            \draw[->, draw=gray] (4) -- (1);
+        \end{tikzpicture}
+    \end{minipage}
 
 \end{frame}
 
@@ -183,7 +232,7 @@ Freie Universität Berlin}
     \pause
 
     \begin{proof}
-        \scriptsize
+        \footnotesize
         \begin{description}
             \item[Input:] \(\enc{G, s, t}\), where \(G = (V, E)\) is a directed graph with nodes \(s, t\).
             \item[Function:] \phantom{}
@@ -192,7 +241,7 @@ Freie Universität Berlin}
                       \State Check for repetitions. If any are found, reject.
                       \State Check if \(p_1, p_m\) correspond to the node indices of \(s, t\). If not, reject.
                       \For{each \(1 \leq i \leq m - 1\)}
-                      \State Check if \((p_i, p_{i+1}) \in E\). If not, reject
+                      \State Check if \((p_i, p_{i+1}) \in E\). If not, reject.
                       \EndFor
                       \State Accept.
                   \end{algorithmic}
@@ -295,26 +344,123 @@ Freie Universität Berlin}
             \item Connect nodes if not from the same triple
             \item Or if not contradicting (e.g. \(x\) and \(\neg x\) are not connected)
         \end{itemize}
-
-
-        
     \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Example for the Construction}
+
+    \[\phi = (x_1 \lor \overline{x_1} \lor \overline{x_2}) \land (\overline{x_1} \lor x_2 \lor \overline{x_2}) \land (\overline{x_2} \lor x_1 \lor \overline{x_2})\]
+
+    \pause
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tikzpicture}
+            \node[draw, circle] (0) at (0, 0) {\(x_1\)};
+            \node[draw, circle] (1) at (0, 1.5) {\(\overline{x_1}\)};
+            \node[draw, circle] (2) at (0, 3) {\(\overline{x_2}\)};
+            \node[draw, circle] (3) at (1.5, 4.5) {\(\overline{x_1}\)};
+            \node[draw, circle] (4) at (3, 4.5) {\(x_2\)};
+            \node[draw, circle] (5) at (4.5, 4.5) {\(\overline{x_2}\)};
+            \node[draw, circle] (6) at (6, 3) {\(\overline{x_2}\)};
+            \node[draw, circle] (7) at (6, 1.5) {\(x_1\)};
+            \node[draw, circle] (8) at (6, 0) {\(\overline{x_2}\)};
+            \pause
+            \draw (0) -- (4);
+            \draw (0) -- (5);
+            \draw (0) -- (6);
+            \draw (0) -- (7);
+            \draw (0) -- (8);
+            \pause
+            \draw (1) -- (3);
+            \draw (1) -- (4);
+            \draw (1) -- (5);
+            \draw (1) -- (6);
+            \draw (1) -- (8);
+            \pause
+            \draw (2) -- (3);
+            \draw (2) -- (5);
+            \draw (2) -- (6);
+            \draw (2) -- (7);
+            \draw (2) -- (8);
+            \pause
+            \draw (3) -- (6);
+            \draw (3) -- (8);
+            \draw (4) -- (7);
+            \draw (5) -- (6);
+            \draw (5) -- (7);
+            \draw (5) -- (8);
+        \end{tikzpicture}
+    \end{minipage}
 
 \end{frame}
 
 \begin{frame}
     \frametitle{NP-Completeness}
 
-    \begin{definition} A language \(L\) is called \emph{NP-complete}, if it satisfies two conditions:
+    \textbf{Observation:} There is some kind of link between the complexities of problems.
+
+    \pause
+
+    \begin{definition} A language \(B\) is called \emph{NP-complete}, if it satisfies two conditions:
         \begin{enumerate}
     
-            \item \(L \in \npclass\)
+            \item \(B \in \npclass\)
     
-            \item \(L \leq_p X\) for every language \(X\), also called \emph{NP-hard}
+            \item \(A \leq_p B\) for every language \(A \in \npclass\), also called \emph{NP-hard}
     
         \end{enumerate}
     \end{definition}
 
+\end{frame}
+
+\begin{frame}
+    \frametitle{SAT}
+
+    \[
+        \satprob = \{ \;\enc{\phi} \mid \phi \text{ has a satisfying assignment} \; \}
+    \]
+
+    \pause
+
+    \begin{fact}[\emph{Cook-Levin Theorem}]
+        \(\satprob \text{ is NP-complete}\)
+    \end{fact}
+
+    \textbf{Proof idea.}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Colloraries}
+
+    \pause
+
+    \begin{corollary}
+        If \(B\) is NP-complete and \(B \in \pclass\), then \(\pclass=\npclass\).
+    \end{corollary}
+
+    \pause
+
+    \begin{corollary}
+        If \(B\) is NP-complete and \(B \leq_p C\) for \(C \in \npclass\), then \(C\) is NP-complete.
+    \end{corollary}
+
+    \pause
+
+    \begin{corollary}
+        CLIQUE is NP-complete.
+    \end{corollary}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Resources}
+    \nocite{*}
+    \renewcommand{\refname}{\normalsize References}
+    \bibliography{np_presentation}
+    \bibliographystyle{plain}
 \end{frame}
 
 \begin{frame}
@@ -369,14 +515,12 @@ Freie Universität Berlin}
         \node at (1.5, -0.75) {\satprob};
         \node at (3.5, -1) {\threesatprob};
     \end{tikzpicture}
-\end{frame}
 
-\begin{frame}
-    \frametitle{Resources}
-    \nocite{*}
-    \renewcommand{\refname}{\normalsize References}
-    \bibliography{np_presentation}
-    \bibliographystyle{plain}
+    \pause
+
+    \begin{center}
+        \Large Questions?
+    \end{center}
 \end{frame}
 \end{document}
 
