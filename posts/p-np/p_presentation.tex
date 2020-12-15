@@ -6,7 +6,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
-\usepackage[english, ngerman]{babel}
+\usepackage[ngerman, english]{babel}
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{mathtools}
@@ -26,8 +26,8 @@
 \newtheorem{proposition}{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}{Corollary}
-\theoremstyle{remark}
 \newtheorem{fact}{Fact}
+\theoremstyle{remark}
 \newtheorem{remark}{Remark}
 
 \newcommand{\pclass}{\text{P}}
@@ -46,17 +46,17 @@
 
 \renewcommand{\qedsymbol}{\(\blacksquare\)}
 
-\selectlanguage{ngerman}
 \title{The Complexity Class P}
 \author{valentinpi}
 \institute{\normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
 Institut für Informatik\\
 Freie Universität Berlin}
-\date{\today\\(neueste Version)}
-\selectlanguage{english}
+\date{8. Dezember 2020{ }(neueste Version)}
 
 \begin{document}
+    \selectlanguage{ngerman}
     \frame{\titlepage}
+    \selectlanguage{english}
 
     \begin{frame}
         \begin{center}
@@ -72,7 +72,7 @@ Freie Universität Berlin}
         \frametitle{Complexity classes}
 
         \begin{definition}
-            Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) contains all languages that are computable in \(\onot{(f(n))}\) time for an input of size \(n\).
+            Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) is defined as follows:
             \begin{align*}
                 \text{TIME}(f(n)) \coloneqq \{ \; L \mid &\text{There is a deterministic TM that decides } L \text{ in }\\&\onot{(f(n))} \text{ time for an input of size } n \; \}
             \end{align*}
@@ -293,11 +293,19 @@ Freie Universität Berlin}
     \end{frame}
 
     \begin{frame}
+        \frametitle{Resources}
+        \nocite{*}
+        \renewcommand{\refname}{\normalsize References} 
+        \bibliography{p_presentation}
+        \bibliographystyle{plain}
+    \end{frame}
+
+    \begin{frame}
         \frametitle{Final Landscape of Languages}
         \begin{figure}[!htbp]
             \begin{tikzpicture}[
                 semithick,
-                scale=0.8
+                scale=0.5
             ]
                 \draw (-6.5, -4.5) rectangle (6.5, 5);
                 \draw (0.0, 0.0) ellipse (6cm and 4cm);
@@ -310,13 +318,11 @@ Freie Universität Berlin}
                 \node at (0.0, -1.5) {\cflclass};
             \end{tikzpicture}
         \end{figure}
-    \end{frame}
 
-    \begin{frame}
-        \frametitle{Resources}
-        \nocite{*}
-        \renewcommand{\refname}{\normalsize References} 
-        \bibliography{p_presentation}
-        \bibliographystyle{plain}
+        \pause
+    
+        \begin{center}
+            \Large Questions?
+        \end{center}
     \end{frame}
 \end{document}

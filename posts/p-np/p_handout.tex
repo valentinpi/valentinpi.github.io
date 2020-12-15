@@ -73,7 +73,6 @@
 \renewcommand{\qedsymbol}{\(\blacksquare\)}
 
 \begin{document}
-\selectlanguage{ngerman}
 \pagenumbering{arabic}
 \title{
     \vspace*{-12ex}
@@ -88,12 +87,13 @@
 }
 \author{\normalsize \Authors}
 \date{
-    \normalsize \today\\
+    \normalsize 8. Dezember 2020\\
     (neueste Version)
     \rule{\textwidth}{0.1pt}
 }
-\selectlanguage{english}
+\selectlanguage{ngerman}
 \maketitle
+\selectlanguage{english}
 \begin{abstract}
     \noindent This handout gives an introduction to complexity theory and the complexity class P. It presents the most important definitions, discusses why polynomial computation time is of practical interest and then presents a handful of algorithmic problems and shows that they are in P.
 \end{abstract}
@@ -102,9 +102,9 @@
     \item \emph{Computability theory} discusses the \emph{possibilities} of computational models
     \item \emph{Complexity theory}, however, discusses the \emph{efficiency} of computation
 \end{itemize}
-Efficiency can be viewed from multiple perspectives. For instance, time or space (memory usage). Time might be the number of steps that the computational model has to take in order to decide a problem. For instance the number of left or right moves on a TM.
+Efficiency can be viewed from multiple perspectives. For instance, time, space (memory usage) or encoding efficiency. Time might be the number of steps that the computational model has to take in order to decide a problem. For instance the number of left or right moves on a TM.
 \begin{definition}
-    Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) contains all languages that are computable in \(\onot{(f(n))}\) time for an input of size \(n\).
+    Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity class \emph{TIME} of \(f\) is defined as follows:
     \[
         \text{TIME}(f(n)) \coloneqq \{ \; L \mid \text{There is a deterministic TM that decides } L \text{ in } \onot{(f(n))} \text{ time for an input of size } n \; \}
     \]
@@ -163,9 +163,9 @@ We only consider decidable problems, as Turing machines of semi-decidable proble
 \end{theorem}
 \begin{proof} To prove the theorem, we need to find an algorithm that decides PATH in polynomial time.\\
     
-To brute-force, we can attempt to calculate every possible path inside of the graph and then check for one that connects \(s\) and \(t\). Any path is at most \(|V|\) nodes long (or longer, but that can be neglected in this context). If all nodes are connected, as in complete graphs, for instance, we can choose one of the \(|V|\) nodes for each of the \(|V|\) connections made, including duplicates. Therefore the runtime is \(\onot{(|V|^{|V|})}\) and exponential.\\
+To brute-force, we can attempt to calculate every possible path inside of the graph and then check for one that connects \(s\) and \(t\). Any path is at most \(m \coloneqq |V|\) nodes long. If all nodes are connected, as in complete graphs, we can choose one of the \(m\) nodes for each of the \(m-1\) connections made. We do not always know whether the path satisfies the search. Therefore the runtime of this algorithm is \(\onot{(m^m)}\) and exponential.\\
 
-Alternatively we can use a \emph{breadth-first-search (BFS)} approach: We begin by placing a mark on the first node \(s\), then mark its neighbors, then further those neighbors' neighbors and so on. By that, we ultimately mark each node that we can reach from \(s\). If there are no further possible marks to be made our search is finished and we can check if \(t\) is marked, which leads to the following Turing machine \(M\) that decides PATH:
+Alternatively one can use a \emph{breadth-first-search (BFS)} approach: We begin by placing a mark on the first node \(s\), then mark its neighbors, then continue with those neighbors' neighbors and so on. By that, we ultimately mark each node that we can reach from \(s\). If there are no further possible marks to be made our search is finished and we can check if \(t\) is marked, which leads to the following Turing machine \(M\) that decides PATH:
 
 \begin{description}
     \item[Input:] \(\enc{G, s, t}\), where \(G\) is a directed graph with nodes \(s, t\).
@@ -178,7 +178,7 @@ Alternatively we can use a \emph{breadth-first-search (BFS)} approach: We begin 
     \end{algorithmic}
 \end{description}
 
-Step 1 runs in \(\onot{(1)}\) time. The loop of 2 and 3 runs in \(\onot{(|V|)}\) time, since we can only mark as many times as we have nodes. For implementations, efficient data structures can store unmarked nodes and edges and thereby decrease runtime, but that is of no interest here. The runtime is \(\onot{(|V| + 2)}\), which is a polynomial runtime and therefore \(\pathprob \in \pclass\).
+Step 1 runs in \(\onot{(1)}\) time. The loop of 2 and 3 runs in \(\onot{(m)}\) time, since we can only mark as many times as we have nodes. For implementations, efficient data structures can store unmarked nodes and edges and thereby decrease runtime, but that is of no interest here. The runtime is \(\onot{(m + 2)}\), which is a polynomial runtime and therefore \(\pathprob \in \pclass\).
 \end{proof}
 As a practical example, consider BFS for finding a route between two points in a city.
 \newpage
@@ -311,7 +311,7 @@ Steps 1 and 11 run in \(\onot{(1)}\) time. Let \(v = |V|\) be the number of vari
 
 \newpage
 
-\paragraph*{Conclusion} The landscape of decidable languages has changed since the last time we saw a diagram of it. This sketch shows the new classes.
+\paragraph*{Conclusion} The landscape of decidable languages has changed since the last time we saw a diagram of it. This sketch shows the new classes and problems.
 \begin{figure}[!htbp]
     \large
     \centering
