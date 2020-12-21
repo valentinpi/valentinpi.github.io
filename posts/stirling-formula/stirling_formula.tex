@@ -1,0 +1,279 @@
+% List of math symbols: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+% Font sizes: http://www.sascha-frank.com/latex-font-size.html
+
+\documentclass[10pt,fleqn]{article}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[ngerman]{babel}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{graphs}
+\usepackage{wasysym}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks   = true,
+    urlcolor     = blue,
+    linkcolor    = blue,
+    citecolor    = red
+}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Satz}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Anmerkung}
+
+\newcommand{\Authors}{valentinpi}
+
+\newcommand{\conj}[1]{\overline{#1}}
+\newcommand{\liminftybelow}{\lim_{n\rightarrow\infty}}
+\newcommand{\liminftyindex}{\textstyle\lim_{n\rightarrow\infty}}
+
+% https://tex.stackexchange.com/questions/89166/centering-in-tabularx-and-x-columns
+% and https://tex.stackexchange.com/questions/257128/how-does-the-newcolumntype-command-work
+% Combines c + X in tabularx environments.
+% Inserts centering command after the entry in the cell to center it.
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\pagenumbering{arabic}
+\vspace*{-12ex}
+\phantom{}\\
+\noindent\rule{\textwidth}{0.1pt}
+\large \textbf{Analysis für Informatiker \hfill WiSe 2020-21} \vspace*{0.25cm}\\
+\normalsize \textbf{Schriftliche Ausarbeitung zu der Stirling-Formel \hfill \today { (neueste Version)}}\\
+\Authors\\
+Freie Universität Berlin\\
+\noindent\rule{\textwidth}{0.1pt}
+
+\begin{abstract}
+    \noindent Ziel dieser Ausarbeitung ist es, die in der Vorlesung unbewiesene Formel von \textsc{Stirling} zu beweisen, und dabei weitgehend die nötigen Hilfsformeln mit unseren bisherigen Kenntnissen selbst herzuleiten. Insbesondere versuchen wir hier ein Verständnis für recht erweiterte Werkzeuge zu entwickeln, trotz dass wir diese nicht beweisen werden. Genutzt wird eine weitere Ausarbeitung der Uni Mainz.\footnote{\url{https://www.staff.uni-mainz.de/pommeren/Kryptologie02/Klassisch/1_Monoalph/Stirling.pdf}}\\
+    
+    \noindent Die in der Komplexitätsanalyze genutzte Formel von James Stirling hat eine reiche Geschichte. Ein Ansatz hier für Quellen ist das Dokument \emph{Methodus Differentialis} von 1730. In anderen Papern zu diesem Thema kann man aber deutlich mehr erfahren. Wen dies interessiert: Diese\footnote{\url{https://kconrad.math.uconn.edu/blurbs/analysis/stirling.pdf}} Ausarbeitung von Keith Conrad ist sehr empfehlenswert. Etwa hat \textsc{DeMoivre} bei der Entdeckung seinen Anteil gehabt. Ausserdem wird darüber geredet, wie Stirling auf die Rolle der Konstante \(\pi\) in der Formel kam.
+\end{abstract}
+
+\begin{theorem}[Stirling-Formel] Für alle \(n \in \mathbb{N}\) gilt:
+    \[
+        \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \leq n! \leq \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
+    \]
+\end{theorem}
+
+Den Beweis vollziehen wir in drei Schritten:
+\begin{enumerate}
+    \item Wir zeigen, dass die Folge \(\left(a_n \coloneqq \frac{n!}{\left(\frac{n}{e}\right)^n\cdot\sqrt{n}}\right)_{n\in\mathbb{N}}\) monoton fällt. Da alle Glieder positiv sind, besitzt sie daher einen Grenzwert \(a\).
+    \item Danach zeigen wir \(a = \sqrt{2\pi}\) mithilfe der sogenannten Produktformel von \textsc{Wallis}.
+    \item Am Ende führen einige kleine Abschätzungen durch, welche auf die Formel führen.
+\end{enumerate}
+Das klingt alles konzeptionell simpel, jedoch benötigen wir einige Vorkenntnisse über sogenannte \emph{Potenzreihen} und \emph{Produktentwicklungen}. Wir werden erstere nach der Integralrechnung, also höchstwahrscheinlich etwa im Februar, in der Vorlesung im ganzen Detail kennenlernen. Ich versuche an dieser Stelle, die nötigen Vorkenntnisse selbst einmal aufzubereiten, selbst wenn wir diese hier nicht beweisen werden.
+
+Motivation für Potenzreihen und Produktentwicklungen sind möglichst exakte Berechnungen von Funktionswerten verschiedener elementarer Funktionen. Etwa, wenn wir Taschenrechner oder Software für Computergestützte Mathematik entwickeln möchten.
+
+Es stellt sich in der Realanalysis heraus, dass für viele elementare Funktionen wie dem Sinus, Kosinus, dem natürlichen Logarithmus usw. andere Darstellungsformen entwickelt werden können. Insbesondere können wir diese Funktionen als unendliche Summen oder Produkte darstellen! Meist spricht man dann davon, dass wir ein unendliches Polynom (was ja dann kein Polynom wäre, weil diese endlich sind) zu der Approximation des Funktionswertes nutzen. Schließlich sind Polynome ja äußerst flexibel. Besonders gut erklärt dies ein Physikprofessor der HU Berlin\footnote{\url{https://www.youtube.com/watch?v=XF5QiVNwnco}}.\\
+
+% https://en.wikibooks.org/wiki/LaTeX/Footnotes_and_Margin_Notes
+{
+    \let\thefootnote\relax\footnote{Allesamt zuletzt am 21.12.2020, 15:45 Uhr, aufgerufen.}
+}
+
+Insbesondere sind dabei folgende Formeln für uns vom Interesse:
+\begin{align}
+    &\ln{\frac{1+x}{1-x}} = 2 \cdot \sum_{k=0}^{\infty} \frac{x^{2k+1}}{2k+1} \text{ für } |x| < 1\\
+    &\sin{\pi x} = \pi x \cdot \prod_{k=1}^{\infty} 1 - \frac{x^2}{k^2}
+\end{align}
+
+Solch ähnliche Formeln haben wir bereits bei der Exponentialfunktion gesehen, und bei der Konstante \(e\). Zu der ersten Formel gleich etwas. Die letzte Formel wird auch die \emph{Eulersche Produktentwicklung des Sinus} genannt. Im Buch \emph{Analysis 1} von \textsc{Konrad Königsberger} lässt sich hierfür der Beweis nachlesen. Jene zu beweisen könnte eine ganze weitere Ausarbeitung füllen.
+
+Die erste Formel können wir aber noch in diesem Semester beweisen!
+\begin{theorem} Für \(|x| < 1\) gilt folgende Gleichung:
+    \[
+        \ln{\frac{1+x}{1-x}} = 2 \cdot \sum_{k=0}^{\infty} \frac{x^{2k+1}}{2k+1}
+    \]
+\end{theorem}
+\begin{proof}
+    Der Kontext ist das Kapitel über Potenzreihen im Skript. Dort finden wir auf Seite 81 folgende Potenzreihe:
+    \[
+        \ln{1+x} = \sum_{k=0}^{\infty} \frac{(-1)^{k}}{k+1} x^{k+1}
+    \]
+    Wieso diese Formel gilt, können wir also noch im Semester erfahren. Durch geschicktes Umformen können wir aber die Behauptung schon hier zeigen. Zunächst beobachten wir:
+    \[
+        \ln{\frac{1+x}{1-x}} = \ln{(1+x)} - \ln{(1-x)}
+    \]
+    Was ist \(\ln{(1-x)}\)? Wir setzen \(x' \coloneqq -x\) und sehen:
+    \begin{align*}
+        \ln{1-x} &= \ln{1+x'} = \sum_{k=0}^{\infty} \frac{(-1)^{k}}{k+1} (x')^{k+1} = \sum_{k=0}^{\infty} \frac{(-1)^{k}}{k+1} (-x)^{k+1}\\
+        &= \sum_{k=0}^{\infty} \frac{(-1)^{k} (-1)^{k+1}}{k+1} x^{k+1} = -\sum_{k=0}^{\infty} \frac{x^{k+1}}{k+1}
+    \end{align*}
+    Wobei wir vorsichtig sein müssen: Wir wenden stets keine Rechengesetze auf die unendliche Summe selbst an, sondern auf den Grenzwert dieser, welcher ja existiert. Etwa wird in der letzten Umformung die Konstantenregel verwendet.
+
+    Nun betrachten wir erneut den Quotienten:
+    \begin{align*}
+        \ln{\frac{1+x}{1-x}} = \ln{(1+x)} - \ln{(1-x)} = \sum_{k=0}^{\infty} \frac{(-1)^{k}}{k+1} x^{k+1} - \left(-\sum_{k=0}^{\infty} \frac{x^{k+1}}{k+1}\right)
+    \end{align*}
+    Nun nehmen wir an, dass diese Reihen konvergieren. Wir kehren die Summenformel für Grenzwerte um und summieren die Partialsummen:
+    \begin{align*}
+        \ln{\frac{1+x}{1-x}} = \sum_{k=0}^{\infty} \frac{(-1)^{k}}{k+1} x^{k+1} - \left(-\sum_{k=0}^{\infty} \frac{x^{k+1}}{k+1}\right) = \sum_{k=0}^{\infty} \frac{(-1)^{k} x^{k+1} + x^{k+1}}{k+1} = \sum_{k=0}^{\infty} \frac{(-1)^{k} + 1}{k+1} x^{k+1}
+    \end{align*}
+    Betrachten wir diese Reihe. Wenn \(k\) ungerade ist, so ist \((-1)^k + 1 = 0\), da der linke Term zu \(-1\) wird. Wir gestalten die Summe so um, dass wir nur die Folgeglieder mit \(k\) gerade betrachten, für die diese Summe zu 2 wird. Wir können auch \(k\) mit \(2k\) substituieren, denn der Grenzwert geht gegen \(\infty\). Es ergibt sich:
+    \begin{align*}
+        \ln{\frac{1+x}{1-x}} = \sum_{k=0}^{\infty} \frac{(-1)^{k} + 1}{k+1} x^{k+1} = \sum_{k=0}^{\infty} \frac{2}{2k+1} x^{2k+1} = 2 \cdot \sum_{k=0}^{\infty} \frac{x^{2k+1}}{2k+1}
+    \end{align*}
+    Was die Aussage zeigt.
+\end{proof}
+
+Genauer beweisen werden wir diese Formeln nicht, da sie thematisch nicht Gegenstand dieser Ausarbeitung sind. Für eine axiomatisch korrekte Herleitung des Ganzen müssten wir dies allerdings tun.
+
+\begin{proof}
+    1. Wir betrachten die Folge \(\left(a_n = \frac{n!}{\left(\frac{n}{e}\right)^n\cdot\sqrt{n}}\right)_{n\in\mathbb{N}}\). Zunächst werden die aufeinanderfolgenden Glieder dividiert. Dies sieht sehr umfangreich aus, letztendlich faktorisieren wir aber im Zähler und Nenner nur gleiche Terme aus und fassen zusammen: 
+    \begin{align*}
+        \frac{a_n}{a_{n+1}} &= \frac{n! \cdot \left(\frac{n+1}{e}\right)^{n+1}\cdot\sqrt{n+1}}{(n+1)! \cdot \left(\frac{n}{e}\right)^{n}\cdot\sqrt{n}} = \frac{n! \cdot (n+1)^{n+1} \cdot \left(\frac{1}{e}\right)^{n+1} \cdot \sqrt{n+1}}{n! \cdot (n+1) \cdot n^n \cdot \left(\frac{1}{e}\right)^n \cdot \sqrt{n}} = \frac{1}{e} \cdot \left(\frac{n+1}{n}\right)^n \cdot \sqrt{\frac{n+1}{n}}\\
+        &= \frac{1}{e} \cdot \left(\frac{n+1}{n}\right)^{n+1/2}
+    \end{align*}
+    Nun logarithmieren wir mit dem natürlichen Logarithmus \(\ln\) und nutzen davon Rechenregeln:
+    \begin{align}
+        \ln{\frac{a_n}{a_{n+1}}} = \ln{\frac{1}{e} \cdot \left(\frac{n+1}{n}\right)^{n+1/2}} = -1 + \left(n + \frac{1}{2}\right) \cdot \ln{\frac{n+1}{n}}
+    \end{align}
+    Wir halten dieses Ergebnis mit (3) fest. Nun wollen wir die Potenzreihe (1) nutzen, um weiter abzuschätzen. Zunächst müssen wir einige weitere andere Abschätzungen durchführen, welche wir später nutzen können. Betrachten wir noch einmal (1) und schreiben wir einige Anfangsglieder der Summe auf:
+    \[
+        \ln{\frac{1+x}{1-x}} = 2 \cdot \sum_{k=0}^{\infty} \frac{x^{2k+1}}{2k+1} = 2 \cdot \left(x + \frac{x^3}{3} + \frac{x^5}{5} + ...\right)
+    \]
+    Wir sehen: Nehmen wir etwa nur die \(2x\) selbst, so sind diese kleiner als die Summe. Wenn wir ausserdem statt den anderen ungeraden Quotienten in der rechten Summe nur die \(3\) nehmen würden, so lägen wir über der Summe, da die Summanden größer wären. Wir nehmen dabei \(2x\) mit auf. Dies gilt nur für positive \(x\), sonst wäre die Differenz ja größer. Es ergibt sich für \(0 < x < 1\) wegen \(|x| < 1\):
+    \begin{align*}
+        2x &< \ln{\frac{1+x}{1-x}} = 2 \cdot \left(x + \frac{x^3}{3} + \frac{x^5}{5} + ...\right) < 2 \cdot \left(x + \frac{x^3}{3} + \frac{x^5}{3} + ...\right)\\
+        &= 2 \cdot \left(x + \frac{x^3}{3} \cdot (1 + x^2 + x^4 + ...) \right) = 2 x + \frac{2}{3} \cdot x^3 \cdot \sum_{k=0}^{\infty} x^{2k}
+    \end{align*}
+    Der letzte Term stellt eine weitere Reihe dar. Wir wollen dafür für ein beliebiges \(0 < x < 1\) den Grenzwert bestimmen. Tatsächlich können wir diesen auf die geometrische Reihe zurückführen. Siehe dafür im Skript die Seite 32. Es gilt generell für ein \(|q| < 1\):
+    \[
+        \lim_{n\to\infty} \sum_{k=0}^n c \cdot q^k = \frac{c}{1-q}
+    \]
+    Wir wenden diese Reihe an, denn schließlich ist \(x^2 < 1\) und \(\sum_{k=0}^{\infty} x^{2k} = \sum_{k=0}^{\infty} (x^2)^k\):
+    \[
+        2 x + \frac{2}{3} \cdot x^3 \cdot \sum_{k=0}^{\infty} x^{2k} = 2x + \frac{2}{3} \cdot x^3 \cdot \frac{1}{1-x^2} = 2x + \frac{2}{3} \cdot \frac{1}{\frac{1}{x^3}-\frac{1}{x}}
+    \]
+    Insgesamt ergibt sich (4):
+    \begin{align}
+        2x < \ln{\frac{1+x}{1-x}} < 2x + \frac{2}{3} \cdot \frac{1}{\frac{1}{x^3}-\frac{1}{x}}
+    \end{align}
+
+    Setzt man \(x = \frac{1}{2n+1}\), so ist:
+    \begin{align*}
+        \frac{1+x}{1-x} = \frac{1 + \frac{1}{2n+1}}{1 - \frac{1}{2n+1}} = \frac{\left(1 + \frac{1}{2n+1}\right) \cdot (2n+1)}{\left(1 - \frac{1}{2n+1}\right) \cdot (2n+1)} = \frac{2n + 1 + 1}{2n + 1 - 1} = \frac{2n+2}{2n} = \frac{n+1}{n}
+    \end{align*}
+    Wir nutzen die Formel (4). Das ergibt zunächst, wenn wir unser \(x\) einsetzen, die Abschätzung:
+    \begin{align*}
+        \frac{2}{2n+1} &< \ln{\frac{n+1}{n}} < \frac{2}{2n+1} + \frac{2}{3} \cdot \frac{1}{(2n+1)^3-(2n+1)}\\
+        \frac{1}{n+1/2} &< \ln{\frac{n+1}{n}} < \frac{1}{n+1/2} + \frac{2}{3} \cdot \frac{1}{(2n+1)^3-(2n+1)} = \frac{1}{n+1/2} + \frac{1}{3} \cdot \frac{1}{(n+1/2)((2n+1)^2-1)}\\
+        1 &< \left(n + \frac{1}{2}\right) \cdot \ln{\frac{n+1}{n}} < 1 + \frac{1}{3} \cdot \frac{1}{(2n+1)^2-1} = 1 + \frac{1}{3} \cdot \frac{1}{4n^2+4n} = 1 + \frac{1}{12} \cdot \frac{1}{n(n+1)}
+    \end{align*}
+    Wir haben also \(x = \frac{1}{2n+1}\) eingesetzt, etwas gekürzt und dann alle Seiten mit \(n + 1/2\) multipliziert. Wir erkennen nun aber unsere (3) wieder! Mache weiter damit, dass (3) eingesetzt wird:
+    \begin{align*}
+        1 &< \left(n + \frac{1}{2}\right) \cdot \ln{\frac{n+1}{n}} < 1 + \frac{1}{12} \cdot \frac{1}{n(n+1)}\\
+        1 &< \ln{\frac{a_n}{a_{n+1}}} + 1 < 1 + \frac{1}{12} \cdot \frac{1}{n(n+1)}\\
+        0 &< \ln{\frac{a_n}{a_{n+1}}} < \frac{1}{12} \cdot \frac{1}{n(n+1)} = \frac{1}{12} \cdot \frac{n+1-1}{n(n+1)} = \frac{1}{12} \cdot \left(\frac{n+1}{n(n+1)}-\frac{n}{n(n+1)}\right) = \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+1}\right)\\
+        1 &< \frac{a_n}{a_{n+1}} < e^{\frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{(n+1)}\right)}
+    \end{align*}
+    Für alle \(n \in \mathbb{N}\) ist damit \(1 < \frac{a_n}{a_{n+1}}\), also \(a_{n+1}\) ist kleiner als \(a_n\) und jedes \(a_n \geq 0\). Die Folge ist durch \(a_1\) beschränkt und monoton fallend. Wir nutzen das Monotoniekriterium und folgern, dass \((a_n)_{n \in \mathbb{N}}\) konvergiert. Schritt 1 ist getan.\\
+    
+    2. Sei \(a \coloneqq \lim_{n\to\infty} a_n\) der Grenzwert der Folge von oben. Da die Folgeglieder alle positiv sind, ist \(a \geq 0\). Die obere Ungleichung:
+    \[
+        0 < \ln{\frac{a_n}{a_{n+1}}} < \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+1}\right)
+    \]
+    verallgemeinern wir nun für ein \(k \in \mathbb{N}\). Betrachte:
+    \begin{align*}
+        0 < \ln{\frac{a_n}{a_{n+k}}} < \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+k}\right)
+    \end{align*}
+    Aus der Literatur ist nicht klar, wie man diese Abschätzung aufstellen kann. Wir wenden hier nun aber einen genialen Trick an! Multipliziere geschickte Einsen und vereinfache mithilfe der obigen Formel:
+    \begin{align*}
+        \ln{\frac{a_n}{a_{n+k}}} &= \ln{\frac{a_n}{a_{n+1}} \cdot \frac{a_{n+1}}{a_{n+2}} \cdot ... \cdot \frac{a_{n+k-1}}{a_{n+k}}}\\
+        &< \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+1}\right) + \frac{1}{12} \cdot \left(\frac{1}{n+1}-\frac{1}{n+2}\right) + ... + \frac{1}{12} \cdot \left(\frac{1}{n+k-1}-\frac{1}{n+k}\right)\\
+        &= \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+1} + \frac{1}{n+1}-\frac{1}{n+2} + \frac{1}{n+k-1}-\frac{1}{n+k}\right)\\
+        &= \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+k}\right)
+    \end{align*}
+    Dies ergibt die Verallgemeinerung. Lasse nun \(k\) gegen unendlich laufen. Links im Term erhalten wir mit \(a_n\) eine Konstantenfolge und mit \(a_{n+k}\) haben wir den Grenzwert \(a\). Für rechts:
+    \begin{align*}
+        \lim_{k\to\infty} \frac{1}{12} \cdot \left(\frac{1}{n}-\frac{1}{n+k}\right) &= \frac{1}{12n}
+    \end{align*}
+    nach den Grenzwertregeln. Der zweite Summand läuft nämlich gegen Null, wenn \(k\to\infty\) läuft.
+    
+    Insgesamt:
+    \begin{align*}
+        0 &< \ln{\frac{a_n}{a}} < \frac{1}{12n}\\
+        1 &< \frac{a_n}{a} < e^{\frac{1}{12n}}
+    \end{align*}
+    Es kann aber nun auch möglicherweise \(a = 0\) sein, ausserdem haben wir noch nicht die Formel, wir sind aber sehr weit. Wir müssen nun, um diese zu erhalten, \(a = \sqrt{2\pi}\) nachweisen. Dies ist wegen dem Faktorial in der Gliedervorschrift etwas schwierig direkt zu bestimmen, wir können aber auch die sogenannte \emph{Produktformel von Wallis} dafür verwenden.
+
+    \begin{lemma}[Produktformel von Wallis]
+        \[
+            \sqrt{\pi} = \lim_{n\to\infty} \frac{2^{2n}\cdot(n!)^2}{(2n)!\cdot\sqrt{n+1/2}}
+        \]
+    \end{lemma}
+
+    \begin{proof} Wir nutzen die obige Produktentwicklung des Sinus (2). Setze \(x = \frac{1}{2}\).
+        \begin{align*}
+            \sin{\frac{\pi}{2}} &= \frac{\pi}{2} \cdot \prod_{k=1}^{\infty} 1 - \frac{(1/2)^2}{k^2}\\
+            1 &= \frac{\pi}{2} \cdot \prod_{k=1}^{\infty} 1 - \frac{1}{4k^2} = \frac{\pi}{2} \cdot \prod_{k=1}^{\infty} \frac{4k^2-1}{4k^2}
+        \end{align*}
+        Wir nehmen an, dass das unendliche Produkt konvergiert. Nutze Produktregel und multipliziere mit dem Produkt der Kehrwerte der Glieder. Auf der rechten Seite entsteht so eine Eins und insgesamt:
+        \begin{align*}
+            \frac{\pi}{2} &= \prod_{k=1}^{\infty} \frac{4k^2}{4k^2-1} = \prod_{k=1}^{\infty} \frac{4k^2}{(2k+1)(2k-1)} = \lim_{n\to\infty}\prod_{k=1}^n \frac{4k^2}{(2k+1)(2k-1)}
+        \end{align*}
+        Man muss sich das Produkt der Glieder bis zu einem \(n\) vorstellen, wobei wir \(n\) gegen unendlich laufen lassen.
+        Betrachten wir die beiden Terme im Quotienten: \(2k+1\) liefert alle ungeraden Zahlen bis \(2n+1\), ausgenommen von \(1\), denn für \(1\) liefert der Term \(3\). Der zweite Term liefert alle ungeraden Zahlen bis \(2n-1\). Erweitern wir den Bruch um \((2k)^2\), so erhalten wir \((2n)!\) jeweils, wobei wir die fehlende 1 ignorieren können. Übrig bleibt ausserdem \(2n+1\). Also:
+        \begin{align*}
+            \frac{\pi}{2} &= \prod_{k=1}^{\infty} \frac{4k^2 \cdot (2k)^2}{(2k+1)(2k-1) \cdot (2k)^2} = \prod_{k=1}^{\infty} \frac{(2k)^4}{2k(2k+1) \cdot (2k-1)2k} & \text{Umsortieren}\\
+            &= \lim_{n\to\infty}\prod_{k=1}^n \frac{(2k)^4}{2k(2k+1) \cdot (2k-1)2k} = \lim_{n\to\infty} \frac{2^{4n}\cdot(n!)^4}{((2n)!)^2 \cdot (2n+1)} & \text{Zu Grenzwerten umformulieren}
+        \end{align*}
+        Fasse zusammen:
+        \begin{align*}
+            \frac{\pi}{2} &= \lim_{n\to\infty} \frac{2^{4n}\cdot(n!)^4}{((2n)!)^2 \cdot (2n+1)}\\
+            \sqrt{\pi} &= \lim_{n\to\infty} \frac{2^{2n}\cdot(n!)^2\cdot\sqrt{2}}{(2n)! \cdot \sqrt{2n+1}} = \lim_{n\to\infty} \frac{2^{2n}\cdot(n!)^2\cdot\sqrt{2}}{(2n)! \cdot \sqrt{2} \cdot \sqrt{n+1/2}}\\
+            \sqrt{\pi} &= \lim_{n\to\infty} \frac{2^{2n}\cdot(n!)^2}{(2n)! \cdot \sqrt{n+1/2}}
+        \end{align*}
+        Was die Aussage zeigt.
+    \end{proof}
+
+    Wir erinnern uns nochmal an die Definition der Folge zurück. Es ist \(a_n = \frac{n!}{\left(\frac{n}{e}\right)^n \sqrt{n}}\). Demnach \(n! = \frac{a_n n^{n+1/2}}{e^n}\), wenn wir den Bruch aufspalten. Ausserdem \((2n)! = \frac{a_{2n} (2n)^{2n+1/2}}{e^{2n}}\). Setze dies in die Produktformel von Wallis für das \(n!\) ein. Es ergibt sich:
+    \begin{align*}
+        \sqrt{\pi} &= \lim_{n\to\infty} \frac{2^{2n}\cdot(n!)^2}{(2n)!\cdot\sqrt{n+1/2}}\\
+        &= \lim_{n\to\infty} \frac{2^{2n}\cdot(a_n)^2\cdot n^{2n+1}}{e^{2n}} \cdot \frac{e^{2n}}{a_{2n}\cdot(2n)^{2n+1/2} \cdot \sqrt{n+1/2}}\\
+        &= \lim_{n\to\infty} \frac{(a_n)^2\cdot\sqrt{n}}{a_{2n} \cdot \sqrt{2} \cdot \sqrt{n+1/2}}
+    \end{align*}
+    Wir wissen, dass diese Folge konvergiert, nämlich eben gegen \(\sqrt{\pi}\), genauso wie viele der Teilfolgen, insbesondere die \(a_n\) und \(a_{2n}\). Die Grenzwertentwicklung ist mit diesem Argument denkbar einfacher, als die Terme selbst aufzulösen. Also:
+    \begin{align*}
+        \sqrt{\pi} &= \lim_{n\to\infty} \frac{(a_n)^2\cdot\sqrt{n}}{a_{2n} \cdot \sqrt{2} \cdot \sqrt{n+1/2}}\\
+        &= \lim_{n\to\infty} \frac{(a_n)^2}{a_{2n}} \cdot \lim_{n\to\infty} \frac{\sqrt{n}}{\sqrt{2} \cdot \sqrt{n+1/2}}\\
+        &= \frac{a^2}{a} \cdot \frac{1}{\sqrt{2}} \cdot \lim_{n\to\infty}\frac{\sqrt{n}}{\sqrt{n}\sqrt{1+1/(2n)}}\\
+        &= \frac{a}{\sqrt{2}} \Rightarrow a = \sqrt{2\pi}
+    \end{align*}
+    Was diese Aussage zeigt.\\
+    
+    3. Wir können nun voller Freude zusammenfassen:
+    \begin{align*}
+        1 &< \frac{a_n}{a} < e^{1/12n}\\
+        1 &\leq \frac{n!}{\left(\frac{n}{e}\right)^n\sqrt{n}\sqrt{2\pi}} \leq e^{\frac{1}{12n}}\\
+        \left(\frac{n}{e}\right)^n\sqrt{2 \pi n} &\leq n! \leq \left(\frac{n}{e}\right)^n\sqrt{2 \pi n} \cdot e^{\frac{1}{12n}}
+    \end{align*}
+    Wobei wir hier einfach der Konformität halber die \(<\) durch \(\leq\) ersetzen. Wir sind fertig, aber nicht ganz bei der Formel des Skriptes. Wir beobachten: \(n^n < n^{n+\frac{1}{12n}}\), sowie \(e^{-n} > e^{-n-\frac{1}{12n}}\) wegen dem Quotienten. Insgesamt also \(\frac{n^n}{e^n} < \frac{n^{n+1/12n}}{e^{n+1/12n}}\). Wir fassen erneut zusammen:
+    \[
+        \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \leq n! \leq \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
+    \]
+    Damit ist die Aussage gezeigt.
+\end{proof}
+
+\end{document}
