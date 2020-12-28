@@ -69,7 +69,7 @@ Freie Universität Berlin\\
     \noindent Die in der Komplexitätsanalyze genutzte Formel von James Stirling hat eine reiche Geschichte. Ein Ansatz hier für Quellen ist das Dokument \emph{Methodus Differentialis} von 1730. In anderen Papern zu diesem Thema kann man aber deutlich mehr erfahren. Wen dies interessiert: Diese\footnote{\url{https://kconrad.math.uconn.edu/blurbs/analysis/stirling.pdf}} Ausarbeitung von Keith Conrad ist sehr empfehlenswert. Etwa hat \textsc{DeMoivre} bei der Entdeckung seinen Anteil gehabt. Ausserdem wird darüber geredet, wie Stirling auf die Rolle der Konstante \(\pi\) in der Formel kam.
 \end{abstract}
 
-\begin{theorem}[Stirling-Formel] Für alle \(n \in \mathbb{N}\) gilt:
+\begin{theorem}[Stirling-Formel] Für alle \(n \in \mathbb{N}, n \geq 8\) gilt:
     \[
         \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \leq n! \leq \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
     \]
@@ -267,13 +267,29 @@ Genauer beweisen werden wir diese Formeln nicht, da sie thematisch nicht Gegenst
     \begin{align*}
         1 &< \frac{a_n}{a} < e^{1/12n}\\
         1 &\leq \frac{n!}{\left(\frac{n}{e}\right)^n\sqrt{n}\sqrt{2\pi}} \leq e^{\frac{1}{12n}}\\
-        \left(\frac{n}{e}\right)^n\sqrt{2 \pi n} &\leq n! \leq \left(\frac{n}{e}\right)^n\sqrt{2 \pi n} \cdot e^{\frac{1}{12n}}
+        \sqrt{2 \pi n}\left(\frac{n}{e}\right)^n &\leq n! \leq \sqrt{2 \pi n}\left(\frac{n}{e}\right)^n \cdot e^{\frac{1}{12n}}
     \end{align*}
-    Wobei wir hier einfach der Konformität halber die \(<\) durch \(\leq\) ersetzen. Wir sind fertig, aber nicht ganz bei der Formel des Skriptes. Wir beobachten: \(n^n < n^{n+\frac{1}{12n}}\), sowie \(e^{-n} > e^{-n-\frac{1}{12n}}\) wegen dem Quotienten. Insgesamt also \(\frac{n^n}{e^n} < \frac{n^{n+1/12n}}{e^{n+1/12n}}\). Wir fassen erneut zusammen:
+    Wobei wir hier einfach der Konformität halber die \(<\) durch \(\leq\) ersetzen. Wir sind fertig, aber nicht ganz bei der Formel des Skriptes.
+
+    Wir beobachten:
     \[
-        \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \leq n! \leq \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
+        \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \cdot e^{\frac{1}{12n}} = \sqrt{2 \pi n} \frac{n^n}{e^{n-\frac{1}{12n}}}
     \]
-    Damit ist die Aussage gezeigt.
+    Und damit:
+    \[
+        \sqrt{2 \pi n} \frac{n^n}{e^{n-\frac{1}{12n}}} \cdot \frac{n^{\frac{1}{12n}}}{e^{\frac{1}{6n}}} = \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
+    \]
+    Wir haben also den Faktor \(\frac{n^{\frac{1}{12n}}}{e^{\frac{1}{6n}}}\) eingeführt. Intuitiv ist der obere Term ab einem \(n\) größer als der untere, da er Basis und Exponenten der Potenz bestimmt. Wir leiten ab:
+    \[
+        \frac{n^{\frac{1}{12n}}}{e^{\frac{1}{6n}}} = \frac{e^{\frac{1}{12n}\ln{n}}}{e^{\frac{1}{6n}}} \leadsto \frac{1}{12n}\ln{n} \geq \frac{1}{6n} \leadsto \ln{n} \geq 2 \leadsto n \geq e^2
+    \]
+    Wir müssen nun eine approximative Berechnung von \(e^2\) durchführen, darauf verzichten wir aber hier, s. etwa Computerorientierte Mathematik. Der Taschenrechner liefert uns etwa \(n \geq 7.3891\).
+
+    Demnach gilt die Formel für \(n \geq 8\). Wir fassen erneut zusammen:
+    \[
+        \sqrt{2 \pi n} \left(\frac{n}{e}\right)^n \leq n! \leq \sqrt{2 \pi n}\left(\frac{n}{e}\right)^n \cdot e^{\frac{1}{12n}} \leq \sqrt{2 \pi n} \left(\frac{n}{e}\right)^{n+\frac{1}{12n}}
+    \]
+    für alle \(n \geq 8\). Damit ist die Aussage gezeigt.
 \end{proof}
 
 \end{document}
