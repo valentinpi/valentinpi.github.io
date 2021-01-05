@@ -30,6 +30,13 @@
     citecolor    = red
 }
 
+\lstset{
+    backgroundcolor=\color{white},
+    basicstyle=\normalsize\ttfamily,
+    language=python,
+    tabsize=4
+}
+
 \theoremstyle{definition}
 \newtheorem{theorem}{Satz}
 \newtheorem{lemma}{Lemma}
@@ -291,5 +298,41 @@ Genauer beweisen werden wir diese Formeln nicht, da sie thematisch nicht Gegenst
     \]
     für alle \(n \geq 8\). Damit ist die Aussage gezeigt.
 \end{proof}
+
+\newpage
+
+\appendix
+\paragraph*{Anhang: Implementierung der Approximation} Die Formel, sowie eine iterative Berechnung der Fakultät lässt sich in so ziemlich allen General-Purpose Sprachen leicht implementieren. Hier eine Referenzimplementierung in \textsc{Python}:
+
+\begin{lstlisting}[
+    frame=single,
+    xleftmargin=2em,
+    numbers=left
+]
+import math
+
+def fac(n):
+    assert(n >= 0)
+    fac = 1
+    while n > 1:
+        fac *= n
+        n -= 1
+    return fac
+
+def stirling(n):
+    assert(n >= 8)
+    down = (n / math.e)**(n) * math.sqrt(2 * math.pi * n)
+    up = (n / math.e)**(n + 1 / (12*n)) * math.sqrt(2 * math.pi * n)
+    return (down, up)
+\end{lstlisting}
+
+Wie akkurat diese Abschätzungen sind, zeigt sich etwa bei \(150!\):
+
+\begin{lstlisting}
+>>> float(fac(150))
+5.713383956445855e+262
+>>> stirling(150)
+(5.7102107404794024e+262, 5.7229480213358916e+262)
+\end{lstlisting}
 
 \end{document}
