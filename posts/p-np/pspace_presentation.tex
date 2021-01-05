@@ -1,0 +1,498 @@
+\documentclass[notheorems]{beamer}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[english, ngerman]{babel}
+%\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{nccmath}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{arrows, calc, shapes}
+
+\usetheme{metropolis}
+
+\setlength{\parindent}{0pt}
+
+% I do not really like the plain style
+%\theoremstyle{plain}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{fact}{Fact}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\pclass}{\text{P}}
+\newcommand{\npclass}{\text{NP}}
+\newcommand{\pathprob}{\text{PATH}}
+\newcommand{\relprimeprob}{\text{RELPRIME}}
+\newcommand{\cflclass}{\text{CFL}}
+\newcommand{\hampathprob}{\text{HAMPATH}}
+\newcommand{\compositesprob}{\text{COMPOSITES}}
+\newcommand{\cliqueprob}{\text{CLIQUE}}
+\newcommand{\subsetsumprob}{\text{SUBSET-SUM}}
+\newcommand{\satprob}{\text{SAT}}
+\newcommand{\threesatprob}{\text{3SAT}}
+\newcommand{\spaceclass}{\text{SPACE}}
+\newcommand{\nspaceclass}{\text{NSPACE}}
+\newcommand{\pspaceclass}{\text{PSPACE}}
+\newcommand{\npspaceclass}{\text{NPSPACE}}
+\newcommand{\exptimeclass}{\text{EXPTIME}}
+\newcommand{\tqbfprob}{\text{TQBF}}
+\newcommand{\formulagameprob}{\text{FORMULA-GAME}}
+\newcommand{\ggprob}{\text{GG}}
+
+\newcommand{\lpp}{\left \langle}
+\newcommand{\rpp}{\right \rangle}
+\newcommand{\enc}[1]{\lpp #1 \rpp}
+
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\omnot}{\Omega}
+\DeclareMathOperator{\thetnot}{\Theta}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\title{The Class PSPACE and Game Theory}
+\author{valentinpi}
+\institute{\normalsize Proseminar Theoretische Informatik WiSe 2020-21\\
+Institut für Informatik\\
+Freie Universität Berlin}
+\date{5. Januar 2021{ }(neueste Version)}
+
+\begin{document}
+\selectlanguage{ngerman}
+\frame{\titlepage}
+\selectlanguage{english}
+
+\begin{frame}
+    \frametitle{Space Complexity}
+    \pause
+    \begin{definition} Let \(f\colon \mathbb{N} \rightarrow \mathbb{R}^+\) be a function. The complexity classes \emph{SPACE} and \emph{NSPACE} of \(f\) are:
+        \pause
+        \begin{align*}
+            \spaceclass(f(n)) \coloneqq \{ \; L \mid &\; L \text{ is decided by a deterministic turing machine}\\&\text{ using } \mathcal{O}(f(n)) \text{ space} \; \}
+        \end{align*}
+        \pause
+        \vspace{-2\baselineskip}
+        \begin{align*}
+            \nspaceclass(f(n)) \coloneqq \{ \; L \mid &\;L \text{ is decided by a nondeterministic turing}\\&\text{ machine using } \mathcal{O}(f(n)) \text{ space} \; \}
+        \end{align*}
+    \end{definition}
+\end{frame}
+
+\begin{frame}
+    \frametitle{PSPACE and NPSPACE}
+    \pause
+    \begin{definition} In analogy to the classes P and NP, \emph{PSPACE} and \emph{NPSPACE} are defined as:
+        \[
+            \pspaceclass \coloneqq \bigcup_{k \in \mathbb{N}} \spaceclass(n^k) \qquad
+            \npspaceclass \coloneqq \bigcup_{k \in \mathbb{N}} \nspaceclass(n^k)
+        \]
+    \end{definition}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Another inequality?}
+
+    Relations between PSPACE and NPSPACE?
+
+    \pause
+
+    Surprising result (Savitch):
+    
+    \begin{fact}[Corollary from Savitchs Theorem]
+        \(
+            \pspaceclass = \npspaceclass
+        \)
+    \end{fact}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{PSPACE-Completeness}
+
+    \pause
+
+    \begin{definition} A language \(B\) is \emph{PSPACE-complete}, if:
+        \begin{enumerate}
+            \item \(B \in \pspaceclass\)
+            \item \(A \leq_p B\) for all \(A \in \pspaceclass\), also called \emph{PSPACE-hard}
+        \end{enumerate}
+    \end{definition}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Effects on the Landscape}
+
+    \begin{fact} The following holds:
+        \pause
+        \begin{ceqn}
+            \begin{align*}
+                &\pclass \subseteq \npclass \subseteq \pspaceclass = \npspaceclass \subseteq \exptimeclass \coloneqq \bigcup_{k \in \mathbb{N}} \text{TIME}\left(2^{n^k}\right)\\
+                &\pclass \neq \exptimeclass
+            \end{align*}
+        \end{ceqn}
+    \end{fact}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Quantified Boolean Formulas}
+
+    \pause
+
+    Generalization of SAT.
+    
+    Prerequisites:
+    \begin{itemize}
+        \pause
+        \item \emph{Prenex Normal Form}: \(\text{Q}_1x_1\text{Q}_2x_2...\text{Q}_nx_n\colon\phi\) with \(\text{Q}_1,...,\text{Q}_n \in \{\forall,\exists\}\)
+        \pause
+        \item \emph{Fully Quantified Boolean Formulas (Statements)}
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{The TQBF Problem}
+
+    \begin{ceqn}
+        \[
+            \tqbfprob \coloneqq \{\; \enc{\phi} \mid \phi \text{ is a true fully quantified boolean formula}\;\}
+        \]
+    \end{ceqn}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{TQBF is PSPACE-Complete}
+
+    \begin{theorem}
+        \(
+            \tqbfprob
+        \) is PSPACE-complete.
+    \end{theorem}
+    \begin{proof}
+        \pause
+        \(\tqbfprob \in \pspaceclass\):
+        \begin{description}
+            \scriptsize
+            \item[Input:] \(\enc{\phi}\), where \(\phi\) is a fully quantified boolean formula.
+            \item[Function:] \phantom{}
+                \begin{algorithmic}[1]
+                    \If{\(\phi = \psi\), no quantifiers}
+                        \State Evaluate \(\psi\), accept or reject depending on result.
+                    \ElsIf{\(\phi = \exists x\colon \psi\)}
+                        \State Recursive call on \(\psi\) with \(x=\text{true}, x=\text{false}\).
+                        \State If either accepts, accept. Otherwise, reject.
+                    \Else{ \(\phi = \forall x\colon \psi\)}
+                        \State Recursive call on \(\psi\) with \(x=\text{true}, x=\text{false}\).
+                        \State If both accept, accept. Otherwise, reject.
+                    \EndIf
+                \end{algorithmic}
+        \end{description}
+
+        \renewcommand{\qedsymbol}{}
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{TQBF is PSPACE-Complete}
+
+    \begin{theorem}
+        \(
+            \tqbfprob
+        \) is PSPACE-complete.
+    \end{theorem}
+    \begin{proof}
+        \pause
+        TQBF is PSPACE-hard. (Proof idea)
+
+        Use Cook-Levin?
+
+        \[
+            \text{Machine} \longmapsto \text{Fully Quantified Boolean Formula}
+        \]
+
+        \pause
+            
+        Machine may run in exponential time \(\Rightarrow\) Exponential sized result
+
+        \pause
+
+        \(\Rightarrow\) Shorten Formula using \(\forall\) (Savitchs Theorem)
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Proving more PSPACE-Completeness}
+
+    From NP-completeness:
+    \pause
+    \begin{corollary}
+        If \(B\) is PSPACE-complete and \(B \leq_p C\) for \(C \in \pspaceclass\), then \(C\) is PSPACE-complete.
+    \end{corollary}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Games}
+
+    \begin{ceqn}
+        \[
+            \underbrace{\text{Player I} \rightarrow \text{Goals} \leftarrow \text{Player II}}_{\text{Rules}}
+        \]
+    \end{ceqn}
+    \pause
+    Game: \emph{Formula game} between players A and E.
+
+    \pause
+    Want: \emph{Winning strategy}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Equality of Problems}
+
+    \pause
+
+    \begin{corollary} \(\formulagameprob = \tqbfprob\) and \(\formulagameprob\) is PSPACE-complete.
+    \end{corollary}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Geography and the World}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{A Game of Geography on France}
+
+    \begin{figure}[!hbtp]
+        \centering
+        \begin{subfigure}{0.8\linewidth}
+            \resizebox{\linewidth}{!}{%
+                \begin{tikzpicture}[
+                    ->,
+                    >=stealth,
+                    every node/.style={draw, ellipse}
+                ]
+                    \scriptsize
+                    \node (0) at (0, 0) {Paris};
+                    \node (1) at (-2, -1) {St. Malo};
+                    \node (2) at (1, -1.5) {Orleans};
+                    \node (3) at (4, -1) {Strasbourg};
+                    \node (4) at (3, -3) {Grenoble};
+                    \node (5) at (2, 0) {Epernay};
+                    \path (-1, 0) edge (0)
+                    (0) edge[bend left=25] node[draw=none, right] {I} (1)
+                    (1) edge node[draw=none, below] {II} (2)
+                    (2) edge node[draw=none, above right] {I} (3)
+                    (3) edge node[draw=none, above left] {II} (4)
+                    (4) edge node[draw=none, below left] {I} (5);
+                \end{tikzpicture}%
+            }
+        \end{subfigure}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Generalized Geography}
+
+    Generalize for any directed graph:
+    
+    \begin{ceqn}
+        \begin{align*}
+            \ggprob \coloneqq \{\; \enc{G, s} \mid &\;\text{Player I has a winning strategy for the GG game}\\&\text{ played on }G\text{, starting from } s \;\}
+        \end{align*}
+    \end{ceqn}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{GG is PSPACE-Complete}
+
+    \begin{theorem}
+        \(\ggprob\) is PSPACE-complete.
+    \end{theorem}
+
+    \begin{proof} \(\formulagameprob \leq_p \ggprob\)
+
+        \(\ggprob \in \pspaceclass\)
+        \begin{description}
+            \scriptsize
+            \item[Input:] \(\enc{G, s}\), where \(G\) is a directed graph and \(s\) a node from \(G\).
+            \item[Function:] \phantom{}
+                \begin{algorithmic}[1]
+                    \If{\(\deg{s} = 0\)}
+                        \State Reject, since Player I instantly looses.
+                    \EndIf
+                    \State Remove \(s\) and its edges from \(G\) for a new graph \(G'\).
+                    \State For the outgoing neighbors of \(s\), \(s_1, ..., s_k\), do a recursive call on \(\enc{G', s_i}\), \(i \in \{1,...,k\}\).
+                    \State If all accept, reject. Otherwise, accept.
+                \end{algorithmic}
+        \end{description}
+        \renewcommand{\qedsymbol}{}
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{GG is PSPACE-Complete}
+
+    \begin{theorem}
+        \(\ggprob\) is PSPACE-complete.
+    \end{theorem}
+
+    \begin{proof} \(\formulagameprob \leq_p \ggprob\)
+
+        \[\phi = \exists x_1 \forall x_2 \exists x_3 ... \exists x_n\colon \psi \mapsto (G, s)\]
+        \renewcommand{\qedsymbol}{}
+
+    \end{proof}
+
+\end{frame}
+
+\begin{frame}[plain]
+    \begin{tikzpicture}[
+        every node/.style={draw, circle, minimum size=5mm, inner sep=0mm},
+        >=stealth,
+        scale=1
+    ]
+        \footnotesize
+        \node (0) at (0, 0) {\(s\)};
+        \node[below left of=0] (10) {};
+        \node[below right of=0] (11) {};
+        \node[draw=none, left of=10] {\(x_1\)};
+        \node[below right of=10] (2) {};
+        \node[below of=2] (3) {};
+        \node[below left of=3] (40) {};
+        \node[below right of=3] (41) {};
+        \node[draw=none, left of=40] {\(x_2\)};
+        \node[below right of=40] (5) {};
+        \node[below of=5] (6) {};
+        \node[draw=none,below of=6] (7) {...};
+        \node[below of=7] (8) {};
+        \node[below left of=8] (90) {};
+        \node[below right of=8] (91) {};
+        \node[draw=none, left of=90] {\(x_n\)};
+        \node[below right of=90] (100) {};
+        \path[->, draw]
+        (0) edge node[above left, draw=none] {\scriptsize true} (10)
+        (0) edge node[above right, draw=none] {\scriptsize false} (11)
+        (10) edge (2)
+        (11) edge (2)
+        (2) edge (3)
+        (3) edge (40)
+        (3) edge (41)
+        (40) edge (5)
+        (41) edge (5)
+        (5) edge (6)
+        (6) edge (7)
+        (7) edge (8)
+        (8) edge (90)
+        (8) edge (91)
+        (90) edge (100)
+        (91) edge (100)
+        ;
+        \pause
+        \node (c) at (6, -4) {\(c\)};
+        \node (c1) at (4, -1) {\(c_1\)};
+        \node (c2) at (4, -3) {\(c_2\)};
+        \node[draw=none] (etc) at (4, -5) {...};
+        \node (cm) at (4, -7) {\(c_m\)};
+        \node (110) at (3, -0.33) {\(x_1\)};
+        \node (111) at (3, -1) {\(\overline{x_2}\)};
+        \node (112) at (3, -1.66) {\(x_3\)};
+        \node (120) at (3, -2.33) {\(\overline{x_1}\)};
+        \node (121) at (3, -3) {\(x_2\)};
+        \node (122) at (3, -3.66) {};
+        \node (130) at (3, -6.33) {};
+        \node (131) at (3, -7) {};
+        \node (132) at (3, -7.66) {};
+        \path[->, draw]
+        (100) edge[bend right=60] (c)
+        (c) edge (c1)
+        (c) edge (c2)
+        (c) edge (cm)
+        (c1) edge (110)
+        (c1) edge (111)
+        (c1) edge (112)
+        (c2) edge (120)
+        (c2) edge (121)
+        (c2) edge (122)
+        (cm) edge (130)
+        (cm) edge (131)
+        (cm) edge (132)
+        ;
+        \pause
+        \path[->, draw]
+        (110) edge[bend right=10] (10)
+        (111) edge (41)
+        (120) edge (11)
+        (121) edge[bend left=25] (40)
+        ;
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Resources}
+    \nocite{*}
+    \renewcommand{\refname}{\normalsize References}
+    \bibliography{pspace_presentation}
+    \bibliographystyle{plain}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Another New Landscape}
+
+    \pause
+    \begin{figure}[!hbtp]
+        \large
+        \centering
+        \begin{tikzpicture}[
+            semithick,
+            scale=0.75
+        ]
+            \draw (-4.5, -1.5) rectangle (6.5, 6.5);
+            \node at (-3, 5.75) {EXPTIME};
+            \draw (0, 0) ellipse (0.5cm and 0.5cm);
+            \node at (0, 0) {P};
+            \draw (0.5, 0.25) ellipse (1.5cm and 1cm);
+            \node at (1, 0.5) {NP};
+            \node at (1, 5) {\(\pspaceclass = \npspaceclass\)};
+            \draw (1, 2.5) ellipse (5cm and 3.5cm);
+            \node at (1, 3.5) {\normalsize PSPACE-complete};
+            \node at (-0.5, 2) {\normalsize \(\ggprob\)};
+            \node at (1.75, 2.6) {\normalsize \(\begin{matrix}
+                &\tqbfprob =\\
+                &\formulagameprob
+            \end{matrix}\)};
+            \draw (1.25, 2.75) ellipse (3.15cm and 1.4cm);
+        \end{tikzpicture}
+    \end{figure}
+    (Assuming relationships are proper)
+
+    \pause
+
+    \begin{center}
+        \Large Questions?
+    \end{center}
+
+\end{frame}
+
+\end{document}
