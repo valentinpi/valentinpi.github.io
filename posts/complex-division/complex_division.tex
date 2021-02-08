@@ -1,0 +1,216 @@
+% List of math symbols: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+% Font sizes: http://www.sascha-frank.com/latex-font-size.html
+
+\documentclass[10pt,fleqn]{article}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[ngerman]{babel}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{graphs}
+\usepackage{wasysym}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks   = true,
+    urlcolor     = blue,
+    linkcolor    = blue,
+    citecolor    = red
+}
+
+\lstset{
+    backgroundcolor=\color{white},
+    basicstyle=\normalsize\ttfamily,
+    language=python,
+    tabsize=4
+}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Satz}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Anmerkung}
+
+\newcommand{\Authors}{valentinpi}
+
+\newcommand{\conj}[1]{\overline{#1}}
+\newcommand{\liminftybelow}{\lim_{n\rightarrow\infty}}
+\newcommand{\liminftyindex}{\textstyle\lim_{n\rightarrow\infty}}
+
+% https://tex.stackexchange.com/questions/89166/centering-in-tabularx-and-x-columns
+% and https://tex.stackexchange.com/questions/257128/how-does-the-newcolumntype-command-work
+% Combines c + X in tabularx environments.
+% Inserts centering command after the entry in the cell to center it.
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\pagenumbering{arabic}
+\vspace*{-12ex}
+\phantom{}\\
+\noindent\rule{\textwidth}{0.1pt}
+\large \textbf{Analysis für Informatiker \hfill WiSe 2020-21} \vspace*{0.25cm}\\
+\normalsize \textbf{Über die Komplexität komplexer Division \hfill \today { (neueste Version)}}\\
+\Authors\\
+Freie Universität Berlin\\
+\noindent\rule{\textwidth}{0.1pt}
+
+\begin{abstract}
+    \noindent Diese Ausarbeitung zeigt die Division komplexer Zahlen in algebraischer Darstellung mithilfe linearer Gleichungssysteme und zeigt eine Reduktion der Komplexität des Algorithmus. Diese ist analog zu der Reduktion der Komplexität komplexer Multiplikation, welche bereits Gauß entdeckt hatte.\footnote{\url{https://en.wikipedia.org/wiki/Multiplication_algorithm\#Complex_multiplication_algorithm}} Die Reduktion selbst wurde von Aleksandr Cariow entdeckt. Hier soll dieses sehr kurze Paper erklärt werden.\footnote{\url{https://arxiv.org/ftp/arxiv/papers/1608/1608.07596.pdf}}
+\end{abstract}
+
+\begin{remark}
+    Wie in der Vorlesung eingeführt ist in Polardarstellung die Multiplikation und Division komplexer Zahlen sehr leicht, jedoch benötigen wir den Arcus Cosinus für das Argument der Zahl. Jener liegt aber nicht in jeder Hardwarearchitektur vor. Die hier besprochene Reduktion ist also hardwareorientiert. Wir können so etwa eine effiziente Divisionsinstruktion logisch implementieren.
+
+    Wir optimieren hier ausserdem nach Multiplikationen. Während jene auf modernen CPU-Architekturen zwar sehr schnell sind, so haben sie aber den Nachteil, dass deren Schaltkreise sehr viel Strom verbrauchen. Im IoT-Bereich ist dies schwer zu verkraften.\footnote{\url{https://en.wikipedia.org/wiki/Operation_Reduction_for_Low_Power}}
+\end{remark}
+
+{
+    \let\thefootnote\relax\footnote{Allesamt zuletzt am 07.02.2021, 13:55 Uhr, aufgerufen.}
+}
+
+\textbf{Aufgabe:} Gegeben sind zwei komplexe Zahlen \(x = x_r + ix_i\), \(y = y_r + iy_i \neq 0\); \(x, y \in \mathbb{C}\). Berechne:
+\[
+    z = \frac{x}{y}
+\]
+mit möglichst wenigen arithmetischen Operationen.
+
+\paragraph{Komplexe Division} Zunächst bestimmen wir zu einem beliebigen \(x = x_r + ix_i \in \mathbb{C}\) die reziproke komplexe Zahl \(\frac{1}{x} = x'_r + ix'_i\). Es muss gelten:
+\[
+    x \cdot \frac{1}{x} = 1 \qquad (x_r + ix_i) \cdot (x'_r+ix'_i) = \underbrace{(x_rx'_r-x_ix'_i)}_1 + i\underbrace{(x_rx'_i+x_ix'_r)}_0 = 1
+\]
+Es ergibt sich das folgende lineare Gleichungssystem, einmal in Gleichungen, einmal in Matrixschreibweise:
+\[
+    \begin{array}{lc}
+        \text{I}  & x_rx'_r-x_ix'_i = 1\\
+        \text{II} & x_rx'_i+x_ix'_r = 0
+    \end{array} \qquad \begin{pmatrix}
+        x_r & -x_i\\
+        x_i & x_r
+    \end{pmatrix} \cdot \begin{pmatrix}
+        x'_r\\
+        x'_i
+    \end{pmatrix} = \begin{pmatrix}
+        1\\
+        0
+    \end{pmatrix}
+\]
+Wir lösen das LGS:
+\begin{align*}
+    &x_r\text{II} - x_i\text{I}\colon x_r^2x'_i + x_i^2x'_i = -x_i \Rightarrow x'_i = \frac{-x_i}{x_r^2+x_i^2}\\
+    &\left(x'_i = \frac{-x_i}{x_r^2+x_i^2}\right)\text{ in I}\colon x_rx'_r + \frac{x_i^2}{x_r^2+x_i^2} = 1 \Rightarrow x'_r = \frac{1}{x_r} - \frac{x_i^2}{x_r(x_r^2+x_i^2)} = \frac{x_r}{x_r^2+x_i^2}
+\end{align*}
+Damit folgt:
+\[
+    \frac{1}{x} = \frac{x_r}{x_r^2+x_i^2} + i \frac{-x_i}{x_r^2+x_i^2}
+\]
+Für die ursprüngliche Aufgabe folgt demnach:
+\[
+    z = \frac{x}{y} = (x_r+ix_i) \cdot \left(\frac{y_r}{y_r^2+y_i^2} + i \frac{-y_i}{y_r^2+y_i^2}\right) = \frac{x_ry_r+x_iy_i}{y_r^2+y_i^2} + i \frac{-x_ry_i + x_iy_r}{y_r^2+y_i^2}
+\]
+\textbf{Komplexität:} 4 Multiplikationen, 3 Additionen, 2 Quadrate, 2 Divisionen reeller Zahlen.
+
+\paragraph{Optimierung nach Cariow} Das Ziel ist, die multiplikative Komplexität zu reduzieren. Wir nutzen hier Matrizen. Zunächst stellen wir die Zahl \(z = z_r + i z_i\) als Matrix aus dem Real- und Imaginärteil dar:
+\[
+    \begin{pmatrix}
+        z_r\\
+        z_i
+    \end{pmatrix} = \frac{1}{y_r^2+y_i^2} \begin{pmatrix}
+        x_ry_r+x_iy_i\\
+        -x_ry_i+x_iy_r
+    \end{pmatrix} = \begin{pmatrix}
+        \delta & 0\\
+        0 & \delta
+    \end{pmatrix} \begin{pmatrix}
+        x_r & x_i\\
+        x_i & -x_r
+    \end{pmatrix} \begin{pmatrix}
+        y_r\\
+        y_i
+    \end{pmatrix} \text{ mit } \delta \coloneqq \frac{1}{y_r^2+y_i^2}
+\]
+Nun führen wir eine Faktorisierung durch. Wir faktorisieren die mittlere Matrix der Teile von \(x\). Dieser Teil stellt die durch das Paper erbrachte, zentrale Beobachtung dar:
+\[
+    \begin{pmatrix}
+        x_r & x_i\\
+        x_i & -x_r
+    \end{pmatrix} = \begin{pmatrix}
+        x_r - x_i + x_i & x_i\\
+        x_i & -x_r - x_i + x_i\\
+    \end{pmatrix} = \begin{pmatrix}
+        x_r - x_i & 0 & x_i\\
+        0 & x_r + x_i & x_i
+    \end{pmatrix} \begin{pmatrix}
+        1 & 0\\
+        0 & -1\\
+        1 & 1
+    \end{pmatrix}
+\]
+Wir stellen uns dies folgendermaßen vor: In den diagonalen Einträgen werden geschickte Nullen addiert, dann wird eine \(3 \times 2\)-Matrix eingeführt, welche je die \(x_i\) addiert und den Eintrag \(x_r-x_i\), sowie \(x_r+x_i\) negiert auffasst. Nun erstellen wir aus der Matrix der \(x_r\) und \(x_i\) eine Diagonalmatrix:
+\[
+    \begin{pmatrix}
+        x_r - x_i & 0 & x_i\\
+        0 & x_r + x_i & x_i
+    \end{pmatrix} = \begin{pmatrix}
+        1 & 0 & 1\\
+        0 & 1 & 1
+    \end{pmatrix} \begin{pmatrix}
+        x_r - x_i & 0 & 0\\
+        0 & x_r + x_i & 0\\
+        0 & 0 & x_i
+    \end{pmatrix}
+\]
+Das Gesamtergebnis:
+\[
+    \begin{pmatrix}
+        z_r\\
+        z_i
+    \end{pmatrix} = \begin{pmatrix}
+        \delta & 0\\
+        0 & \delta
+    \end{pmatrix} \begin{pmatrix}
+        1 & 0 & 1\\
+        0 & 1 & 1
+    \end{pmatrix} \begin{pmatrix}
+        x_r - x_i & 0 & 0\\
+        0 & x_r + x_i & 0\\
+        0 & 0 & x_i
+    \end{pmatrix} \begin{pmatrix}
+        1 & 0\\
+        0 & -1\\
+        1 & 1
+    \end{pmatrix} \begin{pmatrix}
+        y_r\\
+        y_i
+    \end{pmatrix}
+\]
+\textbf{Komplexität:} 3 Multiplikationen, 6 Additionen, 2 Quadrate, 2 Divisionen reeller Zahlen.
+
+Die Multiplikationen mit den 1en und (-1)en können wir je weglassen. In der Diagonalmatrix in der Mitte finden zwei Additionen statt. Das letzte Produkt rechts ergibt:
+\[
+    \begin{pmatrix}
+        y_r\\
+        -y_i\\
+        y_r + y_i
+    \end{pmatrix}
+\]
+Also eine Addition. Die darauffolgende Multiplikation mit der Diagonalmatrix erfordert exakt drei Multiplikationen. Es werden nämlich schlicht die nichtleeren Einträge jeder Zeile multipliziert. Im letzten Produkt kommen dann nur noch zwei Additionen vor. Dazu kommt die Addition, die zwei Divisionen und die zwei Quadrate für \(\delta\).\\
+
+Tatsächlich befindet sich im Paper von Cariow dazu ein Fehler: Die dritte Matrix von links hat einen Vorzeichenfehler bei der eins in \((2, 2)\).
+
+\end{document}
