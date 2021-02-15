@@ -8,9 +8,17 @@ I was doing a 100% run of the game S.T.A.L.K.E.R.: Shadow Of Chernobyl with the 
 
 There is no save game editor out for this game, so we have handle this manually with the binary representation of our saves.
 
+## Structure
+
+I have structured this excourse into file formats and old game code in several parts:
+
+- Finding out what "internal" name the quest has inside the game scripts
+- Analyzing the save file format of the game
+- Finding the mission entry in the save and edit the time, basically by guessing luckily
+
 ## First thoughts and observations
 
-So our overall goal is to increase the time left. First, I looked into the game files. AA (Autumn Aurora) added a gamedata folder, in which scripts and other altered content of the game is included. First, I tried to track down the internal name of the quest, which might prove to be useful later on.
+So our overall goal is to increase the time left. First, I looked into the game files. AA (Autumn Aurora) added a folder `gamedata`, in which scripts and other altered content of the game is included. First, I tried to track down the internal name of the quest using `grep`, which might prove to be useful later on:
 
 ```sh
 valentin@debian:.../STALKER Shadow of Chernobyl/gamedata$ grep -aiHr "sales representative"
@@ -19,9 +27,7 @@ valentin@debian:.../STALKER Shadow of Chernobyl/gamedata$ grep -aiHr "sales repr
 
 Searching multiple other strings game me some success though, since I found the `task_manager.ltx` file, where all the quests and their settings are saved. But without any obvious relation to my current save. So from there, there was no way to track down the related quest.
 
-I assumed AA mostly includes modified files from the mod, not all of the content in the game.
-
-To overcome this, I downloaded an [unpacker](https://www.moddb.com/games/stalker/downloads/stalker-extractor) for the .db*-archives in the root directory of the folder:
+I assumed AA mostly includes modified files from the mod, not all of the content in the game. Since we might need everything, I downloaded an [unpacker](https://www.moddb.com/games/stalker/downloads/stalker-extractor) for the .db*-archives in the root directory of the folder:
 
 ```
 gamedata.db0
@@ -174,7 +180,7 @@ valentin@debian:~$ xxd -l 48 36.sav_c
 
 For the LZO decompression: One solution might be to write a small C program that utilizes the lzo-library, which is quite easy to do. But I will use Python for this, since I want to get it done more quickly.
 
-I will use Python 3 and the [python-lzo package](https://github.com/jd-boyd/python-lzo). On Debian based systems, one can install the C dependencies, pip and the venv package to create a virtual environment. We use a virtual environment, so that we do not affect our system wide Python installation. So to set everything up we do:
+I will use Python 3 and the [python-lzo package](https://github.com/jd-boyd/python-lzo). On Debian based systems, one can install the C dependencies, `pip` and the `venv` package to create a virtual environment. We use a virtual environment, so that we do not affect our system wide Python installation. So to set everything up we do:
 
 ```sh
 valentin@debian:~$ sudo apt install liblzo2-dev zlib1g-dev python3-pip python3-venv
@@ -226,7 +232,7 @@ Remember the quests name we discovered? `tm_kill_stalker_6` We now skim through 
 My next thought was to look for the according location of "Remaining", from the above screenshot.
 
 ```sh
-valentin@debian:/media/sf_D_DRIVE/unpacked$ grep -aiHr Remaining
+.../unpacked$ grep -aiHr Remaining
 config/text/eng/ui_st_mp.xml:    <text>Time remaining: %d:%d; Agreed %.2f</text>
 config/text/eng/ui_st_other.xml:		<text>Remaining</text>
 ```
@@ -388,7 +394,7 @@ This was an interesting problem, since there is hardly any documentation about t
 
 Further work could involve making a savegame editor for this game, as it is still very popular among modders and fixing corrupted savegames by mod bugs displays a suitable use case.
 
-To finish this off, I will now present four scripts, with which we can decompress and compress these `sav` files. I will also append my savegame in the misc folder of this repository.
+To finish this off, I will now present four scripts, with which we can decompress and compress these `sav` files. I will also append my savegame in the `misc` folder of this repository.
 
 <!--
 After cloning, we can initialize the submodules in the xray-16 repository
