@@ -1,12 +1,11 @@
 body {
     margin: 8px;
+    max-width: 650px;
+    font-family: Calibri, Georgia, Arial, Helvetica, sans-serif;
+    margin: 0px auto 0px auto;
 }
 
-header {
-    font-family: Arial, Helvetica, sans-serif;
-    text-align: center;
-}
-
-main {
-    font-family: Arial, Helvetica, sans-serif;
+ul {
+    list-style-type: disc;
+    padding-left: 1em;
 }
