@@ -212,7 +212,7 @@ To obtain logarithmically many such decisions, the idea is to remove several ver
     
     We find such a 5-coloring, and pick a color class \(U \in V\) with \(\geq \frac{n}{5}\) vertices, as there has to exists at least one such class.
 
-    Set \(\alpha \coloneqq \frac{1}{10}\). From \(U\), we pick \(\frac{n}{10}\) many vertices of smallest degree. We claim that these vertices all have degree \(< c \coloneqq 60\). Suppose the opposite, then the \emph{unpicked} vertices would have a total degree of \(\frac{n}{10} \cdot 60 = 6n\), which corresponds to more than \(3n\) edges inside the graph, as the coloring itself is an independent set. This contradicts the result from above \lightning.
+    Set \(\alpha \coloneqq \frac{1}{10}\). From \(U\), we pick \(\frac{n}{10}\) many vertices of smallest degree. We claim that these vertices all have degree \(< c \coloneqq 60\). Suppose the opposite, then the \emph{unpicked} vertices would have a total degree of \(\geq \frac{n}{10} \cdot 60 = 6n\), which corresponds to more than \(3n\) edges inside the graph, as the coloring itself is an independent set. This contradicts the result from above \lightning.
 \end{proof}
 
 \paragraph{Complexity Consequences}
