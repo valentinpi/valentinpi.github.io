@@ -1,4 +1,4 @@
-\documentclass[10pt,fleqn]{article}
+\documentclass[10pt]{article}
 
 \usepackage{amsfonts}
 \usepackage{amsmath}
@@ -244,5 +244,28 @@ Since \(k \in O(\log{n})\). With the previous assessment, we can also observe th
     \underbrace{\left(\sum_{i=0}^{k-1} (1-\alpha)^i\right) n}_{\text{Finding the independent set, removing vertices and retriangulating}} = O(n)
 \]
 The retriangulations take \(O(1)\) time for each hole, as they are of constant size, so even an inefficient triangulation algorithm can be used there.
+
+\paragraph{Appendix: Lowering the Constants}
+
+We obtained \(\alpha = \frac{1}{10}, c = 60\) from above. We can minimize these constants further by three ways:
+
+\begin{enumerate}
+    \item Obvious improvement: Set \(c = 30\) as we saw in the proof that \(6n\) is way above \(3n-6\) and thus we can slightly shorten the \(c\).
+    \item Use a 4-coloring instead of a 5-coloring, which can be obtained in \(O(n^2)\) time. The runtime becomes worse, so this shortening is not applicable to the algorithm above.
+
+    In the proof of the lemma, we now select \(\frac{n}{8}\) vertices for our set. The contradiction \(\frac{n}{8} c = 3n\) leads to the constants \(\alpha = \frac{1}{8}, c = 24\).
+    \item From an excercise we know that the following can be proven:
+    \begin{lemma}
+        An arbitrary graph with vertex set \(V\) has an independent set of size:
+        \[
+            \sum_{v \in V} \frac{1}{d(v)+1} \geq \frac{|V|}{d^*+1} \text{ with } d^* = \frac{\sum_{v \in V}d(v)}{|V|} \text{ the average degree of a vertex in } V
+        \]
+    \end{lemma}
+    For planar graphs, we can obtain the average degree of a vertex by the handshake lemma:
+    \[
+        \frac{\sum_{v \in V}{d(v)}}{|V|} = \frac{2|E|}{|V|} \leq \frac{2(3|V|-6)}{|V|} \leq 6
+    \]
+    With that in mind, we obtain, that there must be an independent set of size \(\geq \frac{n}{7}\) and with \(\frac{n}{7} \cdot c = 3n\) the constants \(\alpha = \frac{1}{7}, c = 21\).
+\end{enumerate}
 
 \end{document}
