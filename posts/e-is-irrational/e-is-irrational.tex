@@ -1,0 +1,119 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[ngerman]{babel}
+\usepackage{bookmark}
+\usepackage{cancel}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{polynom}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usepackage{wasysym}
+\usepackage{wrapfig}
+\usepackage{xcolor}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem*{definition*}{Definition}
+\newtheorem{theorem}{Satz}
+\newtheorem*{theorem*}{Satz}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Anmerkung}
+
+\newcommand{\Authors}{valentinpi}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\pagenumbering{arabic}
+\vspace*{-12ex}
+\phantom{}\\
+\noindent\rule{\textwidth}{0.1pt}
+\large \textbf{Tutorenvortrag} \vspace*{0.25cm}\\
+\normalsize \textbf{Die Irrationalität von \(e\) \hfill 21.09.2021}\\
+\Authors\\
+\noindent\rule{\textwidth}{0.1pt}
+
+\begin{abstract}
+    \noindent Im Rahmen meines Vortrags zum Eignungstests für Tutoren trage ich einen kurzen Beweis zu der Irrationalität von \(e\) durch Restgliedabschätzung der Exponentialfunktion vor. Der Beweis stammt aus dem Buch Analysis 1 von Konrad Königsberger, ab S. 109, wurde aber von mir leicht ergänzt.
+\end{abstract}
+
+\paragraph{Wiederholung} Wir haben in der Vorlesung die Exponentialfunktion \(\exp\) in einer Formulierung als Potenzreihe, sowie die Konstante \(e\) kennengelernt:
+\[
+    \exp(x) = \sum_{k=0}^\infty \frac{x^k}{k!} \qquad e = \sum_{k=0}^\infty \frac{1}{k!} = \exp(1)
+\]
+ Unser Ziel ist es, zu zeigen, dass die letztere Konstante irrational ist. Wir machen dies über einen Umweg, in dem wir im Folgenden die Berechnung von \(\exp(x)\) bis zu einem festen \(n\)-ten Glied auf den Fehler untersuchen. So eine Abschätzung kann zum Beispiel mithilfe einer Schleife in einer iterativen Programmierungssprache wie C berechnet werden.
+ 
+ Analog zu den Restgliedern bei Taylorreihen definieren wir:
+\begin{definition}
+    Sei \(n \in \mathbb{N}\) beliebig, aber fest. Dann bezeichnen wir im Folgenden als \emph{Restglied} \(R_{n+1}(x)\) die Fehlerabschätzung:
+    \[
+        R_{n+1}(x) = \exp(x) - \sum_{k=0}^n \frac{x^k}{k!} = \sum_{k=n+1}^\infty \frac{x^k}{k!}
+    \]
+\end{definition}
+Die Glieder der zugrundeliegenden Reihe des Restgliedes werden immer kleiner, da die Exponentialfunktion, wie wir wissen, konvergiert. Es wird im Folgenden gezeigt, dass der Fehler für die Berechnung von \(e\) höchstens zweimal so groß wie der erste Summand des Restgliedes werden kann:
+\begin{theorem}
+    \[0 < R_{n+1}(1) \leq 2 \cdot \frac{1}{(n+1)!}\]
+\end{theorem}
+\begin{proof}
+    Wir nehmen an, dass die Positivität des Restgliedes hier nicht bewiesen werden muss. Der Beweis der oberen Schranke folgt:
+    \begin{align*}
+        R_{n+1}(1) &= \frac{1}{(n+1)!} \left(1+\frac{1}{n+2}+\frac{1}{(n+2)(n+3)}+...\right)\\
+        &\leq \frac{1}{(n+1)!} \left(1+\frac{1}{2}+\frac{1}{2^2}+...\right)\\
+        &= \frac{1}{(n+1)!} \cdot \frac{1}{1-\frac{1}{2}} = 2 \cdot \frac{1}{(n+1)!}
+    \end{align*}
+    Wir haben zunächst den ersten Summanden ausgeklammert. Dann stellen wir fest, dass die Produkte in den Nennern jeweils größer oder gleich Zweierpotenzen sind. Mit den Ungleichungsregeln der reellen Zahlen, welche wir kennen, und dem Limes der geometrischen Reihe folgern wir die obere Schranke.
+\end{proof}
+
+\newpage
+
+Nun zu unserem Ziel. Wir verwenden das vorige Ergebnis im nächsten Beweis.
+
+\begin{theorem}
+    \(e\) ist irrational.
+\end{theorem}
+\begin{proof}
+    Angenommen, \(e \in \mathbb{Q}\). Dann muss es Zahlen \(m \in \mathbb{Z}\), \(n \in \mathbb{N}^+\) geben, sodass \(e = \frac{m}{n}\).
+
+    Zunächst ist zu zeigen, dass \(e\) keine ganze Zahl ist, also \(n \geq 2\) sein muss. Wir zeigen dies, indem wir \(e\) bis zu dem dritten Folgeglied (\(n=2\)) berechnen und den Fehler nach oben abschätzen:
+    \[
+        \sum_{k=0}^2 \frac{1}{k!} = \frac{1}{0!} + \frac{1}{1!} + \frac{1}{2!} = 2.5 \qquad R_3(1) \leq 2 \cdot \frac{1}{3!} = \frac{1}{3} \implies 2.5 \leq e \leq 2.84
+    \]
+
+    Betrachte nun die Zahl \(n!R_{n+1}(1)\) und untersuche sie auf Ganzzähligkeit. Wir beobachten erstens:
+    \[
+        n!R_{n+1}(1) = n!e - n!\sum_{k=0}^n \frac{1}{k!} = (n-1)!m - n! - n! - \frac{n!}{2} - ... - n - 1 \in \mathbb{Z}
+    \]
+    Nun gilt allerdings auch:
+    \begin{align*}
+        0 &< R_{n+1}(1) \leq \frac{2}{(n+1)!}\\
+        0 &< n! R_{n+1}(1) \leq n! \cdot \frac{2}{(n+1)!} = \frac{2}{n+1}  < 1
+    \end{align*}
+    Wegen \(n \geq 2\). Also ist \(n!R_{n+1}(1)\) zugleich ganz und nicht ganz, was ein Widerspruch ist.
+\end{proof}
+
+\textbf{Kleiner Anhang} \quad Satz 1 kann auch folgendermaßen generalisiert werden:
+\begin{theorem}
+    Sei \(|x| \leq 1\), dann ist:
+    \[
+        0 < |R_{n+1}(x)| \leq 2 \frac{|x|^{n+1}}{(n+1)!}
+    \]
+\end{theorem}
+
+Der Beweis ist analog.
+
+\end{document}
