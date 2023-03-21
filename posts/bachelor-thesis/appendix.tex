@@ -1,0 +1,257 @@
+\appendix
+
+\section{Omitted Details}
+
+\aacosinehelpersumlemma*\label{aa_cosine_helper_sum_lemma_proof}
+
+\begin{proof}[Proof by induction over \(m\).]
+    For \(m = 1\), consider
+    \begin{align}
+        \cos(\alpha) = \frac{2\cos(\alpha)\sin(\alpha)}{2\sin(\alpha)} = \frac{\sin(2\alpha)}{2\sin(\alpha)}
+    \end{align}
+    under the use of \Cref{sine_and_cosine_addition_theorem}.
+
+    Suppose the statement holds for an arbitrary, but fixed \(m\). Then for the inductive step, under the usage of the assumption, the addition of a skillful zero and using \Cref{sine_and_cosine_addition_theorem} twice, we obtain
+    \begin{align}
+        \sum_{j=0}^{(m+1)-1}\cos((2j+1)\alpha) &= \frac{\sin(2m\alpha)}{2\sin(\alpha)} + \cos((2m+1)\alpha)\\
+        &= \frac{\sin((2m+1)\alpha-\alpha)+2\cos((2m+1)\alpha)\sin(\alpha)}{2\sin(\alpha)}\\
+        &= \frac{-\cos((2m+1)\alpha)\sin(\alpha)+\sin((2m+1)\alpha)\cos(\alpha)+2\cos((2m+1)\alpha)\sin(\alpha)}{2\sin(\alpha)}\\
+        &= \frac{\sin(2(m+1)\alpha)}{2\sin(\alpha)}
+    \end{align}
+    By the principle of the theorem of induction, the statement is proven.
+\end{proof}
+
+\sinebound*\label{sine_bound_proof}
+
+\begin{proof}
+    Let \(f\colon \mathbb{R} \to \mathbb{R}, x \mapsto x-\frac{x^3}{6}\) and let \(x \in \mathbb{R}_{\geq 0}\) be fixed. From real analysis we know that \(f'(x) = 1 - \frac{x^2}{2}\) and thus that \(f\) is monotonically decreasing in \([\sqrt{2}, \infty)\). Especially \(f(3) = -\frac{3}{2}\). So the first inequality holds in \([3, \infty)\). We prove the statement for \([0, 3)\).
+
+    The sine can be represented as a sum of some first terms of its Taylor series \Cref{sine_and_cosine_taylor_series}, and in sum with the following Langrangian remainder terms for some \(\xi_1, \xi_2 \in [0, x]\):
+    \begin{align}
+        \sin(x) = x - \frac{x^3}{6} + \frac{\sin(\xi_1)}{4!}x^4 = x - \frac{\sin(\xi_2)}{2!}x^2
+    \end{align}
+    See \cite[p. 284]{Forster2016}. Since \(\sin(\xi_2) \geq 0\) for \(x \in [0, 1)\), we have the upper bound. For \(x \in [0, \pi]\) and especially \(x \in [0, 3)\) we have \(\sin(\xi_1) \geq 0\), thus concluding the lower bound. The strict inequality can be read off directly.
+\end{proof}
+
+\sinecomplemma*\label{sine_comp_lemma_proof}
+
+\begin{proof}
+    We first calculate the derivatives of both functions \ref{sine_comp_lemma_1} and then divide the interval into two pieces, for which we argue the statement analytically \ref{sine_comp_lemma_2} and geometrically \ref{sine_comp_lemma_3}.
+
+    \begin{enumerate}[label=(\roman*)]
+        \item \label{sine_comp_lemma_1} Observe, that
+        \begin{align}
+            {l^\uparrow}'(\delta) &= \frac{1}{2T}\left(\cos\left(\frac{\delta+\pi}{2T}\right)\sin\left(\frac{\delta-\pi}{2T}\right)+\sin\left(\frac{\delta+\pi}{2T}\right)\cos\left(\frac{\delta-\pi}{2T}\right)\right) \overset{\ref{sine_comp_lemma_calc_1}}{=} \frac{1}{2T}\sin\left(\frac{\delta}{T}\right) \label{l_functions_derivatives_1}\\
+            {l^\downarrow}'(\delta) &= \frac{2c_1}{\pi^2}\frac{\delta}{T^2}
+        \end{align}
+        \begin{enumerate}[label=(\arabic*), wide]
+            \item We use \Cref{sine_and_cosine_addition_theorem}. \label{sine_comp_lemma_calc_1}
+        \end{enumerate}
+        Notice, that both functions grow strictly monotonically. Consider the partition
+        \begin{align}
+            [2 \pi, \pi T] = \left[2\pi, \frac{\pi}{2}T\right] \cup \left(\frac{\pi}{2}T, \pi T\right]
+        \end{align}
+        \item \label{sine_comp_lemma_2} It suffices to show, that \({l^\uparrow}' > {l^\downarrow}'\) and \(\left(l^\uparrow(2\pi), l^\uparrow\left(\frac{\pi}{2}T\right)\right) > \left(l^\downarrow(2\pi), l^\downarrow\left(\frac{\pi}{2}T\right)\right)\). Let \(\delta \in \left[2 \pi, \frac{\pi}{2}T\right]\). Going from left to right, we first have with \Cref{sine_bound} and \(-\delta^2 \geq -\frac{\pi^2}{4}T^2\)
+        \begin{align}
+            {l^\uparrow}'(\delta) > \frac{1}{2T}\frac{\delta}{T}\left(1-\frac{1}{6}\frac{\delta^2}{T^2}\right) \geq \frac{1}{2}\left(1-\frac{\pi^2}{24}\right)\frac{\delta}{T^2} > \frac{2c_1}{\pi^2}\frac{\delta}{T^2} = {l^\downarrow}'(\delta)
+        \end{align}
+        Then, it holds, that
+        \begin{align}
+            l^\uparrow(2\pi) > \frac{3\pi^2}{4T^2}\left(1-\frac{1}{6}\frac{10\pi^2}{4T^2}\right) > \frac{c_3}{T^2} > \frac{4c_1}{T^2} = l^\downarrow(2\pi)
+        \end{align}
+        %gut gemacht :)\\
+        where \(c_3 \coloneqq 7.3724 < \frac{3\pi^2}{4}\left(1-\frac{1}{6}\frac{10\pi^2}{4 \cdot 32^2}\right)\). Note, that we use \Cref{sine_bound} twice in the product for the first lower bound, which is allowed, as the argument is still inside of \((0, \pi/2)\). The third claim follows directly from the larger strictly monotonic growth of \(l^\uparrow\) and the initial inequality at \(2 \pi\).
+        \item \label{sine_comp_lemma_3} Since \(\evalat{{l^\uparrow}''}{\left(\frac{\pi}{2}T, \pi T\right]} < 0\), the function is concave \cite[pp. 185-187]{Forster2016}, whilst the parabola \(l^\downarrow\) is clearly convex. First, we have with the sinoal symmetry around \(\frac{\pi}{2} T\)
+        \begin{align}
+            l^\uparrow(\pi T) = \sin^2\left(\frac{\pi}{2} - \frac{\pi}{64}\right) > c_1 = l^\downarrow(\pi T) \label{helper_qubits_needed}
+        \end{align}
+        We have \(g^\uparrow > g^\downarrow\), where \(g^\uparrow\) is the line segment connecting \(\left(\frac{\pi}{2}T, l^\uparrow\left(\frac{\pi}{2}T\right)\right)\) and \((\pi T, l^\uparrow(\pi T))\), and where \(g^\downarrow\) connects \(\left(\frac{\pi}{2}T, l^\downarrow\left(\frac{\pi}{2}T\right)\right)\) and \((\pi T, l^\downarrow(\pi T))\) respectively. We have
+        \begin{align}
+            \evalat{l^\uparrow}{\left(\frac{\pi}{2}T, \pi T\right]} \geq g^\uparrow > g^\downarrow \geq \evalat{l^\downarrow}{\left(\frac{\pi}{2}T, \pi T\right]}\
+        \end{align}
+        concluding the proof.
+    \end{enumerate}
+\end{proof}
+
+\newpage
+
+\section{Formula Sheet}
+
+This appendix presents some of the formulas used. We refer to \cite{Forster2016} and \cite{Jaenich2004}, but any undergraduate Analysis and Complex Analysis textbook will most likely present these results.
+
+\begin{theorem}[Exponential, Sine and Cosine Taylor Series] \label{sine_and_cosine_taylor_series}
+    For any \(x \in \mathbb{C}\) it holds that:
+    \begin{align}
+        \exp(x) = \sum_{k=0}^\infty \frac{x^{k}}{k!} \qquad \sin(x) = \sum_{k=0}^\infty (-1)^k\frac{x^{2k+1}}{(2k+1)!} \qquad \cos(x) = \sum_{k=0}^\infty (-1)^k\frac{x^{2k}}{(2k)!}
+    \end{align}
+\end{theorem}
+
+\cite[p. 288]{Forster2016}, gives a detailed calculation of the latter two expansions for \(\mathbb{R}\). \cite[p. 5]{Jaenich2004}, states these power series expansions for \(\mathbb{C}\).
+
+\begin{definition}[Exponential Sine and Cosine] \label{exponential_sine_and_cosine}
+    For any \(x \in \mathbb{C}\) we have:
+    \begin{align}
+        \sin(x) \coloneqq \frac{e^{ix}-e^{-ix}}{2i} \qquad \cos(x) \coloneqq \frac{e^{ix}+e^{-ix}}{2}
+    \end{align}
+\end{definition}
+
+The statement for \(\mathbb{R}\) can be found in \cite[pp. 146-147]{Forster2016}, it is clear that both can be obtained by direct calculation and also hold for \(\mathbb{C}\).
+
+\begin{theorem}[Trigonometric Pythagoras] \label{trigonometric_pythagoras}
+    For any \(x \in \mathbb{C}\) the following holds:
+    \begin{align}
+        \sin^2(x) + \cos^2(x) = 1
+    \end{align}
+\end{theorem}
+
+The proof can be found in \cite[p. 140]{Forster2016}.
+
+\begin{theorem}[Sine and Cosine Addition Theorems]
+    \label{sine_and_cosine_addition_theorem} For any \(x, y \in \mathbb{C}\) it holds that:
+    \begin{align}
+        \sin(x+y)=\sin(x)\cos(y)+\cos(x)\sin(y) \qquad \cos(x+y)=\cos(x)\cos(y)-\sin(x)\sin(y)
+    \end{align}
+\end{theorem}
+
+Again, the proof can be found in \cite[p. 140]{Forster2016}.
+
+\begin{theorem}[Geometric Sum]
+    \label{geometric_sum} For any \(q \in \mathbb{C}\) and \(n \in \mathbb{N}\), we have
+    \begin{align}
+        \sum_{i=0}^n q^i = \begin{cases}
+            \frac{1-q^{n+1}}{1-q} & q \neq 1\\
+            n+1 & q = 1
+        \end{cases}
+    \end{align}
+\end{theorem}
+
+\begin{proof}
+    The first case follows directly from \(\left(\sum_{i=0}^n q^i\right) (1-q) = 1 + \left(\sum_{i=1}^n \left(-q^i + q^i\right)\right) - q^{n+1}\), the second case by addition.
+\end{proof}
+
+\begin{theorem}[Cauchy-Schwarz Inequality] \label{cauchy_schwarz_inequality}
+    For any \(x, y \in \mathbb{C}^n\), \(n \in \mathbb{N}_{\geq 1}\), we have
+    \begin{align}
+        |\langle x, y \rangle| \leq \norm{x}\norm{y}
+    \end{align}
+\end{theorem}
+
+The proof can be found in \cite[p. 220]{Werner2018}.
+
+\begin{theorem} \label{zeta_two}
+    We have
+    \begin{align}
+        \sum_{k=1}^\infty \frac{1}{k^4} = \frac{\pi^4}{90}
+    \end{align}
+\end{theorem}
+
+In close relation to the Riemann \(\zeta\)-function, the proof of this limit can be found in \cite[pp. 296-298]{Remmert2002}.
+
+\newpage
+
+\section{Hardness Results \draftcommentgreen{DONE}} \label{hardness_results}
+
+In this appendix, we quickly present the hardness results on the solving of SLEs via quantum algorithms by Harrow et al. \cite[pp. 12-14]{Harrow2008}. This topic is not included in the main body of the thesis, but shall be visited, s.t. we have worked through the entire original HHL paper, as well as got some intuition on the computational complexity theory of matrix inversion.
+
+\paragraph*{PSPACE, PP, BPP and BQP} \phantom{}\\\phantom{}
+
+The landscape of computational complexity classes is vast. Besides classes dedicated to capturing the time complexity of a problem, there are also notions for considering the space complexity of a problem. We use the books by Sipser and Barak \cite{Sipser2013, Barak2007}. Recall the concepts of a language \cite[p. 16]{Sipser2013}, computability in the sense of Turing machines \cite[p. 168]{Sipser2013}, the complexity classes \(\text{P}\) \cite[p. 286]{Sipser2013} and \(\text{NP}\) \cite[pp. 293-294]{Sipser2013}, \(\text{SAT}\) \cite[p. 299]{Sipser2013} and polynomial time reducibility \cite[p. 300]{Sipser2013}. We do not introduce these classes rigorously. Let \(\Sigma\) be an alphabet.
+
+\begin{definition}
+    We define the following notions.
+    \begin{enumerate}[label=(\roman*)]
+        \item The complexity class \(\text{PSPACE}\) is composed of all languages \(L \subseteq \Sigma^*\), for which the associated decision problem \(\Sigma^* \ni \omega \in L\) can be decided with polynomial space complexity.
+        \item A language \(B \subseteq \Sigma^*\) is called \(\text{PSPACE}\)-complete, if \(B \in \text{PSPACE}\) and \(A \leq_p B\) for any \(A \in \text{PSPACE}\).
+        \item The language \(\text{TQBF}\) is composed of all Boolean formulas with existential or universal quantifiers, for which an assignment of the quantifiers making the associated statement true exists.
+    \end{enumerate}
+\end{definition}
+These definitions follow \cite[pp. 336-338]{Sipser2013}, where we cite in this order.
+\begin{theorem} \label{tqbf_pspace_complete}
+    \(\text{TQBF}\) is \(\text{PSPACE}\)-complete.
+\end{theorem}
+The proof is based on a Savitchs Theorem and can be found in \cite[pp. 339-341]{Sipser2013}.
+
+\phantom{}
+
+Besides \(\text{P}\), \(\text{NP}\) and \(\text{PSPACE}\), classes dedicated to decision problems, other classes have arisen. We want to consider probabilistic and especially quantum complexity classes. The following definition captures the most important classes we want to know about.
+\begin{definition}
+    We define the following complexity classes.
+    \begin{enumerate}[label=(\roman*)]
+        \item \label{pp_definition_1} The complexity class \(\text{PP}\) is the set of languages \(L \in \Sigma^*\), s.t. there is a probabilistic polynomial-time Turing machine \(T\), s.t. it successfully and a polynomial \(p \in \mathbb{R}[x]\), \(p(\mathbb{N}) \subseteq \mathbb{N}\), s.t. \(x \in L\), \(|x| \in \mathbb{N}\) denoting the word length, iff
+        \begin{align}
+            \left|\left\{y \in \Sigma^{p(|x|)} \mid M(x, y) = 1\right\}\right| \geq \frac{1}{2} 2^{p(|x|)}
+        \end{align}
+        \item The complexity class \(\text{BPP}\) is the set of languages \(L \in \Sigma^*\), s.t. there is a probabilistic polynomial-time Turing machine \(T\), s.t. it successfully and a polynomial \(p \in \mathbb{R}[x]\), \(p(\mathbb{N}) \subseteq \mathbb{N}\), s.t. \(x \in L\), \(|x| \in \mathbb{N}\) denoting the word length, iff
+        \begin{align}
+            \left|\left\{y \in \Sigma^{p(|x|)} \mid M(x, y) = 1\right\}\right| \geq \frac{2}{3} 2^{p(|x|)}
+        \end{align}
+        \item The complexity class \(\text{BQP}\) is the set of languages \(L \in \Sigma^*\), s.t. there is a polynomial-time quantum algorithm, which solves the decision problem \(w \in L\) for a \(w \in \Sigma^*\) with a success probability of at least \(2/3\).
+    \end{enumerate}
+\end{definition}
+The notion of completeness carries over analogously from \(\text{PSPACE}\)-completeness. We interpret \ref{pp_definition_1} of this definition by considering \(x\) to be the problem instance of interest and \(y\) to be one of the possible solutions. The polynomial \(p\) thus computes the required length of \(y\). The bound on the right specifies, that at least half of these possible values of \(y\) are valid solutions to the problem given by \(x\). Another way of phrasing this is, that there is an algorithm, specified by \(M\) and \(p\), which solves \(x \in L\) with a probability of at least one half, as we may then choose \(y\) uniformly at random. These first two definitions, with this equivalent interpretation, follow the book from Arora and Barak \cite[p. 173, pp. 116-117]{Barak2007}. The definition of \(\text{BQP}\) follows \cite[p. 412]{Barak2007}, although we do not directly fix the set of allowed unitaries.
+
+\phantom{}
+
+The following three results are known.
+
+\begin{theorem} \label{bqp_relations}
+    The following statements hold.
+    \begin{enumerate}[label=(\roman*)]
+        \item \label{bqp_in_pspace} \(\text{BQP} \subseteq \text{PSPACE}\).
+        \item \label{bpp_in_bqp} \(\text{BPP} \subseteq \text{BQP}\).
+        \item \label{bqp_in_pp} \(\text{BQP} \subseteq \text{PP}\).
+    \end{enumerate}
+\end{theorem}
+
+
+The first and third parts are major results from \cite[p. 201]{Nielsen2010} and \cite[p. 1538]{Adleman_1997}. Both proofs utilize a technique called \emph{sum of histories}. The second statement follows from the fact, that we can simulate any classical simulation using a gate quantum algorithm, so also probabilistic algorithms, as Nielsen and Chuang point out \cite[p. 201]{Nielsen2010}. It is interesting to note, that all converse directions are unknown, but provide possibilities for determining the hardness of a problem in a quantum complexity class. Especially, the second statement is widely conjectured to be false.
+
+\paragraph*{The Problem \(\text{MATRIXINVERSION}\)} \phantom{}\\\phantom{}
+
+Following Harrow et al., we give a formal definition for the problem of matrix inversion. Furthermore, we present the hardness results from the HHL paper and explain their hardness with regard to the previously presented complexity classes and problems.
+
+\begin{definition}
+    Let \(N \coloneqq 2^n\) for \(n \in \mathbb{N}_{\geq 2}\). We say, that a quantum algorithm solves the problem \(\text{MATRIXINVERSION}\), if for a given Hermitian, \(O(1)\)-sparse matrix \(A \in \mathbb{C}^{N \times N}\) with \(\kappa \coloneqq \kappa(A)\) and \(\frac{1}{\kappa} \leq \lambda \leq 1\) for any eigenvalue \(\lambda \in \mathbb{R}\) of \(A\), for which the entries in a row can either be computed by an algorithm with runtime \(\poly(\log_2(N))\) or an oracle, it computes a quantum state \(\ket{x}\) with \(\norm{\ket{x} - \frac{1}{\norm{A^{-1}\ket{0}}} A^{-1}\ket{0}} < \varepsilon \in \mathbb{R}_{> 0}\) and outputs a \(1\) when measuring conditioned on the first qubit. If \(A\) is given by an oracle, we may refer to the algorithm as being \emph{relativizing}. We say a classical algorithm solves this problem, if it outputs the vector \(\ket{x}\).
+\end{definition}
+
+This definition follows \cite[p. 12]{Harrow2008}. There are also more general definitions for relativizing algorithms \cite[pp. 376-377]{Sipser2013}, but this notion suffices for this text.
+
+\begin{theorem}
+    \(\text{MATRIXINVERSION}\) is \(\text{BQP}\)-complete.
+\end{theorem}
+
+The proof of this theorem can be found in \cite[p. 4]{Harrow2008}. Any quantum computation can thus be expressed via an SLE after a polynomial quantum reduction. Harrow et al. then also have the following result \cite[pp. 12-14]{Harrow2008}.
+
+\begin{theorem}
+    The following statements hold. Throughout this theorem, the error cap \(\varepsilon\) of any algorithm here shall be fixed.
+    \begin{enumerate}[label=(\roman*)]
+        \item If there is a quantum algorithm for solving \(\text{MATRIXINVERSION}\) with time complexity
+        \begin{align}
+            \kappa^{1-\delta}\poly(\log_2(N))
+        \end{align}
+        with \(\delta \in (0, 1)\), then \(\text{BQP} = \text{PSPACE}\).
+        \item No relativizing quantum algorithm for \(\text{MATRIXINVERSION}\) can run in time \(\kappa^{1-\delta}\poly(\log_2(N))\).
+        \item If there exists a classical algorithm for \(\text{MATRIXINVERSION}\) with a runtime of \(\poly(\kappa, \log_2(N))\), then \(\text{BQP} = \text{BPP}\).
+        \item No relativizing classical algorithm for \(\text{MATRIXINVERSION}\) can run in time \(N^\alpha 2^{\beta \kappa}\), unless \(3\alpha+4\beta \geq 1/2\) for any \(\alpha, \beta \in \mathbb{R}_{>0}\).
+    \end{enumerate}
+\end{theorem}
+
+The error cap is fixed to e.g. \(1/100\), because we consider the other parameters in these results. We want to discuss the first and third statement.  For the first part of the theorem, the first direction is already proven via \ref{bqp_in_pspace} in \Cref{bqp_relations}. Taking a problem in \(\text{PSPACE}\), it can be polynomially reduced to the problem of \(\text{TQBF}\) and then, using so-called \emph{exhaustive enumeration}, an associated formula can be used to obtain an instance of the \(\text{MATRIXINVERSION}\) problem. Given the stated complexity, we can then derive the claimed polynomial reduction, giving \(\text{PSPACE} \subseteq \text{BQP}\). This, however, is an open problem. For the third statement, we again have an open problem in the direction \(\text{BQP} \subseteq \text{BPP}\). The proof is analogous to the proof of the first statement.
+
+\begin{theorem}
+    The following statements hold.
+    \begin{enumerate}[label=(\roman*)]
+        \item If there is a quantum algorithm for solving \(\text{MATRIXINVERSION}\) in time
+        \begin{align}
+            \poly(\kappa, \log_2(N), \log_2(1/\varepsilon))
+        \end{align}
+        then \(\text{BQP} = \text{PP}\).
+        \item No relativizing algorithm for \(\text{MATRIXINVERSION}\) can run in time \(\onot(N^\alpha\poly(\kappa)/\varepsilon^\beta)\) for \(\alpha, \beta \in \mathbb{R}_{> 0}\), unless \(\alpha + \beta \geq 1\).
+    \end{enumerate}
+\end{theorem}
+
+This result can be found in \cite[p. 14]{Harrow2008}. We consider the first statement only. Again, we already have \(\text{BQP} \subseteq \text{PP}\) and want to prove \(\text{PP} \subseteq \text{BQP}\). The authors use the \(\text{PP}\)-complete problem \(\text{\#SAT}\), which counts the fulfilling assignments of the variables in a given Boolean formula \(\varphi\) of \(n \in \mathbb{N}_{\geq 1}\) variables and reduce it to a problem instance of \(\text{MATRIXINVERSION}\). One major point in the proof is, that the \(\log_2(N)\) runtime term mitigates the complexity of thte size of the reduced equation system and the \(\log_2(1/\varepsilon)\) factor mitigates the complexity induced by chosing an exponentially small error.
+
+\begin{remark}
+    One may now question the validity of the result by Childs et al. in \Cref{hhl_fourier_approach}. However, as Childs et al. point out \cite[p. 2]{Childs2015}, the measurement of the first qubit as in \(\text{MATRIXINVERSION}\) is a crucial difference in the design of the different algorithms, making a the possibility of a subexponential error algorithm of this form unlikely.
+\end{remark}
