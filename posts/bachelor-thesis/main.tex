@@ -1,0 +1,100 @@
+\documentclass[10pt, a4paper]{article}
+
+\usepackage{algorithm}
+\usepackage{algpseudocodex}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[backend=biber, bibstyle=ieee, citestyle=numeric-comp]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{polynom}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, automata, cd, decorations.pathmorphing, external, patterns, quantikz, quotes}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+%\tikzexternalize[prefix=out/]
+
+\titleformat{\section}{\normalsize\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+\numberwithin{equation}{subsection}
+
+\addbibresource{bibliography.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\notgate}{NOT}
+\DeclareMathOperator{\onot}{\mathcal{O}}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\ajk}{\alpha_{j, k}}
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlj}{\tilde{\lambda_j}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[1]{\textcolor{red}{#1}}
+\newcommand{\draftcommentgreen}[1]{\textcolor{green}{#1}}
+\renewcommand{\draftcomment}[1]{}
+\renewcommand{\draftcommentgreen}[1]{}
+
+\renewcommand{\algorithmicrequire}{\textbf{Given:}}
+\renewcommand{\algorithmicensure}{\textbf{Return:}}
+
+\begin{document}
+    \pagenumbering{gobble}
+    \include{titlepage}
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+    \include{chapter_1}
+    \include{chapter_2}
+    \include{chapter_3}
+    \include{chapter_4}
+    \include{appendix}
+    \printbibliography
+\end{document}

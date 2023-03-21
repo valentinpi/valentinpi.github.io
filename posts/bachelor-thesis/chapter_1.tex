@@ -1,0 +1,363 @@
+\section{Introduction} \label{introduction}
+
+The main goal of this thesis is to present the quantum algorithm for solving systems of linear equations proposed by Harrow et al. \cite{Harrow2008} in 2008 in full detail and in the original formulation. We then apply it to the cryptanalysis of AES. For that, we shortly present the results by Chen \cite{Chen2017} and Ding \cite{Ding2021}.
+
+This and the next section are dedicated to providing the foundations to this thesis. Note that, although this thesis is written in English, we will partly give references to \emph{German} standard literature. The focus is to present these results following rigorous mathematical sources.
+
+This thesis is divided into four sections. In \Cref{introduction}, we first introduce necessary mathematical background knowledge on Hermitian matrices, matrix invertibility criteria and polynomial factor rings. \Cref{extensions_of_the_common_quantum_algorithmic_toolbox} presents multiple auxiliary quantum algorithms, including Qutrit Rotation, Amplitude Amplification, Quantum Phase Estimation and Hamiltonian Simulation. \Cref{the_hhl_algorithm} then presents a full, rigorous description of the original HHL algorithm, as described by Harrow et al.. \Cref{application_on_the_cryptanalysis_of_aes} closes the thesis by introducing the AES cipher and linearization techniques, as well as presenting the current state of the art of the approach.
+
+\subsection{Background Knowledge in Quantum Computation \draftcommentgreen{DONE}} \label{intro_to_quant_comp}
+
+\emph{Classical Computers}, with which nowadays we are all familiar with, utilize the notion of a logical \emph{bit} to process information. In the simplest case, a bit is physically implemented by a small transistor, capable of storing an electronic current. This allows the physical machine to differentiate between the logical values \(0\) and \(1\) and is the foundation of all other activities in a classical electronic computer.
+
+\phantom{}
+
+\emph{Quantum Mechanics} is a physical theory of microscopically small particles. Such particles exhibit many interesting properties, such as the so-called \emph{particle-wave duality} \cite[pp. 4-8]{Griffiths2018}. We model quantum particles as elements of Hilbert spaces, of which we can measure some properties. Such measurable properties are called \emph{observables}. A particle is always in a state, which, in turn, is a superposition of several special states. Let us dive into a little more detail.
+
+\phantom{}
+
+For that, we follow \cite[pp. 29-39]{Scherer2019}. Suppose \(t_0 \in \mathbb{R}_{\geq 0}\) is the starting point of our investigation of a very small particle, take it to be an electron or a photon, which is in a state \(\ket{\psi(t)}\) at time point \(t \in [t_0, \infty)\). The state is an element of a Hilbert space \(\mathcal{H}\). Especially, \(\ket{\psi(\cdot)}\colon [t_0, \infty) \to \mathcal{H}\) is thus the map capturing the development of the state over time. Let us assume \(\mathcal{H} = \mathbb{C}^2\) for convenience for the partial derivative below. There are general operator derivatives \cite[p. 126 ff.]{Werner2018}, but here, we will not get into that. In Borns statistical interpretation of the quantum mechanical wave function, \(\norm{\ket{\psi(t)}} = 1\) must hold at all times \cite[3-5]{Griffiths2018}, aligning with the stochastical nature of quantum particles. The particle state especially obeys the following version of the fixed-position, time-dependent \emph{Schroedinger equation} \cite[p. 38]{Scherer2019}:
+\begin{align}
+    i \frac{\partial}{\partial t} \ket{\psi(t)} = H(t) \ket{\psi(t)} \label{schroedinger_equation}
+\end{align}
+\(H\) is an operator, called the \emph{Hamiltonian} of the particle, and represents its observable energy with its eigenvalues. It is often the sum of potential and kinetic energy, each also being represented by an operator. Furthermore, the \emph{time postulate} \cite[p. 38]{Scherer2019} holds in the theory, stating that there is a map \(U\colon [t_0, \infty) \to \{O\colon \mathcal{H} \to \mathcal{H} \mid O \text{ is a unitary operator}\}\), satisfying:
+\begin{align}
+    \ket{\psi(t)} = U(t)\ket{\psi(t_0)} \label{time_postulate}
+\end{align}
+Also, \(U(t_0) = \text{id}_{\mathcal{H}}\) for sure. So, according to the time postulate, quantum states are only transformed unitarily. One may take this postulate to be the starting point for the idea of quantum computation.
+
+\phantom{}
+
+\emph{Quantum computers} differ from classical computers. Here we utilize the notion of particles, that can form superpositions of bit values. For this thesis, the physics of these systems is less interesting to us, than their computational consequences, and we will not discuss the implementation of quantum hardware. To us, a so-called \emph{qubit} is capable of spanning a superposition between the two classical bit values \(0\) and \(1\). This system is represented by a complex vector in the Hilbert space \(\mathbb{C}^2\), being the complete complex Euclidian vector space of 2-complex-component vectors. These systems, as mentioned above, can only be transformed unitarily to us. Using the results of quantum mechanics, we hope to find more efficient algorithms for solving tough computational problems. It has been shown by authors such as Deutsch, Jozsa, Bernstein, Vazirani, Grover and Shor, that quantum computers, for some special problems, are indeed able to produce exponential speedups to their classical counterpart algorithms \cite{Nielsen2010}. It has also been shown, that quantum computers and classical computers are computationally equivalent, as classical systems can simulate quantum computers and vice versa due to Toffoli-gates \cite[p. 29 f.]{Nielsen2010}. This also means, that classical issues like the halting problem cannot be resolved with this new model. The complexity-theoretic landscape of classical and quantum complexity classes is much more complex. In this thesis, we will discuss an approach to solving SLEs. As in classical computation, we may also use the notion of \emph{gates} to describe algorithms on qubits and qubit registers, with these gates corresponding to unitary matrices.
+
+\phantom{}
+
+With the gate model of quantum computing, a framework was given for non-physicists to design quantum algorithms by applying unitary transformations to a quantum state. Despite that, research in the field of Quantum Computer Science is still partly dominated by terminology from QM. We will occasionally talk about Hamiltonians in this thesis, although we will not explicitely talk about energies of particles, unlike adiabatic quantum computation, for instance. This specific term is due to the above mentioned Schroedinger equation, where \(H\) is always Hermitian. Physicists use the terms \emph{Hermitian operator} and \emph{Hamiltonian} synonymously.
+
+\phantom{}
+
+This bachelor thesis is designed to be mostly self-sufficient, besides a required background in linear algebra, analysis and quantum computational principles.
+
+\subsection{Finite-Dimensional Hermitian Operator Theory \draftcommentgreen{DONE}}
+
+This subsection will introduce Hermitian matrices and present some important mathematical results. Some examples will also be mentioned. Throughout this subsection, let \(m, n \in \mathbb{N}_{\geq 1}\). As we will talk about quantum computing, we shall revisit the definition of unitary matrices first, after some remarks on our terminology.
+
+\begin{remark} \label{remark_functional_analytic_terminology}
+    We first visit a few definitions from functional analysis. Complex matrices in \(\mathbb{C}^{m \times n}\) are linear maps between the vector spaces \(\mathbb{C}^n\) and \(\mathbb{C}^m\), which are in turn, due to the standard norm, \emph{Banach spaces} \cite[p. 2]{Werner2018}. Especially, complex matrices are continuous \cite[p. 35]{Forster2017}, meaning that we can also call them by their functional-analytic term \emph{operators} \cite[p. 49]{Werner2018}. Operators, that map into scalar spaces, such as \(\mathbb{C}\), are also called \emph{functionals}.
+\end{remark}
+
+\begin{definition} \label{definition_unitary_matrix}
+    An invertible matrix \(U \in \mathbb{C}^{n \times n}\) is called \emph{unitary}, if \(U^{-1} = U^\dagger\).
+\end{definition}
+
+\begin{example} \label{example_unitary_rotation}
+    Using the exponential form of the sine and cosine functions from \Cref{exponential_sine_and_cosine} and the trigonometric pythagoras from \Cref{trigonometric_pythagoras}, one may easily verify that the two-dimensional rotation by an angle \(\varphi \in [0, 2\pi)\) is unitary:
+    \begin{align}
+        \begin{pmatrix}
+            \cos(\varphi) & -\sin(\varphi)\\
+            \sin(\varphi) & \cos(\varphi)
+        \end{pmatrix} \begin{pmatrix}
+            \cos(\varphi) & -\sin(\varphi)\\
+            \sin(\varphi) & \cos(\varphi)
+        \end{pmatrix}^\dagger = \begin{pmatrix}
+            \cos^2(\varphi)+\sin^2(\varphi) & 0\\
+            0 & \sin^2(\varphi)+\cos^2(\varphi)
+        \end{pmatrix}^\dagger = E_2
+    \end{align}
+\end{example}
+
+\begin{theorem} \label{theorem_unitary_matrices_characterization}
+    Let \(U \in \mathbb{C}^{n \times n}\) with rows \(u_1, ..., u_n \in \mathbb{C}^n\) and columns \(v_1, ..., v_n \in \mathbb{C}^n\). The following are equivalent:
+    \begin{itemize}
+        \item \(U\) is unitary.
+        \item \(\{u_1, ..., u_n\}\) is an orthonormal basis of \(\mathbb{C}^n\).
+        \item \(\{v_1, ..., v_n\}\) is an orthonormal basis of \(\mathbb{C}^n\).
+    \end{itemize}
+\end{theorem}
+
+For the proof, see \cite[pp. 351-352]{Fischer2020}. Remember, that unitary matrices represent steps in quantum algorithms.
+
+\begin{theorem} \label{theorem_unitary_isometry}
+    Unitary matrices are \emph{length-preserving/isometric}, meaning that for any unitary \(U \in \mathbb{C}^{n \times n}\) and \(x \in \mathbb{C}^n\) it holds that \(\norm{Ux} = \norm{x}\). Especially they preserve the standard product, meaning that for \(u, v \in \mathbb{C}^n\), we have \(\langle Uu, Uv \rangle = \langle u, v \rangle\).
+\end{theorem}
+
+For the proof, see \cite[pp. 350-351]{Fischer2020}. We now introduce Hermitian matrices.
+
+\begin{definition} \label{definition_eigenstates}
+    We call a normalized eigenvector \(\ket{v} \in \mathbb{C}^n\) of a matrix \(U \in \mathbb{C}^{n \times n}\) an \emph{eigenstate}.
+\end{definition}
+
+\begin{definition} \label{definition_hermitian_matrix}
+    A matrix \(H \in \mathbb{C}^{n \times n}\) is called \emph{Hermitian}\footnote{After Charles Hermite.}, if \(H = H^\dagger\). We also call Hermitian matrices \emph{Hamiltonians}.
+\end{definition}
+
+\begin{example} \label{example_hermitian_matrix}
+    Consider the following matrix:
+    \begin{align}
+        \begin{pmatrix*}
+            1 & i\\
+            -i & 2
+        \end{pmatrix*}^\dagger = \begin{pmatrix*}
+            1 & -i\\
+            i & 2
+        \end{pmatrix*}^* = \begin{pmatrix*}
+            1 & i\\
+            -i & 2
+        \end{pmatrix*}
+    \end{align}
+\end{example}
+
+\begin{theorem} \label{theorem_eigenbasis}
+    Every Hermitian matrix \(H \in \mathbb{C}^{n \times n}\) possesses at most \(n\) eigenvalues, with all of them being real. There is an orthonormal basis of \(\mathbb{C}^n\), which is composed entirely of eigenvectors of \(H\), also called an \emph{eigenbasis}.
+\end{theorem}
+
+For the proof see \cite[pp. 360-362]{Fischer2020}. It is clear that, since eigenvectors are by definition non-zero, we can also normalize the eigenvectors mentioned to a length of one and thus obtain an orthonormal basis. In general, any basis of eigenvectors is called an eigenbasis. With the Gram-Schmidt-orthonormalization-procedure \cite[p. 185]{Janich2010} however, an orthonormal basis can be acquired algorithmically from a non-orthonormal eigenbasis. Note further, that some eigenstates may also be associated with the zero eigenvalue.
+
+\begin{example} \label{example_hermitian_eigenbasis}
+    The following Hermitian matrix has eigenvalues \(2\) and \(0\) with corresponding eigenvectors \(\ket{0}\) and \(\ket{1}\), which form an eigenbasis of \(\mathbb{C}^2\):
+    \begin{align}
+        \begin{pmatrix}
+            2 & 0\\
+            0 & 0
+        \end{pmatrix}
+    \end{align}
+\end{example}
+
+\begin{theorem}[Spectral Decomposition] \label{theorem_spectral_decomposition}
+    Given a Hermitian \(H \in \mathbb{C}^{n \times n}\) with eigenvalues \(\lambda_1, ..., \lambda_n \in \mathbb{R}\) and eigenbasis \(\ket{v_1}, ..., \ket{v_n} \in \mathbb{C}^n\), it holds that:
+    \begin{align}
+        H = \sum_{i=1}^n \lambda_i \ket{v_i}\bra{v_i}
+    \end{align}
+\end{theorem}
+
+\begin{proof}
+    It suffices to show the statement for the vectors in the eigenbasis. Since the vectors are orthogonal, we observe for any \(j \in [1, n]_{\mathbb{N}}\):
+    \begin{align}
+        \sum_{i=1}^n \lambda_i \ket{v_i}\braket{v_i}{v_j} = \lambda_j \ket{v_j} = H\ket{v_j}
+    \end{align}
+\end{proof}
+
+\begin{corollary} \label{corollary_inverse_spectral_decomposition}
+    If the Hermitian matrix in \Cref{theorem_spectral_decomposition} is invertible, the eigenvalues are all non-zero and the spectral decomposition of \(H^{-1}\) is given by:
+    \begin{align}
+        H^{-1} = \sum_{i=1}^n \lambda_i^{-1} \ket{v_i}\bra{v_i}
+    \end{align}
+\end{corollary}
+
+\begin{proof}
+    We prove the first statement by contradiction. With reordering, we may assume wlog., that \(\lambda_1 = 0\). Then \(H\ket{v_1} = \lambda_1v_1 = 0 = H\ket{0}\), contradicting the bijectivity of \(H\).{ }\lightning{ } We observe, that \(H\left(\sum_{i=1}^n \lambda_i^{-1} \ket{v_i}\bra{v_i}\right)\ket{v_k} = \lambda_k \lambda_k^{-1} \ket{v_k} = \ket{v_k}\) for all \(\ket{v_k}\) by the above formula, proving equality.
+\end{proof}
+
+This theorem allows us to write a given Hermitian matrix more compactly. It can surely also be used for generally any matrix, where the eigenvalues involved may then be complex. Another useful decomposition of matrices is presented in the following.
+
+\begin{theorem}[Outer Product Form of the SVD] \label{theorem_svd}
+    Let \(A \in \mathbb{C}^{m \times n}\) and \(r \coloneqq \rk(A)\). There are so-called \emph{singular values} \(\sigma_1, ..., \sigma_r \in \mathbb{R}_{> 0}\) with \(\sigma_1 \geq ... \geq \sigma_r\) and orthonormal systems, comprised of so-called \emph{singular vectors}, \(\{\ket{u_1}, ..., \ket{u_r}\} \subset \mathbb{C}^m\) and \(\{\ket{v_1}, ..., \ket{v_r}\} \subset \mathbb{C}^n\), such that:
+    \[
+        A = \sum_{j=1}^r \sigma_j \ket{u_j}\bra{v_j}
+    \]
+\end{theorem}
+
+The proof is given in \cite[p. 153-157]{Lyche}.
+
+\begin{corollary}[SVD] \label{svd_corollary}
+    Any matrix \(A \in \mathbb{C}^{m \times n}\) can be written in the form
+    \begin{align}
+        A = U \Sigma V^\dagger
+    \end{align}
+    where \(\Sigma \coloneqq \diag(\sigma_1, ..., \sigma_r, 0, ..., 0) \in \mathbb{C}^{m \times n}\) with \(\sigma_1, ..., \sigma_r \in \mathbb{R}_{> 0}\) being the singular values of \(A\) and \(U \in \mathbb{C}^{m \times m}\) and \(V \in \mathbb{C}^{n \times n}\) being unitary.
+\end{corollary}
+
+\begin{proof}
+    Consider the outer form SVD of \(A\), see \Cref{theorem_svd}. Extend \(\{\ket{u_1}, ..., \ket{u_r}\}\) and \(\{\ket{v_1}, ..., \ket{v_r}\}\) to an orthonormal basis each for \(\mathbb{C}^m\) and \(\mathbb{C}^n\) respectively via \(\{\ket{u_1}, ..., \ket{u_m}\}\) and \(\{\ket{v_1}, ..., \ket{v_n}\}\). The computation
+    \begin{align}
+        A = \sum_{j=1}^r \sigma_j \ket{u_j}\bra{v_j} = \begin{pmatrix}
+            \ket{u_1} & \cdots & \ket{u_m}
+        \end{pmatrix} \diag(\sigma_1, ..., \sigma_r, 0, ..., 0) \begin{pmatrix}
+            \bra{v_1}\\
+            \hdots\\
+            \bra{v_n}
+        \end{pmatrix} \eqqcolon U \Sigma V^\dagger
+    \end{align}
+    which we can directly verify using the matrix product gives the statement.
+\end{proof}
+
+We cannot invert non-invertable matrices. The following definition gives us a different notion of invertibility.
+
+\begin{definition}[Moore-Penrose Pseudoinverse] \label{moore_penrose_pseudoinverse}
+    Let \(A \in \mathbb{C}^{m \times n}\) possess the SVD \(A = U \Sigma V^\dagger\) with singular values \(\sigma_1, ..., \sigma_r \in \mathbb{R}_{> 0}\). Then we define the \emph{Monroe-Pense Pseudoinverse} to be
+    \begin{align}
+        A^+ \coloneqq V \Sigma^+ U^\dagger
+    \end{align}
+    with \(\Sigma^+ \coloneqq \diag\left(\frac{1}{\sigma_1}, ..., \frac{1}{\sigma_r}, 0, ..., 0\right)\).
+\end{definition}
+
+This definition follows \cite[pp. 41-42]{Dervovic2018}. For \(m = n\) and \(A\) being invertible for instance, we can verify \(A^+ = A^{-1}\) via \(AA^+ = U \Sigma V^\dagger V \Sigma^+ U^\dagger = E^m\).
+
+\begin{definition} \label{definition_matrix_exponential_function}
+    The \emph{matrix exponential function}  is defined by:
+    \begin{align}
+        \exp\colon \mathbb{C}^{n \times n} \to \mathbb{C}^{n \times n}, M \mapsto \sum_{k=0}^\infty \frac{M^k}{k!}
+    \end{align}
+    We shall also note \(\exp(M) \eqqcolon e^M\).
+\end{definition}
+
+Note that this series is a multidimensional limit. The following lemma gives us the convergence and two other properties.
+
+\begin{lemma}[Properties of the matrix exponential function] \label{matrix_exponential_properties}
+    Let \(M, N \in \mathbb{C}^{n \times n}\). The following holds:
+    \begin{enumerate}[label=(\roman*)]
+        \item \(\exp(0) = E_n\).
+        \item \(\exp(M)\) converges.
+        \item If \(MN=NM\), then \(\exp(M+N)=\exp(M)\exp(N)\).
+    \end{enumerate}
+\end{lemma}
+
+The proof can be found in \cite[p. 9]{Waldmann2022}. The previous statements and definitions are generalizations of known facts from the study of euclidian/unitarian vector spaces. Now we want to study the problem of generating a unitarian matrix with a Hermitian matrix.
+
+\begin{theorem} \label{exponential_of_hermitian_is_unitary}
+    For any Hermitian matrix \(H \in \mathbb{C}^{n \times n}\) and \(t \in \mathbb{R}\), \(e^{iHt}\) is unitary.
+\end{theorem}
+
+\begin{remark}
+    The parameter \(t\) is introduced, as the unitary described may be interpreted as a time evolution of a particle, as described in the introduction.
+\end{remark}
+
+We shall demonstrate the notion of the matrix exponential by giving a proof to this statement. Without proof, note that taking the transpose of a matrix and taking the conjugate are both continuous mappings, meaning that we can move these operations inside of the matrix exponential series.
+
+\begin{proof}
+    In the following, we move the adjunction inside of the series. Since taking the adjoint is compatible both with addition and multiplication in each matrix entry, it holds:
+    \begin{align}
+        \left(e^{iHt}\right)^\dagger = \sum_{k=0}^\infty \frac{(-1)^ki^k(H^\dagger)^kt^k}{k!} = e^{-i H^\dagger t} = e^{-i H t}
+    \end{align}
+    Since \(H = H^\dagger\) and thus \(H H^\dagger = H^\dagger H\), we can use \Cref{matrix_exponential_properties} and conclude:
+    \begin{align}
+        e^{iHt}\left(e^{iHt}\right)^\dagger = e^{iHt-iHt} = e^0 = E_n
+    \end{align}
+\end{proof}
+
+\begin{theorem} \label{eigenvalue_phases}
+    Suppose \(U \in \mathbb{C}^{n \times n}\) is unitary with eigenvalue \(\lambda \in \mathbb{C}\). Then there is a number \(\theta \in [0, 1)\) with \(\lambda = e^{i2\pi\theta}\), called the \emph{phase} of the eigenvalue.
+\end{theorem}
+
+\begin{proof}
+    It suffices to show that the magnitude of the eigenvalue is \(1\). Let \(v\) be an eigenvector to \(\lambda\). With \Cref{theorem_unitary_isometry}, we have \(\norm{Uv} = \norm{\lambda v} = |\lambda| \norm{v} = \norm{v}\) and \(|\lambda| = 1\), since by definition \(v \neq 0\).
+\end{proof}
+
+\begin{theorem} \label{exponential_eigenvalue_theorem}
+    If a Hermitian matrix \(H \in \mathbb{C}^{n \times n}\) has eigenvalue \(\lambda\) with eigenvector \(v\), then the associated unitary matrix exponential \(e^{iHt}, t \in \mathbb{R},\) has eigenvalue \(e^{i \lambda t}\) with eigenvector \(v\).
+\end{theorem}
+
+\begin{proof}
+    We have
+    \begin{align}
+        e^{iHt}v = \sum_{k=0}^\infty \frac{i^kt^k}{k!} H^k v = \sum_{k=0}^\infty \frac{i^k\lambda^kt^k}{k!}v = e^{i \lambda t} v
+    \end{align}
+\end{proof}
+
+\begin{remark}
+    This theorem shows that an eigenbasis of \(e^{iHt}\) is given by an eigenbasis of \(H\). It is important to note, that, due to \Cref{theorem_spectral_decomposition} and \Cref{exponential_eigenvalue_theorem}, we can write the spectral decomposition of \(e^{iHt}\) as:
+    \begin{align}
+        e^{iHt} = \sum_{i=1}^n e^{i \lambda_i t} \ket{v_i}\bra{v_i}
+    \end{align}
+    The proof is analogous to the one of \Cref{theorem_spectral_decomposition}.
+\end{remark}
+
+\subsection{Matrix Condition Number and Sparsity \draftcommentgreen{DONE}}
+
+The main tool for quantifying the toughness of a matrix invertibility problem is the \emph{condition number}. There are multiple ways of defining the condition number, we use the following definition following Lyche \cite{Lyche}
+
+\begin{definition} \label{condition_number}
+    The \emph{condition number} \(\kappa(A) \in \mathbb{R}_{\geq 1}\) of a matrix \(A \in \mathbb{C}^{m \times n}\) with singular values \(\sigma_1, ..., \sigma_r \in \mathbb{R}_{> 0}\), \(r \coloneqq \rank(A)\) is defined by
+    \begin{align}
+        \kappa(A) \coloneqq \frac{\sigma_{\max}(A)}{\sigma_{\min}(A)} \text{, where } \sigma_{\max}(A) \coloneqq \max\{\sigma_1, ..., \sigma_r\}, \sigma_{\min}(A) \coloneqq \min\{\sigma_1, ..., \sigma_r\}
+    \end{align}
+    Furthermore, we set for \(m = n\), \(A\) invertible and, possibly duplicate, eigenvalues \(\lambda_1, ..., \lambda_n \in \mathbb{C} \setminus \{0\}\) of \(A\) the condition number as
+    \begin{align}
+        \kappa(A) = \frac{\lambda_{\max}(A)}{\lambda_{\min}(A)} \text{, where } \lambda_{\max}(A) \coloneqq \max\{|\lambda_1|, ..., |\lambda_n|\}, \lambda_{\min}(A) \coloneqq \min\{|\lambda_1|, ..., |\lambda_n|\}
+    \end{align}
+\end{definition}
+
+We can also set \(\kappa(A) \coloneqq \norm{A}\norm{A^+}\) using the Moore-Penrose pseudoinverse, see \Cref{moore_penrose_pseudoinverse}, so the concrete use of condition numbers depends on the current context. \draftcomment{INCLUDE}
+
+\begin{remark}
+    Note, that
+    \begin{itemize}
+        \item \(\kappa(A) \geq 1\) always holds, due to \(0 < \sigma_{\min}(A) \leq \sigma_{\max}(A)\) and for the second part of the definition analogously. Especially, \(0 < \frac{1}{\kappa(A)} \leq 1\).
+        \item if \(\kappa(A)\) is very large, then we call \(A\) \emph{ill-conditioned}.
+    \end{itemize}
+\end{remark}
+
+\begin{example} \label{diagonal_matrix_condition_number_example}
+    Consider a diagonal matrix \(D\) with diagonal elements \(d_{11}, ..., d_{nn} \in \mathbb{C}_{\neq 0}\). Then \(\kappa(D) = \max_{i \in [1, n]_{\mathbb{N}}}|d_{ii}| / \min_{i \in [1, n]_{\mathbb{N}}}|d_{ii}|\), which allows us to increase the condition arbitrarily. Consider for instance for \(n \geq 2\) and \(j \in \mathbb{N}\) the matrix \(D \coloneqq 2^j \ket{0}\bra{0} + \sum_{i = 1}^{n-2} \ket{i}\bra{i} + 2^{-j} \ket{n-1}\bra{n-1}\). One may ask the question, whether there are non-trivial ill-conditioned matrices.
+\end{example}
+
+\begin{example} \label{example_hilbert_matrices}
+    One particularly interesting class of examples are \emph{Hilbert matrices}, where the \emph{\(n\)-th Hilbert matrix} is defined as
+    \begin{align}
+        \mathcal{H}_n \coloneqq \left(\frac{1}{i+j-1}\right)_{i, j \in n \times n}
+    \end{align}
+    This construction solves the question from \Cref{diagonal_matrix_condition_number_example}: \(\mathcal{H}_n\) is clearly Hermitian and it can also be shown, that it is invertible by explicitely giving the inverse as in \cite[pp. 302, 306]{Choi_1983}. \cite[p. 51]{Wilf_1970} gives the bound \(\lambda_{\min}(\mathcal{H}_n) \in \Theta(\sqrt{n}(1+\sqrt{2})^{-4n})\) and, following the result cited in \cite[p. 111]{Todd1954}, we also have \(\lambda_{\max}(\mathcal{H}_n) \in \Theta(\pi)\). So
+    \begin{align}
+        \kappa(\mathcal{H}_n) \in \Theta\left(\frac{(1+\sqrt{2})^{4n}}{\sqrt{n}}\right)
+    \end{align}
+    which gives the statement that this matrix is very ill-conditioned.
+\end{example}
+
+\begin{definition} \label{sparse_and_efficiently_row_computable_matrices}
+    A matrix \(A \in \mathbb{C}^{m \times n}\) is called \emph{\(s\)-sparse}, with \(s \in \mathbb{N}\), if there are at most \(s\) many non-zero entries per row or column. \(A\) is called \emph{efficiently row-computable}, if there is an algorithm, that, for a given row or column index respectively, computes the corresponding indices of the non-zero entries in time \(\onot(s)\).
+\end{definition}
+
+\begin{definition} \label{well_conditioned_matrices}
+    We call an invertible, Hermitian, positive-semidefinite, sparse, efficiently row-com\-putable matrix with condition number \(\kappa \in \mathbb{R}_{\geq 1}\) and for all eigenvalues \(\lambda \in \mathbb{R}_{>0}\), that
+    \begin{align}
+        \frac{1}{\kappa} \leq \lambda \leq 1
+    \end{align}
+    \emph{well-conditioned}.
+\end{definition}
+
+\subsection{Finite Polynomial Fields \draftcommentgreen{DONE}}
+
+This subsection is dedicated to presenting fields of polynomials, which are formed over finite fields. We use the book by Fischer \cite{Fischer2017} for the necessary algebra. Recall the formal details of a group \cite[p. 5]{Fischer2017}, a ring \cite[pp. 171-172]{Fischer2017}, a field \cite[p. 174]{Fischer2017},  polynomial rings \cite[pp. 183-186]{Fischer2017}, an ideal and generating an ideal \cite[p. 206]{Fischer2017}.
+
+\begin{definition}
+    Let \(K\) be a field and \(p \in K[x]\). The \emph{factor ring} \(K[X]/(p)\) is composed of the set \(\{q + (p) \mid q \in K[X]\}\) with the operations \((q + (p)) + (q' + (p)) \coloneqq (q + q') + (p)\) and \((q + (p)) \cdot (q' + (p)) \coloneqq q \cdot q' + (p)\) for \(q, q' \in K[X]\).
+\end{definition}
+
+Here, \((p) = \{q p \mid q \in K[x]\}\) denotes the ideal generated by \(p\). For further information and a more precise description with proof, see \cite[p. 208]{Fischer2017}. Here, we use the common calculation techniques for taking modulos with polynomials via polynomial division, as also described in \cite[p. 188]{Fischer2017}. Furthermore, as taking the modulo is unique, we may choose representants of the elements in \(K[x]/(p)\) via the condition \(\deg(q) < \deg(p)\). This, with an additional result, gives the following result.
+
+\begin{theorem}
+    If \(p \in K[x]\) is irreducible, then \(K[x]/(p)\) is a field. If \(K\) is finite, then \(|K[x]/(p)| = |K|^{\deg(p)}\).
+\end{theorem}
+
+For the proof of the first part of the statement, we refer to \cite[p. 313]{Fischer2017}. For the second part, consider
+\begin{align}
+    \{q + (p) \mid q \in K[x]\} = \{q + (p) \mid q \in K[x] \land \deg(q) < \deg(p)\}
+\end{align}
+via the uniqueness of polynomial division.
+
+\begin{corollary} \label{byte_field}
+    The factor rings \(\gf(2)[x]/(x^8+x^4+x^3+x+1) \cong \mathbb{F}_{2^8}\) and \(\mathbb{F}_{2^8}[x]/(x^4+1) \cong \mathbb{F}_{2^8}^4\) are fields.
+\end{corollary}
+
+Note, that \(\gf(2)\) is a field because \(2\) is prime. Due to the isomorphism to \(\mathbb{F}_{2^8}\), it formally makes sense to speak of \(\gf(2^8)\) as a field, although \(2^8\) is not prime. Another factor ring that will be of interest later on is .
+
+\begin{example} \label{polynomial_multipl_matrix_example}
+    We shall give a short example for polynomial multiplication in finite fields and the matrix representation of a multiplication with a fixed polynomial. Consider the field \(\gf(2)^8[x]/(x^4+1)\). We have for instance
+    \begin{align}
+        (3x^3+x^2+x+2) \cdot x^3 \bmod (x^4+1) = 2x^3+3x^2+x+1
+    \end{align}
+    The multiplication to obtain the result here is done via polynomial division in \(\mathbb{R}[x]\). We obtain
+    \begin{equation}
+        \polylongdiv[div=:, style=C]{3x^6+x^5+x^4+2x^3}{x^4+1}
+    \end{equation}
+    Since \(-3 = 3\) and \(-1 = 1\) in \(\gf(2)^8\), we have the result. Especially, as polynomial multiplication is linear, we can even form a matrix to compute these results faster. It suffices to compute the product with \(\{x^3, x^2, x, 1\}\). In this case, the matrix is exactly
+    \begin{align}
+        \begin{pmatrix}
+            2 & 3 & 1 & 1\\
+            1 & 2 & 3 & 1\\
+            1 & 1 & 2 & 3\\
+            3 & 1 & 1 & 2
+        \end{pmatrix}
+    \end{align}
+    The coefficients for \(x^3\), which can be found in the first row, were computed above.
+\end{example}

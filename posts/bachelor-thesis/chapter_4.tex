@@ -1,0 +1,627 @@
+\section{Application on the Cryptanalysis of AES} \label{application_on_the_cryptanalysis_of_aes}
+
+The AES, synonymously \emph{Rijndael}, is a famous, widely used block cipher. It is specified by the US-American NIST in \cite{Dworkin2001}. AES is a symmetric cipher, meaning that it uses one key for the encryption and decryption of blocks. The key is \(K\) bits long, where \(K \in \{128, 192, 256\}\). Thus, it is clear that for a brute force approach to key retrieval with Grovers algorithm, one can achieve a quadratic improvement from a runtime of \(\onot(2^K)\) to \(\onot(2^{K/2})\).
+
+Rijndael and AES are two different cipher specifications. As described by the original authors of both ciphers \cite[p. 31]{Daemen_2020}, the difference lies in the allowed values of the input block length and the cipher key length. We will focus on AES, as it is the cipher of our cryptanalytical interest.
+
+The goal of this last subsection is twofold. For one, we want to discuss the inner workings of Rijndael and its formulation as a so-called BES-cipher. Especially, we want to form a system of equations for key recovery using that, which we will however not solve, as this is not the scope of this thesis. Secondly, we will discuss current research on this topic in the context of two recent papers by the researchers Chen and Gao \cite{Chen2017} and Ding et al. \cite{Ding2021}. We chose BES, as it overcomes a small algebraic problem when attempting to formulate such an equation system with a comparatively simple solution. We furthermore analyze the size of the system.
+
+AES has proven to be a reliable cipher over the years, resisting any attempt at successful cryptanalysis yet, as a survey by Nover shows \cite{Nover}. The authors of Rijndael, Joan Daemen and Vincent Rijmen, released a book on the details and the design philosophy of Rijndael \cite{Daemen_2020}, as referenced above. It shall be our main source for the next subsection, next to the FIPS cipher specification.
+
+\subsection{An Algebraic Description of AES \draftcommentgreen{DONE}} \label{an_algebraic_description_of_aes}
+
+An overview of AES is given in \Cref{aes_block_diagram}. \Cref{aes_parameters} lists the relevant parameters. We shall use the symbol \(K\) for the key itself. One difficulty in this description is differentiating between the different representations of bytes: A byte can be seen as a vector from the vector space \(\gf(2)^8\), an integer from the finite modulo ring \(\mathbb{F}_{2^8}\) or as a polynomial from the field \(\gf(2)[x]/(p)\), where \(p \in \gf(2)[x]\) is an irreducible polynomial, see \Cref{byte_field}. We shall explicitely state the form we use each time. We always index starting from the least significant bit, so for instance we may have \(b = b_7b_6b_5b_4b_3b_2b_1b_0 = 01110010\), which corresponds to \((0, 1, 0, 0, 1, 1, 1, 0)^t\), \(114\) or \(x^6+x^5+x^4+x\).
+
+The input of the algorithm is both a \(32N_b\)-bit plaintext \(P \in \mathbb{F}_{2^8}^{4 \times N_b}\) and a \(32N_k\)-bit key \(K \in \mathbb{F}_{2^8}^{4 \times N_k}\). The output is a \(32N_b\)-bit long encrypted block \(C \in \mathbb{F}_{2^8}^{4 \times N_b}\). We will describe each step of the AES in detail and algebraically. We also do not fix \(N_b\), \(N_r\) or \(N_k\), as it is not necessary for our discussion.
+
+One major design criterion of AES was space-efficiency \cite[pp. 4-5]{Daemen_2020}, thus, we do not require a lot of storage. We work with a null-indexed column-major enumeration of the input plaintext bytes along a \(4 \times N_b\) grid following \cite[p. 9]{Dworkin2001}. Let the plaintext be the initial \emph{state} \(S \coloneqq (s_{(i-1)(j-1)})_{i, j \in 4 \times N_b} \in \mathbb{F}_{2^8}^{4 \times N_b}\) of the current encryption or decryption. The plaintext indices start at the first byte, independent of endianness. In other words, \(S = P\) and, since \(P = (p_0, ..., p_{4N_b-1}) \in \mathbb{F}_{2^8}^{4N_b} \cong \mathbb{F}_{2^8}^{4 \times N_b}\), we can write for both \(P\) and \(K\) analogously
+\begin{align}
+    P = S = \begin{pmatrix}
+        p_{ 0} & p_{ 4} & p_{ 8} & p_{12}\\
+        p_{ 1} & p_{ 5} & p_{ 9} & p_{13}\\
+        p_{ 2} & p_{ 6} & p_{10} & p_{14}\\
+        p_{ 3} & p_{ 7} & p_{11} & p_{15}
+    \end{pmatrix} \qquad K = \begin{pmatrix}
+        k_{ 0} & k_{ 4} & k_{ 8} & k_{12}\\
+        k_{ 1} & k_{ 5} & k_{ 9} & k_{13}\\
+        k_{ 2} & k_{ 6} & k_{10} & k_{14}\\
+        k_{ 3} & k_{ 7} & k_{11} & k_{15}
+    \end{pmatrix}
+\end{align}
+for the initial state \cite[p. 33]{Daemen_2020}, here for the case \(N_b = N_k = 4\).
+
+\begin{table}[!hbtp]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Parameter & Meaning & AES-128, AES-192, AES-256\\
+        \hline
+        \(N_b\) & Block length in 32-bit words. & 4, 4, 4\\
+        \(K\) & Length of cipher key in bits. & 128, 192, 256\\
+        \(N_k\) & Key length in 32-bit words. & 4, 6, 8\\
+        \(N_r\) & Round count. & 10, 12, 14\\
+        \hline
+    \end{tabular}
+    \caption{AES Parameters, according to \cite[pp. 13-14]{Dworkin2001}.}
+    \label{aes_parameters}
+\end{table}
+
+\begin{figure}[!hbtp]
+    \centering
+    \begin{tikzpicture}[>=stealth, semithick]
+        \node (x) at (0, 0) {\(x\)};
+        \node[below of=x] (s11) {\texttt{AddRoundKey}};
+        \node[below of=s11] (s21) {\texttt{SubBytes}};
+        \node[below of=s21] (s22) {\texttt{ShiftRows}};
+        \node[below of=s22] (s23) {\texttt{MixColumns}};
+        \node[below of=s23] (s24) {\texttt{AddRoundKey}};
+        \node[below of=s24] (s31) {\texttt{SubBytes}};
+        \node[below of=s31] (s32) {\texttt{ShiftRows}};
+        \node[below of=s32] (s33) {\texttt{AddRoundKey}};
+        \node[below of=s33] (y) {\(y\)};
+        \draw[->] (x) -- (s11);
+        \draw[->] (s11) -- (s21);
+        \draw[->] (s21) -- (s22);
+        \draw[->] (s22) -- (s23);
+        \draw[->] (s23) -- (s24);
+        \draw[->] (s24) -- (s31);
+        \draw[->] (s31) -- (s32);
+        \draw[->] (s32) -- (s33);
+        \draw[->] (s33) -- (y);
+        \draw ($(s21.north)+(-1.5, 0)$) rectangle ($(s24.south)+(4.5, 0)$);
+        %\draw ($(s31.north)+(-1.5, 0)$) rectangle ($(s33.south)+(4.5, 0)$);
+        %\node[left] at ($(s22.south)+0.5*(s23.north)-0.5*(s22.south)-(1.5, 0)$) {\(N_r-1\) times};
+        \node[above] at ($(s21.north)+(-1.5, 0)$) {\(N_r-1\) times};
+        \node (k) at ($(x)+(3, 0)$) {\(k\)};
+        \node (k1) at ($(s11)+(3, 0)$) {\texttt{KeySchedule}};
+        \node (k2) at ($(s24)+(3, 0)$) {\texttt{KeySchedule}};
+        \node (k3) at ($(s33)+(3, 0)$) {\texttt{KeySchedule}};
+        \draw[->] (k) -- (k1);
+        \draw[->] (k1) -- ($(s21.north)+(3, 0)$);
+        \draw[->] ($(s21.north)+(3, 0)$) -- (k2);
+        \draw[->] (k2) -- (k3);
+        \draw[->] (k1) -- (s11);
+        \draw[->] (k2) -- (s24);
+        \draw[->] (k3) -- (s33);
+
+        \node (x) at (8, 0) {\(x\)};
+        \node[below of=x] (i33) {\texttt{AddRoundKey}};
+        \node[below of=i33] (i32) {\texttt{InvShiftRows}};
+        \node[below of=i32] (i31) {\texttt{InvSubBytes}};
+        \node[below of=i31] (i24) {\texttt{AddRoundKey}};
+        \node[below of=i24] (i23) {\texttt{InvMixColumns}};
+        \node[below of=i23] (i22) {\texttt{InvShiftRows}};
+        \node[below of=i22] (i21) {\texttt{InvSubBytes}};
+        \node[below of=i21] (i11) {\texttt{AddRoundKey}};
+        \node[below of=i11] (y) {\(y\)};
+        \draw[<-] (x) -- (i33);
+        \draw[<-] (i33) -- (i32);
+        \draw[<-] (i32) -- (i31);
+        \draw[<-] (i31) -- (i24);
+        \draw[<-] (i24) -- (i23);
+        \draw[<-] (i23) -- (i22);
+        \draw[<-] (i22) -- (i21);
+        \draw[<-] (i21) -- (i11);
+        \draw[<-] (i11) -- (y);
+        \draw ($(i24.north)+(-1.5, 0)$) rectangle ($(i21.south)+(4.5, 0)$);
+        \node[above] at ($(i24.north)+(-1.5, 0)$) {\(N_r-1\) times};
+        \node (k3) at ($(i33)+(3, 0)$) {\texttt{KeySchedule}};
+        \node (k2) at ($(i24)+(3, 0)$) {\texttt{KeySchedule}};
+        \node (k1) at ($(i11)+(3, 0)$) {\texttt{KeySchedule}};
+        \node (k) at ($(y)+(3, 0)$) {\(k\)};
+        \draw[->] (k) -- (k1);
+        \draw[->] (k1) -- ($(i21.south)+(3, 0)$);
+        \draw[->] ($(i21.south)+(3, 0)$) -- (k2);
+        \draw[->] (k1) -- (k2);
+        \draw[->] (k2) -- (k3);
+        \draw[->] (k1) -- (i11);
+        \draw[->] (k2) -- (i24);
+        \draw[->] (k3) -- (i33);
+    \end{tikzpicture}
+    \caption{AES encryption and decryption block diagram. The inverse versions of the encryption functions are defined in analogy to them, and will not be of concern to us.}
+    \label{aes_block_diagram}
+\end{figure}
+
+\begin{enumerate}[label=(\roman*)]
+    \item \label{aes_subbytes} \texttt{SubBytes} \cite[pp. 34-37]{Daemen_2020}: Each byte in the state is interpeted as an element of the field \(F \coloneqq \gf(2)[x]/(x^8+x^4+x^3+x+1)\). First, consider the so-called \emph{patched inverse} bijection \(\iota\), as well as the matrix \(L_A \in \gf(2)^{8 \times 8}\) and vector \(v_A \in \gf(2)^8\):
+    \begin{align}
+        \iota\colon F \overset{\cong}{\to} F, a \mapsto \begin{cases}
+            0 & a = 0\\
+            a^{-1} & a \neq 0
+        \end{cases} \qquad L_A \coloneqq \begin{pmatrix}
+            1&0&0&0&1&1&1&1\\
+            1&1&0&0&0&1&1&1\\
+            1&1&1&0&0&0&1&1\\
+            1&1&1&1&0&0&0&1\\
+            1&1&1&1&1&0&0&0\\
+            0&1&1&1&1&1&0&0\\
+            0&0&1&1&1&1&1&0\\
+            0&0&0&1&1&1&1&1
+        \end{pmatrix} \qquad v_A \coloneqq \begin{pmatrix}
+            1\\
+            1\\
+            0\\
+            0\\
+            0\\
+            1\\
+            1\\
+            0
+        \end{pmatrix}
+    \end{align}
+    The \texttt{SubBytes} step performs the map
+    \begin{align}
+        \rho\colon F \to F, a \mapsto L_A \iota(a) + v_A
+    \end{align}
+    for each byte \(s\) in \(S\). This part of the description already poses a problem for the cryptanalysis of the cipher, as we switched from \(F\) to \(\gf(2)^8\) for the application of the affine transformation. \(\rho\) is also called the \emph{Rijndael S-Box}. We may also note, that the byte is interpreted as a column vector with the top entry being the LSB. \(L_A\) is further invertible, as \(\det(L_A) = 5\), which we may check in a long calculation via the recursive development of the determinant.
+    \item \texttt{ShiftRows} \cite[pp. 37-38]{Daemen_2020}: Use the following map:
+    \begin{align}
+        \begin{pmatrix}
+            s_{00} & s_{01} & s_{02} & s_{03}\\
+            s_{10} & s_{11} & s_{12} & s_{13}\\
+            s_{20} & s_{21} & s_{22} & s_{23}\\
+            s_{30} & s_{31} & s_{32} & s_{33}\\
+        \end{pmatrix} \mapsto \begin{pmatrix}
+            s_{00} & s_{01} & s_{02} & s_{03}\\
+            s_{11} & s_{12} & s_{13} & s_{10}\\
+            s_{22} & s_{23} & s_{20} & s_{21}\\
+            s_{33} & s_{30} & s_{31} & s_{32}\\
+        \end{pmatrix}
+    \end{align}
+    We can also express this operation via a permutation matrix \(M_A \in F^{4N_b \times 4N_b}\). The above instruction is then equivalent to taking a row-major enumeration of \(S\) and performing
+    \begin{align}
+        S \mapsto S_A S
+    \end{align}
+    where we denote with the notation of a permutation, i.e. each entry shows the index of the \(1\)-entry in the column
+    \begin{align}
+        S_A \coloneqq (0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11)
+    \end{align}
+    \item \texttt{MixColumns} \cite[pp. 39-41]{Daemen_2020}: The \(i \in [0, N_b-1]_{\mathbb{N}}\)th column vector \((s_{ij})_{j \in [0, 3]_{\mathbb{N}}}\) of \(S\) is treated as a vector from \(F' \coloneqq \mathbb{F}_{2^8}[x]/(x^4+1)\) and multiplied with \(3x^3+x^2+x+2\). This is equivalent to taking a column-major enumeration of \(S\) and applying the diagonal matrix \(M_A \coloneqq \diag(C_A, C_A, C_A, C_A)\), where
+    \begin{align}
+        C_A \coloneqq \begin{pmatrix}
+            2 & 3 & 1 & 1\\
+            1 & 2 & 3 & 1\\
+            1 & 1 & 2 & 3\\
+            3 & 1 & 1 & 2
+        \end{pmatrix}
+    \end{align}
+    following \Cref{polynomial_multipl_matrix_example}. Note, that the first byte in a column thus corresponds to the coefficient \(x^3\) in each polynomial, and so on.
+    \item \texttt{AddRoundKey} \cite[p. 41]{Daemen_2020}: During the \(i \in [0, N_r]_{\mathbb{N}}\)th round, add the current round key, so \(S \mapsto S + \tilde{K}_i\). See \ref{key_schedule}.
+    \item \label{key_schedule} \texttt{KeySchedule} \cite[pp. 43-46]{Daemen_2020}: The algorithm initially creates \(N_r+1\) additional keys \(\tilde{K}_0, ..., \tilde{K}_{N_r} \in \mathbb{F}_{2^8}^{4 \times N_b}\) for the \texttt{AddRoundKey} step. This procedure is called \texttt{KeyExpansion}. Let \(W \coloneqq \mathbb{F}_{2^8}^{4 \times N_b(N_r+1)}\) be a matrix of \(N_b(N_r+1)\) \(32\)-bit words. Four columns each correspond to a round key. We further define so-called \emph{round constants} \(r_{i+1} \coloneqq x^i \in F\), \(i \in \mathbb{N}\). All additions are performed in \(\gf(2)^8\), so by a component-wise exclusive-or operation.
+    
+    There are versions of the \texttt{KeyExpansion} for \(N_k \leq 6\) and \(N_k > 6\). For AES, these versions correspond to the cases \(N_k \in \{4, 6\}\) and \(N_k = 8\). If \(N_k \leq 6\), then the matrix \(W\) is constructed column by column according to the following rules, in this order of precedence:
+    \begin{align}
+        \begin{array}{rll}
+            w_{ij} &\coloneqq k_{ij} & i \in [0, 3]_{\mathbb{N}}, j \in [0, N_k-1]_{\mathbb{N}}\\
+            w_{0j} &\coloneqq w_{0(j-N_k)} + \rho(w_{1(j-1)}) + r_{j/N_k} & j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+            w_{ij} &\coloneqq w_{i(j-N_k)} + \rho(w_{((i+1) \bmod 4)(j-1)}) & i \in [1, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+            w_{ij} &\coloneqq w_{i(j-N_k)} + w_{i(j-1)} & i \in [0, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j \neq 0 \bmod N_k
+        \end{array}
+    \end{align}
+    If \(N_k > 6\), then the matrix \(W\) is constructed in a similar way, that is according to:
+    \begin{align}
+        \begin{array}{rll}
+            w_{ij} &\coloneqq k_{ij} & i \in [0, 3]_{\mathbb{N}}, j \in [0, N_k-1]_{\mathbb{N}}\\
+            w_{0j} &\coloneqq w_{0(j-N_k)} + \rho(w_{1(j-1)}) + r_{j/N_k} & j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+            w_{ij} &\coloneqq w_{i(j-N_k)} + \rho(w_{((i+1) \bmod 4)(j-1)}) & i \in [1, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+            w_{ij} &\coloneqq w_{i(j-N_k)} + \rho(w_{i(j-1)}) & i \in [0, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 4 \bmod N_k\\
+            w_{ij} &\coloneqq w_{i(j-N_k)} + w_{i(j-1)} & i \in [0, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j \neq 0 \bmod N_k
+        \end{array}
+    \end{align}
+    After \(W\) is obtained, we derive the keys by \(W = \begin{pmatrix}
+        \tilde{K}_0 & \tilde{K}_1 & ... & \tilde{K}_{N_r}
+    \end{pmatrix}\).
+\end{enumerate}
+The output of the algorithm is stored in \(S\). We may also note, that all steps described are invertible, allowing decryption.
+
+\subsection{The BES Cipher \draftcommentgreen{DONE}} \label{the_bes_cipher}
+
+The cryptanalysis of AES in form of the above algebraic description is complicated, as we have to switch between the field \(F\) and the vector space \(\gf(2)^8\). The \emph{Big Encryption System} (BES) cipher by Murphy and Robshaw \cite{Murphy2002} defines a family of ciphers similar structure, and simplifies the cryptanalysis by only using operations in \(F\). We shall describe the BES for every version of AES and without the so-called modified key schedule \cite[p. 3]{Murphy2002}.\footnote{As a sidenote, that the authors of AES proposed a similar method as described here under the name of \emph{AES-GF}, see \cite[pp. 192-194]{Daemen_2020}.}
+
+\phantom{}
+
+We define the map
+\begin{align}
+    \phi \colon F &\to F^8\\
+    b &\mapsto \left(b^{\left(2^0\right)}, b^{\left(2^1\right)}, ..., b^{\left(2^7\right)}\right)
+\end{align}
+For any \(n \in \mathbb{N}_{\geq 1}\), \(\phi\) is extended component-wise, giving
+\begin{align}
+    \phi_n \colon F^n &\to F^{8n}\\
+    b &\mapsto \left(\phi(b_1), \phi(b_2), ..., \phi(b_n)\right)
+\end{align}
+Analogously, we define the matrix operation \(\phi_{m \times n}\), \(m \in \mathbb{N}_{\geq 1}\), via \(\phi_{mn}\). We further let
+\begin{align}
+    \iota(\phi(a)) \coloneqq \phi(\iota(a))
+\end{align}
+with \(\iota\) being the patched inverse, as described in the AES \texttt{SubBytes} operation, see \ref{aes_subbytes} in the previous subsection. The component-wise application of \(\iota\) gives the analogous definitions for the general functions \(\phi_n\) and \(\phi_{m \times n}\).
+
+\begin{theorem}[Properties of \(\phi\)]
+    \(\phi\) is injective and additive. Both properties carry over to \(\phi_n\). \footnote{Field theorists may be reminded of the \emph{Frobenius homomorphism} \cite[p. 337]{Fischer2017}. The additivity there, the \emph{Frobenius rule}, is also called \emph{the freshmans dream}. The proof idea for the additivity is the same.}
+\end{theorem}
+
+\begin{proof}
+    The injectivity can be read off by observing the behavior on the first component. For the additivity we calculate in \(\gf(2)[X]\) and \(k \in [0, 7]_{\mathbb{N}}\) using the binomial development:
+    \begin{align}
+        (a+b)^{\left(2^k\right)} = \sum_{l=0}^{2^k} \binom{2^k}{l} a^l b^{2^k-l} = a^{\left(2^k\right)} + b^{\left(2^k\right)}
+    \end{align}
+    Note that the terms for \(1 \leq l \leq 2^k-1\) vanish as the binomial factors are natural numbers and especially divisible by \(2\). We slightly abuse the notation here, but the point is, that the terms in the middle of the sum are evenly often added together, which leads to the polynomial powers vanishing.
+\end{proof}
+
+\phantom{}
+
+As mentioned, the main result by Murphy and Robshaw is, that we can represent the AES algorithm by only using operations in \(F\). It is not yet clear, why \(\phi\) could help our cause. In the same manner as in \Cref{an_algebraic_description_of_aes}, we shall describe all five operations in the language of BES. For that, we first map the input plaintext-key pair \((P, K)\) via \(\phi\) into the BES-associated vector spaces. So now, denote \(P \in \left(F^8\right)^{4 \times N_b}\), \(K \in \left(F^8\right)^{4 \times N_k}\) and for the state \(S \in \left(F^8\right)^{4 \times N_b}\). Also \(C \in \left(F^8\right)^{4 \times N_b}\), as we will see.
+
+\begin{enumerate}[label=(\roman*')]
+    \item \texttt{SubBytes} \cite[pp. 5-8]{Murphy2002}: The patched inverse \(\iota\) can be applied component-wise for each entry \(s_{ij}\) in S. In the original AES, we applied the operator \(L_A\colon \gf(2)^8 \to \gf(2)^8\) after \(\iota\) and then added \(v_A\). This is an operation in \(\gf(2)^8\), not \(F\), and it is not clear, how we could represent this operation with a linear transformation. Define
+    \begin{align}
+        \psi\colon F \to \gf(2)^8, \sum_{k=0}^7 b_kx^k \mapsto \begin{pmatrix}
+            b_0\\
+            ...\\
+            b_7
+        \end{pmatrix}
+    \end{align}
+    to be the bijective natural embedding of \(F\) into \(\gf(2)^8\). Then, we form the map \(f \coloneqq \psi^{-1} \circ L_A \circ \psi\). For the following derivation, we want a polynomial, which interpolates \(f\). The Lagrangian interpolation method \cite[p. 193]{Fischer2017} gives
+    \begin{align}
+        f(x) = \sum_{b \in F} f(b) \prod_{c \in F \setminus \{b\}} \frac{x-c}{b-c} = \sum_{k=0}^7 \lambda_k x^{\left(2^k\right)}
+    \end{align}
+    with \((\lambda_i)_{i \in [0, 7]_{\mathbb{N}}} \coloneqq (\texttt{05}, \texttt{09}, \texttt{f9}, \texttt{25}, \texttt{f4}, \texttt{01}, \texttt{b5}, \texttt{8f})\) in hexadecimal notation following \cite[p. 7]{Murphy2002}, where we do not verify this result here, as this would require a large computation using a computer, for which we know the needed multiplication techniques. \(L_A\) is invertible and thus \(f\). Interpret the hexadecimal notation here digit-wise, so e.g. \(\texttt{f9} = 11111001\).
+
+    Similarly to \(\phi\), \(f\) is additive. For the matrix representing the action of the linear map \(L_A\), we may choose
+    \newcommand{\lampow}[2]{\lambda_{#1}^{\left(2^{#2}\right)}}
+    \begin{align}
+        \hat{L}_B \coloneqq \left(\lampow{j-1}{i-1}\right)_{i, j \in 8 \times 8} = \begin{pmatrix}
+            \lampow{0}{0} & \lampow{1}{0} & \lampow{2}{0} & \lampow{3}{0} & \lampow{4}{0} & \lampow{5}{0} & \lampow{6}{0} & \lampow{7}{0}\\
+            \lampow{7}{1} & \lampow{0}{1} & \lampow{1}{1} & \lampow{2}{1} & \lampow{3}{1} & \lampow{4}{1} & \lampow{5}{1} & \lampow{6}{1}\\
+            \lampow{6}{2} & \lampow{7}{2} & \lampow{0}{2} & \lampow{1}{2} & \lampow{2}{2} & \lampow{3}{2} & \lampow{4}{2} & \lampow{5}{2}\\
+            \lampow{5}{3} & \lampow{6}{3} & \lampow{7}{3} & \lampow{0}{3} & \lampow{1}{3} & \lampow{2}{3} & \lampow{3}{3} & \lampow{4}{3}\\
+            \lampow{4}{4} & \lampow{5}{4} & \lampow{6}{4} & \lampow{7}{4} & \lampow{0}{4} & \lampow{1}{4} & \lampow{2}{4} & \lampow{3}{4}\\
+            \lampow{3}{5} & \lampow{4}{5} & \lampow{5}{5} & \lampow{6}{5} & \lampow{7}{5} & \lampow{0}{5} & \lampow{1}{5} & \lampow{2}{5}\\
+            \lampow{2}{6} & \lampow{3}{6} & \lampow{4}{6} & \lampow{5}{6} & \lampow{6}{6} & \lampow{7}{6} & \lampow{0}{6} & \lampow{1}{6}\\
+            \lampow{1}{7} & \lampow{2}{7} & \lampow{3}{7} & \lampow{4}{7} & \lampow{5}{7} & \lampow{6}{7} & \lampow{7}{7} & \lampow{0}{7}
+        \end{pmatrix}
+    \end{align}
+    The seemingly arbitrary choices for the bottom \(15\) rows root in the concept of \(\phi\) being a map mapping into \emph{field conjugates}, a concept relating to minimal polynomials \cite[p. 286]{Karpfinger_2017}, which we shall not dive into. Notice
+    \begin{align}
+        (\hat{L}_B \phi(b))_0 = \sum_{k=0}^7 \lambda_k b^{\left(2^k\right)} = f(b)
+    \end{align}
+    for any \(b \in F\), which was the desired action. As for \(v_A\), let \(v_B \coloneqq \phi(v_A)\) and add it to the state byte. To apply the matrix on the entire state, it suffices to form the diagonal matrix composed of \(4N_b\) \(L_B\) blocks and add \(v_B\) to each entry, while using \(S\) in a column-major enumeration.
+    \item \texttt{ShiftRows} \cite[pp. 5-6]{Murphy2002}: The shifting of the \(F^8\) elements inside \(S\) is the same as in the original AES. The matrix \(M_A\) is generalized to \(M_B\) by replacing every one with \(E_8\) for a \(F^{16N_b \times 16N_b}\) permutation matrix performing this action.
+    \item \texttt{MixColumns} \cite[p. 6]{Murphy2002}: In the AES, we could represent this step as a matrix multiplication with \(M_A\). In BES, we analogously define
+    \begin{align}
+        C_B^k \coloneqq \begin{pmatrix}
+            2^{\left(2^k\right)} & 3^{\left(2^k\right)} & 1 & 1\\
+            1 & 2^{\left(2^k\right)} & 3^{\left(2^k\right)} & 1\\
+            1 & 1 & 2^{\left(2^k\right)} & 3^{\left(2^k\right)}\\
+            3^{\left(2^k\right)} & 1 & 1 & 2^{\left(2^k\right)}
+        \end{pmatrix} \in F^{4 \times 4}
+    \end{align}
+    for \(k \in [0, 7]_{\mathbb{N}}\). This matrix has the property
+    \begin{align}
+        C_B^k \left(y_0^{\left(2^k\right)}, y_1^{\left(2^k\right)}, y_2^{\left(2^k\right)}, y_3^{\left(2^k\right)}\right)^t = \left(z_0^{\left(2^k\right)}, z_1^{\left(2^k\right)}, z_2^{\left(2^k\right)}, z_3^{\left(2^k\right)}\right)^t
+    \end{align}
+    for \(y, z \in F^4\), preserving the aforementioned so-called conjugacy property. We may now set
+    \begin{align}
+        M_B \coloneqq \begin{pmatrix}
+              C_B^0 & \cdots &      0 & \cdots &      0 &      0 &      0\\
+             \vdots & \ddots & \vdots & \cdots &      0 &      0 &      0\\
+                  0 & \cdots &  C_B^7 & \cdots &      0 &      0 &      0\\
+             \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots\\
+                  0 &      0 &      0 & \cdots &  C_B^0 & \cdots &      0\\
+                  0 &      0 &      0 & \cdots & \vdots & \ddots & \vdots\\
+                  0 &      0 &      0 & \cdots &      0 & \cdots &  C_B^7
+        \end{pmatrix} \in F^{32N_b \times 32N_b}
+    \end{align}
+    Multiplying with \(S\) in column-major enumeration, while enumerating its entries from \(F^8\) as row vectors gives the desired map.
+    \item \texttt{AddRoundKey} \cite[p. 5]{Murphy2002}: We perform the same addition as in Rijndael \(S \mapsto S + \tilde{K}_i\) in the \(i \in [0, N_r]\)th round.
+    \item \texttt{KeySchedule} \cite[p. 8]{Murphy2002}: All operations in the key schedule have been explained in the explanations of the previous suboperations, so we can carry it over identically by, instead of using \(F\) as the bytes in the key expansion array \(W \in (F^8)^{4 \times 4N_b(N_r+1)} \cong F^{32 \times 4N_b(N_r+1)}\), the operations being addition and the map \(\rho\), which takes on the form \(b \mapsto \hat{L}_B(\iota(b_0), ..., \iota(b_7))^t+v_B\), and the polynomial addition. The round constants are also thus \(\phi(r_j)\), \(j \in \mathbb{N}_{\geq 1}\).
+\end{enumerate}
+
+We may summarize this discussion with the following theorem.
+
+\begin{theorem}
+    If \(\alpha\colon F^{4 \times N_b} \times F^{4 \times N_k} \to F^{4 \times N_b}\) denotes the AES cipher and \(\beta\colon F^{32 \times N_b} \times F^{32 \times N_k} \to F^{32 \times N_b}\) its associated BES-cipher respectively, then the following diagram commutes:
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tikzpicture}[>=stealth, thin]
+            \node (00) at (0, 0) {\(F^{4 \times N_b}  \times F^{4 \times N_k}\)};
+            \node (01) at (5, 0) {\(F^{32 \times N_b} \times F^{32 \times N_k}\)};
+            \node (10) at (0, -2) {\(F^{4 \times N_b}\)};
+            \node (11) at (5, -2) {\(F^{32 \times N_b}\)};
+            \draw[{Hooks[right]}->] (00) -- (01) node[above, pos=0.5] {\(\phi_{4 \times N_b} \times \phi_{4 \times N_k}\)};
+            \draw[->] (01) -- (11) node[right, pos=0.5] {\(\beta\)};
+            \draw[{Hooks[right]}->>] (11) -- (10) node[below, pos=0.5] {\(\phi_{4 \times N_b}^{-1}\)};
+            \draw[->] (00) -- (10) node[left, pos=0.5] {\(\alpha\)};
+        \end{tikzpicture}
+    \end{minipage}
+\end{theorem}
+Note that in the above diagram, cartesian products of functions are functions taken component-wise and the arguments of \(\alpha\) and \(\beta\) are in order (plaintext, key).
+
+\subsection{A BES Multivariate Equation System for AES \draftcommentgreen{DONE}}
+
+With the previous description of BES for AES, we can now form a multivariate equation system for key recovery over \(F\). Note, that we do not follow Murphy and Robshaw with the derivation of their multivariate quadratic equation system in \cite[pp. 11-13]{Murphy2002}. Consider the description of AES in \Cref{aes_block_diagram}. We are given a plaintext \(P \in (F^8)^{4 \times N_b}\) and a ciphertext \(C \in (F^8)^{4 \times N_b}\), where we know, that \(C\) was produced from \(P\) via running BES using a key \(K \in (F^8)^{4 \times N_k}\). We have an initial addition of the first \(4 \times N_b\) sized part of the key \(K\), which is \(\tilde{K}_0\), giving the state \(S_0\), then execute \(N_r-1\) ''normal'' rounds of AES before entering the last round, where \texttt{MixColumn} is omitted.
+\begin{align}
+    P \mapsto S_0 \mapsto S_1 \mapsto ... \mapsto S_{N_r-1} \mapsto S_{N_r} = C
+\end{align}
+This gives the following equation system over \(F\).
+\begin{align}
+    \begin{array}{rcll}
+        S_0     &=& P + \tilde{K}_0\\
+        T_i     &=& L_B S_{i-1} + V_B            & i \in [1, N_r-1]_{\mathbb{N}}\\
+        U_i     &=& S_B T_i                      & i \in [1, N_r-1]_{\mathbb{N}}\\
+        S_i     &=& M_B U_i + \tilde{K}_i        & i \in [1, N_r-1]_{\mathbb{N}}\\
+        T_{N_r} &=& L_B S_{N_r-1} + V_B\\
+        U_{N_r} &=& S_B T_{N_r}\\
+        S_{N_r} &=& U_{N_r} + \tilde{K}_{N_r}\\
+        C       &=& S_{N_r}
+    \end{array}
+\end{align}
+Here, \(V_B = \begin{pmatrix}
+    v_B & ... & v_B
+\end{pmatrix}^t \in (\mathbb{F}^8)^{4N_b}\). This is not the same system as in \cite[pp. 11-13]{Murphy2002}, where the addition of \(v_B\) and even the application of \(S_B\) were omitted. We further have the BES key schedule as
+\begin{align}
+    \begin{array}{rcll}
+        w_{ij} &=& k_{ij} & i \in [0, 3]_{\mathbb{N}}, j \in [0, N_k-1]_{\mathbb{N}}\\
+        w_{0j} &=& w_{0(j-N_k)} + L_B w_{1(j-1)} + V_B + r_{j/N_k} & j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+        w_{ij} &=& w_{i(j-N_k)} + L_B w_{((i+1) \bmod 4)(j-1)} + V_B & i \in [1, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j = 0 \bmod N_k\\
+        w_{ij} &=& w_{i(j-N_k)} + L_B w_{i(j-1)} +V_B & i \in [0, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}},\\
+               & &                                    & j = 4 \bmod N_k, N_r > 6\\
+        w_{ij} &=& w_{i(j-N_k)} + w_{i(j-1)} & i \in [0, 3]_{\mathbb{N}}, j \in [N_k, N_b(N_r+1)-1]_{\mathbb{N}}, j \neq 0 \bmod N_k\\
+        \tilde{K}_i &=& (w_{i'j'})_{i' \in [0, 3]_{\mathbb{N}}, j' \in [N_bi, N_b(i+1)-1]_{\mathbb{N}}}
+    \end{array}
+\end{align}
+The last aspect we want to analyze wrt. the BES system is the size of this system, and thus the variable and equation count. Consider first the initial equation system. From the count, we omit the variables \(U_1, ..., U_{N_r}\), as they are just permutations of the existing \(T_1, ..., T_{N_r}\) variables. We also do not count the variables for \(W\) in the key schedule. Furthermore, we omit the equations for the \(U_i\)'s, \(C = S_{N_r}\) and for the \(\tilde{K}_i\) assignments. Consider the following table, in which we count the number of variables and equations in each line, including the key schedule, where we mean by ''new'', that the variables appearing in the equation have not appeared in a previous row.
+\begin{table}[!hbtp]
+    \centering
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        Equation                                & New Variables & Equations & Occurences\\ \hline
+        \(S_0     = P + \tilde{K}_0\)           &      \(8N_b\) & \(32N_b\) &      \(1\)\\
+        \(T_i     = L_B S_{i-1} + V_B\)         &      \(4N_b\) & \(32N_b\) &  \(N_r-1\)\\
+        \(U_i     = S_B T_i\)                   &       Omitted &   Omitted &    Omitted\\
+        \(S_i     = M_B U_i + \tilde{K}_i\)     &      \(8N_b\) & \(32N_b\) &  \(N_r-1\)\\
+        \(T_{N_r} = L_B S_{N_r-1} + V_B\)       &      \(4N_b\) & \(32N_b\) &      \(1\)\\
+        \(U_{N_r} = S_B T_{N_r}\)               &       Omitted &   Omitted &    Omitted\\
+        \(S_{N_r} = U_{N_r} + \tilde{K}_{N_r}\) &      \(8N_b\) & \(32N_b\) &      \(1\)\\
+        \(C       = S_{N_r}\)                   &       Omitted &   Omitted &    Omitted\\ \hline
+        \(w_{ij} = k_{ij}\)                                             & Omitted & Omitted & Omitted\\
+        \(w_{0j} = w_{0(j-N_k)} + L_B w_{1(j-1)} + V_B + r_{j/N_k}\)    & Omitted &   \(8\) & \(\leq 15\)\\
+        \(w_{ij} = w_{i(j-N_k)} + L_B w_{((i+1) \bmod 4)(j-1)} + V_B\)  & Omitted &   \(8\) & \(\leq 45\)\\
+        \(w_{ij} = w_{i(j-N_k)} + L_B w_{i(j-1)} +V_B\)                 & Omitted &   \(8\) & \(\leq 60\)\\
+        \(w_{ij} = w_{i(j-N_k)} + w_{i(j-1)}\)                          & Omitted & \(8\) & \(\leq 180\)\\
+        \(\tilde{K}_i = (w_{i'j'})_{i' \in [0, 3]_{\mathbb{N}}, j' \in [N_bi, N_b(i+1)-1]_{\mathbb{N}}}\) & Omitted & Omitted & Omitted\\ \hline
+    \end{tabular}
+    \caption{Sizes of equations in the BES system, where we upper bound the occurences of some of the key schedule equations by letting \((N_k, N_r) = (4, 14)\) wlog..}
+    \label{bes_system_sizes}
+\end{table}
+\begin{theorem}[Equation System Size for BES Key Recovery]
+    Using BES, the key for a given AES encryption can be recovered using an equation system of
+    \begin{align}
+        20N_b+(N_r-1)12N_b \text{ variables and } 96N_b+(N_r-1)64N_b + 2400 \text{ equations.}
+    \end{align}
+\end{theorem}
+\begin{table}[!hbtp]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \((N_k, N_r)\) & \((4, 10)\) & \((6, 12)\) & \((8, 14)\)\\ \hline
+        \((m, n)\) & \((416, 4576)\) & \((512, 5088)\) & \((608, 5600)\)\\ \hline
+    \end{tabular}
+    \caption{Direct BES system sizes. \(m \in \mathbb{N}\) is the variable count and \(n \in \mathbb{N}\) the equation count each. \(N_b = 4\) for AES, as previously said. These systems are not yet linearized.}
+    \label{direct_bes_system_sizes}
+\end{table}
+
+The aforementioned construction for a multivariate equation system for AES using BES demonstrates the technique. Consider also, that we, with this construction, have a system, where the polynomial degrees range up to \(128\), as we have directly used the conjugates in the system. The following subsection is dedicated to presenting recent results for solving this system of equations.
+
+\subsection{Overview of Recent Research on the Approach \draftcommentgreen{DONE}}
+
+We present a discussion of recent results on the cryptanalysis of AES, especially under the HHL algorithm, by studying the results of three research groups by Courtois, Chen and Ding.
+
+\paragraph*{Algebraic Cryptanalysis via XSL} \phantom{}\\\phantom{}
+
+The classical literature on the cryptanalysis of AES is extensive \cite{Nover, Kaminsky2010, Daemen_2020, Gao2022}. In this paragraph, we focus on algebraic cryptanalysis using linear systems of equations, as we have been aluding to. We present three major results, along with the previous results by Murphy and Robshaw.
+
+In 2002, the cryptanalysts Courtois and Pieprzyk presented the so-called \emph{Extended Sparse Linearization} (XSL) attack on block ciphers, especially on AES \cite{Courtois2002}. It improved upon the previous \emph{Extended Linearization} (XL) technique. The essential idea is to form systems of \emph{multivariate quadratic} (MQ) equations, which are then formed into SLEs by introducing variables for the monomials \cite[p. 2]{Kaminsky2010}. XSL attempts to utilize the case, where that equation system is massively overdefined. XSL came under quite some controversy, especially since the effectiveness of the attacks is largely debated \cite[p. 2]{Kaminsky2010} \cite[pp. 15-16]{Nover}. XSL has to this day never been implemented.
+
+The original XSL paper is also not very explicit wrt. the actual construction of the MQ system. Courtois and Pieprzyk claim the following result.
+
+\begin{theorem}[Direct Rijndael MQ System Complexity]
+    The problem of recovering the key from a Rijndael encryption of one plaintext with parameters \((N_b, N_k, N_r)\) can be reduced to the problem of solving an MQ system with \(m\) quadratic equations and \(n\) variables, where
+    \begin{align}
+        m = 160N_bN_r + 5(L_k-32N_k) \qquad n = 32N_b(N_r-1)+L_k
+    \end{align}
+    with
+    \begin{align}
+        L_k \coloneqq \begin{cases}
+            32\left(N_k+\left\lceil\frac{N_bN_r+N_b-N_k}{N_k}\right\rceil\right) & N_k \neq 8\\
+            32\left(N_k+\left\lceil\frac{N_bN_r+N_b-N_k}{4}\right\rceil\right) & N_k = 8
+        \end{cases}
+    \end{align}
+\end{theorem}
+
+The constants in the theorem are a direct result of using the theorem on \cite[p. 22]{Courtois2002} and substituting \(r \coloneqq 40\) as on the same page and \(s = 8\) from p. 4. Note, that we have \(H_k = 32N_k\) in their description, following pp. 3-4. The definition for \(L_k\) can be found on p. 21.
+
+\begin{table}[!hbtp]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \((N_k, N_r)\) & \((4, 10)\) & \((6, 12)\) & \((8, 14)\)\\ \hline
+        \((m, n)\) & \((8000, 1600)\) & \((9600, 1920)\) & \((11200, 2240)\)\\ \hline
+    \end{tabular}
+    \caption{Direct AES MQ system sizes. \(N_b = 4\) for AES, as previously said. These systems are not yet linearized.}
+    \label{direct_aes_mq_system_sizes}
+\end{table}
+
+The equation systems of Murphy et al. and Courtois et al. are not the same. The techniques proposed by Courtois et al. yield the following theorem, see \cite[p. 13]{Courtois2002}, which we shall not further study.
+
+\begin{theorem}
+    Performing an XSL attack on AES-128 requires approximately
+    \begin{align}
+        T^\omega \approx 2^{230}
+    \end{align}
+    operations classically.
+\end{theorem}
+
+XSL is one of the more widely known approaches to the algebraic cryptanalysis of AES. Few authors have yet considered using the HHL algorithm for this task. We briefly overview the results by Chen and Gao \cite{Chen2017,Gao2022} and, following their results, Ding et al. \cite{Ding2021}.
+
+\paragraph*{Chen and Gaos Results} \label{chen_and_gaos_results} \phantom{}\\\phantom{}
+
+Chen and Gao investigated the applicability of HHL on the cryptanalysis of AES in a longer 2017 paper \cite{Chen2017}. The essential idea of using a linear system for the cryptanalysis is not considered at first, but rather the problem of solving Boolean polynomial equation systems directly. The HHL algorithm itself poses three challenges to this problem:
+\begin{enumerate}[label=(\roman*)]
+    \item The algorithm yields a result vector over the field \(\mathbb{C}\) and not \(\gf(2)\). This can be mitigated by including additional equations of form \(\{x_1^2-x_1, ..., x_n^2-x_n\}\) with \(x_1, ..., x_n\) being the variables inside of the original Boolean polynomial system, as in \(\mathbb{C}\) each equation can only be satisfied, iff \(x_1, ..., x_n \in \gf(2)\) using \(x_i = |x_i|e^{i\arg(x_i)}\) for \(i \in [1, n]_{\mathbb{N}}\).
+    \item HHL may produce a wrong result or it may produce a result despite the system being unsolvable.
+    \item The result is a quantum state and not a classically accessible Boolean vector.
+\end{enumerate}
+
+\paragraph*{An Application of HHL} \label{chen_and_gao_an_application_of_hhl} The first major result is the application of the HHL algorithm under two assumptions \cite[pp. 6-8]{Chen2017}.
+\begin{enumerate}[label=\Roman*.]
+    \item \label{chen_gao_assumption_1} The given matrix \(A \in \mathbb{C}^{M \times N}\), \(M \coloneqq r2^\nu\) with \(r, \nu \in \mathbb{N}_{\geq 1}\), \(N \in \mathbb{N}_{\geq 1}\) is \(s\)-sparse and possesses a decomposition into \(s\) \(1\)-sparse matrices of form \(A = \sum_{j=1}^s A_j\), where the entries of each matrix \(A\) may be queried in time \(O(\gamma)\) with \(\gamma\) being a complexity term.
+    \item \label{chen_gao_assumption_2} The given vector \(b \in \{0, 1\}^M\) suffices \(b_i = 1\), iff \(i = k2^\nu\) for \(k \in [0, \rho - 1]_{\mathbb{N}}\) for a \(\rho \in [0, r]_{\mathbb{N}}\).
+\end{enumerate}
+We may especially note the very tiny decomposition of \(A\) into \(s\) other matrices. Chen and Gao describe the effects of the assumptions and the decomposition on the algorithm runtime, as well as the efficient initializability of the state \(\ket{b}\), which is associated to \(b\). The result is then, that
+\begin{theorem}
+    Given the matrix \(A\) and the vector \(b\) as in the stated assumptions and under the use of the HHL algorithm as in \Cref{hhl_algorithm}, as well as an error cap \(\varepsilon \in \mathbb{R}_{> 0}\), the linear system of equations \(Ax = b\) can be solved in time \(\tilde{\onot}((\log(M+N)+\gamma)s\kappa^2/\varepsilon)\).
+\end{theorem}
+
+\paragraph*{A Sufficiently Sparse Macaulay System for Boolean Polynomial Equation Systems} For a given multivariate Boolean polynomial equation system \(\mathcal{F} \coloneqq \{f_1, ..., f_r\} \subseteq \gf(2)[x_1, ..., x_n]\), \(r \in \mathbb{N}_{\geq 1}\), \(n \in \mathbb{N}_{\geq 1}\) to be solved, meaning, that we want to find some \(s \in \gf(2)^n\) with \(f_1(s) = ... = f_r(s) = 0\), Chen and Gao develop a \emph{Macaulay linear system}, i.e. an SLE describing the structure of a polynomial equation system, which suffice the assumptions stated in \Cref{chen_and_gao_an_application_of_hhl}. The construction of the Macaulay linear system involves a bit of machinery, so we may omit it. It can be found on \cite[pp. 8-11]{Chen2017}. The next theorem summarizes the result.
+
+\begin{theorem}
+    Let \(T_{\mathcal{F}} \coloneqq \sum_{f \in \mathcal{F}} t_f\) be the so-called \emph{total sparseness} of \(\mathcal{F}\), where \(t_f \in \mathbb{N}\) denotes the number of terms in a given Boolean polynomial \(f\). A given polynomial Boolean equation system \(\mathcal{F}\) can be described by a Macaulay linear system \(M_{\mathcal{F}}x=b_{\mathcal{F}}\) with the following properties:
+    \begin{enumerate}[label=\alph*)]
+        \item \(M_{\mathcal{F}}\) is \(T_{\mathcal{F}}\)-sparse and \(M_{\mathcal{F}}\) can be decomposed into \(T_{\mathcal{F}}\) \(1\)-sparse matrices, each of which may be queried in time \(\onot(n\log_2(D)+\log_2(r))\) for some \(D \in \mathbb{N}\), s.t. \(D \geq \max_{f \in \mathcal{F}} d_f\) with \(d_f \in \mathbb{N}\) being the total degree of \(f\), i.e. the maximum of the sums of the degrees in each monomial. So \(M_{\mathcal{F}}\) suffices assumption \ref{chen_gao_assumption_1}
+        \item \(b_{\mathcal{F}}\) suffices assumption \ref{chen_gao_assumption_2}
+    \end{enumerate}
+\end{theorem}
+
+\paragraph*{Resulting Algorithms} Using the previous two results, the authors describe multiple algorithms. First, we consider a general algorithm for solving a given multivariate Boolean equation system by solving it over \(\mathbb{C}[x_1, ..., x_n]\) first using a quantum algorithm. We call a solution to such a complex system \emph{boolean}, if all of the entries in the result vector are in \(\gf(2)\).
+
+\begin{theorem} \label{chen_gao_boolean_polynomial_system_solving_algorithm_1}
+    Given a polynomial equation system \(\mathcal{F} \subseteq \mathbb{C}[x_1, ..., x_n]\) and an error cap \(\varepsilon \in \mathbb{R}_{> 0}\), there is a quantum algorithm, which decides the solvability of \(\mathcal{F}\) for recovering a Boolean solution, i.e. one in \(\mathbb{F}_2^n\), with success probability at least \(1-\varepsilon\) and, if so, returns a solution vector in time
+    \begin{align}
+        \tilde{\onot}(n^{2.5}(n+T_{\mathcal{F}})\kappa^2\log_2(1/\varepsilon))
+    \end{align}
+    where \(\kappa\) denotes the maximal condition number of the linear system fpr \(\mathcal{F}'_B \cup \{x_1^2-x_1, ..., x_n^2-x_n\}\) with \(\mathcal{F}'_B\) being the, during the algorithms execution, modified system, where any occurence of \(x_i^m\) has been replaced with \(x_i\) for \(i \in [1, n]_{\mathbb{N}}\) and \(m \in \mathbb{N}\).
+\end{theorem}
+
+The description and proof of runtime can be found on \cite[pp. 16-19]{Chen2017}. We further have, in the same manner as Grovers algorithm, a result regarding multiple solutions.
+
+\begin{theorem}
+    The quantum algorithm described in \Cref{chen_gao_boolean_polynomial_system_solving_algorithm_1} can be extended to find all \(\omega \in \mathbb{N}\) solutions in time
+    \begin{align}
+        \tilde{\onot}(n^{2.5}(n+T_{\mathcal{F}}+\omega)\omega\kappa^2\log_2(1/\varepsilon))
+    \end{align}
+    with success probability \((1-\varepsilon)^{\omega}\).
+\end{theorem}
+
+These two results are further modified for linear Boolean systems, which we will not further present.
+
+\paragraph*{Application to AES} Lastly, the results for solving Boolean polynomial systems are applied to AES using the BES cipher, see \Cref{the_bes_cipher}, in \cite[pp. 24-25, pp. 32-34]{Chen2017}. The obtained result is summarized in the following theorem.
+
+\begin{theorem}
+    There exists a quantum algorithm, which recovers the key of an AES encryption in time
+    \begin{align}
+        \begin{cases}
+            O(\sqrt{2}\alpha_0\alpha_1^{2.5}\alpha_2\kappa^2\log_2(1/\varepsilon)) & N_k \leq 6\\
+            O(\sqrt{2}\beta_0\beta_1^{2.5}\beta_2\kappa^2\log_2(1/\varepsilon)) & N_k > 6
+        \end{cases}
+    \end{align}
+    with
+    \begin{align}
+        \begin{pmatrix}
+            \alpha_0 & \beta_0\\
+            \alpha_1 & \beta_1\\
+            \alpha_2 & \beta_2
+        \end{pmatrix} \coloneqq \begin{pmatrix}
+            \log_2(5024N_kN_r+224N_k+5472N_r)+3 & \log_2(5024N_kN_r+224N_k+10272N_r)+3\\
+            5024N_kN_r+224N_k+5472N_r & 5024N_kN_r+224N_k+10272N_r\\
+            34592N_kN_r+1376N_k+38112N_r & 34592N_kN_r+1376N_k+71520N_r
+        \end{pmatrix}
+    \end{align}
+\end{theorem}
+
+To illustrate the runtimes, consider the following table.
+
+\begin{table}[!hbtp]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        AES-version & Runtime Factor\\
+        \hline
+        AES-128 & \(2^{73.30}\)\\
+        AES-192 & \(2^{76.69}\)\\
+        AES-256 & \(2^{78.53}\)\\
+        \hline
+    \end{tabular}
+    \caption{Runtimes of the AES key-recovery algorithm proposed by Chen and Gao, taken directly from \cite[p. 26]{Chen2017}. The runtime factor is without any asymptotic factors or the squared condition number.}
+    \label{chen_gao_aes_results}
+\end{table}
+
+\paragraph*{Discussion} We may be sceptical of the results presented, especially in the equation system used for the key recovery for AES. For one, it is not clear, why the presented system corresponds to the BES system described by Murphy and Robshaw. Also, the time of the Hamiltonian simulation may be wrong due to a mistake by Harrow, as we have argued in \Cref{hhl_discussion}. Chen and Gao have called their algorithm ''complicated'' \cite[p. 5]{Chen2017}, possibly partly because of the rather sophisticated Gröbner basis techniques used in \cite[pp. 11-15]{Chen2017}, \cite[p. 2]{Ding2021} have given a more elementary proof in their improved version of the algorithm. There have also been criticisms voiced by other researchers. For instance, Gao et al. argues \cite[p. 2]{Gao2022}, that the equation system for AES is incomplete. Furthermore, a major question was left open, which is the range of the condition number \(\kappa\). However, what the result indicates, is a first hint to the HHL algorithm not being sufficient for the cryptanalysis of AES, which is be further supported by the next paragraph.
+
+\paragraph*{Further Research by Ding et al.} \phantom{}\\\phantom{}
+
+Bounding the condition number is essential to obtain a clear bound on the runtime of Chen and Gaos cryptanalysis. Ding et al. prove a lower bound on the condition number, which depends on the sparsity of the solution vector of a linear system \cite{Ding2021}.
+
+\paragraph*{Two Preliminary Notions} We recall and introduce a few notions. One essential concept here is the \emph{truncated condition number}.
+\begin{definition} \label{truncated_condition_number_definition}
+    Let \(A \in \mathbb{C}^{m \times n}\) with \(m, n \in \mathbb{N}_{\geq 1}\) and \(b \in \mathbb{C}^n \setminus \{0\}\). The \emph{truncated condition number} \(\kappa_b(A)\) of the linear system \(Ax = b\) is defined as
+    \begin{align}
+        \kappa_b(A) \coloneqq \norm{A}\frac{\norm{A^+b}}{\norm{b}}
+    \end{align}
+    where the norm used is the operator norm and \(A^+\) is the Moore-Penrose Pseudoinverse of \(A\) following \Cref{moore_penrose_pseudoinverse}.
+\end{definition}
+
+\begin{lemma}
+    For any matrix \(A\) and vector \(b\) as in \Cref{truncated_condition_number_definition}, we have
+    \begin{align}
+        \kappa_b(A) \leq \kappa(A)
+    \end{align}
+\end{lemma}
+\begin{proof}
+    Holds by
+    \begin{align}
+        \norm{A^+} \geq \norm{A^+b}/\norm{b}
+    \end{align}
+\end{proof}
+The importance of this lemma lies in the fact, that lower bounds for condition numbers can be acquired with truncated condition numbers.
+
+\begin{theorem}
+    For binary vectors \(u, v \in \{0, 1\}^n\) define the \emph{Hamming distance} and \emph{Hamming weight} as
+    \begin{align}
+        d_H\colon \mathbb{F}_2^n \times \mathbb{F}_2^n \to \mathbb{N}, (u, v) \mapsto |\{i \mid i \in [1, n]_{\mathbb{N}} \land u_i \neq v_i\}| \qquad w_H\colon \mathbb{F}_2^n \to \mathbb{R}_{\geq 0}, u \mapsto \sqrt{d_H(u, 0)}
+    \end{align}
+    Then \(d_H\) is a metric and \(w_H\) is a norm.
+\end{theorem}
+These terms are known from general coding theory, see \cite[pp. 100-101]{Schulz2003}.
+
+\paragraph*{Lower Bounds of Truncated Condition Numbers for Macaulay Linear Systems} As we have seen, lower bounding a fixed truncated condition number is sufficient for lower bounding the runtime of Chen and Gaos procedures. The results regarding the truncated condition number in the context of the Macaulay matrices involved in Chen and Gaos research can be found in \cite[pp. 8-13]{Ding2021}. Whilst we have not introduced the Macaulay matrix or even the matrices involved in the original work, we shall still present the results.
+
+For a given Macaulay SLE problem \(\mathcal{M}x = b\) with \(\mathcal{M}\) denoting the Chen and Gao Macaulay system for key recovery and following \cite[pp. 8-9]{Ding2021}, we have
+\begin{align}
+    \norm{\mathcal{M}} \geq 1
+\end{align}
+Thus, if we assume wlog., as described in \Cref{hhl_discussion}, \(\norm{b} = 1\), we have
+\begin{align}
+    \kappa(\mathcal{M}) \geq \kappa_{\ket{b}}(\mathcal{M}) \geq \norm{y}
+\end{align}
+where \(y\) denotes a solution vector to the system. The reduction that follows in \cite[pp. 9-10]{Ding2021}, in combination with a few elementary results regarding sets in binary vector spaces yield the following theorem.
+\begin{theorem}
+    Let \(\mathcal{F} \subseteq \mathbb{C}[x_1, ..., x_n]\), \(n \in \mathbb{N}_{\geq 1}\), be a polynomial equation system and \(\mathcal{M}x = b\) be the Macaulay system for finding a Boolean solution to \(\mathcal{F}\) proposed by Chen and Gao. Then we have for the \(t \in \mathbb{N}_{\geq 1}\) solutions of \(\mathcal{F}\) \(a_1, ..., a_t \in \mathbb{F}_2^n\)
+    \begin{align}
+        w_H(a_1) = ... = w_H(a_t)
+    \end{align}
+    and
+    \begin{align}
+        \kappa_{b}(\mathcal{M}) \geq \sqrt{(3n)^h/t}
+    \end{align}
+    where \(h \coloneqq w_H(a_1)\).
+\end{theorem}
+In \cite[pp. 13-21]{Ding2021}, Ding et al. have further presented an improved Macaulay system and associated solution algorithm.
+
+\begin{remark}[The Condition Number of the Macaulay Matrix as a Block Cipher Design Criterion]
+    The example of the algebraic cryptanalysis of AES demonstrates the possibility of formulating block cipher key recovery problems as large equation systems. Following the results we have discussed, especially by Ding et al., we may draw two conclusions to the design criterions a block cipher should fulfill.
+    
+    First, it seems tempting to conclude, that a huge number of dependencies yielding a large size for a key recovery equation system may suffice to make a cipher strong. But one major point in the design of XSL was, that if the system is huge, but massively overdefined, an attacker may be able to break it very fast \cite[p. 15]{Courtois2002}.
+
+    Second, given the results presented, a designer of a block cipher should apply the results by Chen and Gao and Ding et al. on the key recovery equation systems, which are associated to the cipher. While Chen and Gao give the quantum algorithm for breaking it, the results by Ding et al. show the impossibility of key recovery using this technique, if the associated bound is very low. The general exponential lower bound also yields some content for discussions: Is the Macaulay approach in this form not sufficient and can be substantially improved or does the analysis by Ding et al. at some point go wrong? If neither case holds, there is one more possibility: Inside of the cryptographic community, there has been discussion on whether the condition number of associated key recovery equation systems of a block cipher fulfill more general design criteria for block ciphers. We are not aware of recent major results in this topic. Such a result would most likely make this approach unfeasible in general.
+\end{remark}
