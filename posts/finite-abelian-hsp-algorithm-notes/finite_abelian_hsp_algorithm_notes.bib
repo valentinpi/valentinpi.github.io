@@ -1,0 +1,170 @@
+@Article{Lomont,
+  author = {{{Lomont, Chris}}},
+  title  = {{{The Hidden Subgroup Problem - Review and Open Problems}}},
+  doi    = {https://doi.org/10.48550/arXiv.quant-ph/0411037},
+}
+
+@Book{Fischer,
+  author = {{{Fischer, Gerd}}},
+  title  = {{{Lehrbuch der Algebra}}},
+  isbn   = {978-3-658-19365-2},
+}
+
+@Article{Storjohann_1996,
+  author = {{{Storjohann, Arne}}},
+  title  = {{{Near optimal algorithms for computing Smith normal forms of integer matrices}}},
+  doi    = {10.1145/236869.237084},
+}
+
+@Article{Hafner_1991,
+  author = {{{L. Hafner, James and S. McCurley, Kevin}}},
+  title  = {{{Asymptotically Fast Triangularization of Matrices over Rings}}},
+  doi    = {10.1137/0220067},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}
+
+\documentclass[10pt]{amsart}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, cd, quantikz, quotes, patterns}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{finite_abelian_hsp_algorithm_notes.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
+
+\begin{document}
+    \section*{Notes on the Finite Abelian HSP Algorithm} \hfill \hfill Last Change: \today{}
+
+    We quickly introduce the necessary notions, facts and the quantum algorithm, with appropriate citations. First, recall the finite Abelian Hidden Subgroup Problem (HSP): Given a finite Abelian group \((G, +)\), a subgroup \(H \leq G\) and some \(f\colon G \to X\) with \(X\) an appropriate set, s.t. \(f|_{gH}\) is constant and \(f|_{gH}=f|_{hH} \rightarrow g = h\) for all \(g, h \in G\). Recall also that the left cosets of a subgroup form a partition of the group itself \draftcomment{red}{CITE}. Our goal is to find a generator \(\Gamma \subseteq H\) for \(H\) using a quantum algorithm\footnote{Classically, this problem is difficult, as the prime factorization problem shows \draftcomment{red}{CITE}.}.
+
+    \begin{enumerate}[label=(\roman*)]
+        \item Since \(H\) induces a partition of \(G\) \draftcomment{red}{CITE}, choosing \(X\), s.t. \(|X| \geq |G/H| = |G|/|H|\) \draftcomment{red}{CITE}, e.g. via \(X \coloneqq \{0, 1\}^{\lceil \log_2(|G/H|) \rceil}\) suffices.
+        \item How do we store group elements in \(G\) in a quantum register? We can do that using qudits, because \(G \cong \bigoplus_{j=1}^{k} \mathbb{Z}_{N_j}\) \draftcomment{red}{CITE} with \(k \in \mathbb{N}_{\geq 1}\) and \(\{N_1, ..., N_k\} \subseteq \mathbb{N}_{\geq 1}\), where we take the direct sum of the groups \draftcomment{red}{CITE}, i.e. the elements of \(G\) can be taken to be tuples \(G \ni g \coloneqq (g_1,...,g_k) \in \prod_{j=1}^k \mathbb{Z}_{N_j}\).\footnote{Finding such a decomposition is difficult, although a quantum algorithm exists \draftcomment{red}{CITE}.}
+    \end{enumerate}
+
+    different ways of introducing this... nielsen vs lomont...
+
+    \section{Characteristics}
+
+    \begin{definition}
+        A \emph{characteristic} over \(G\) is a group homomorphism \((G, +) \to (\mathbb{C}^* \coloneqq \mathbb{C} \setminus \{0\}, \cdot)\).
+    \end{definition}
+    \begin{lemma}
+        The following statements are true.
+        \begin{enumerate}[label=(\roman*)]
+            \item For every \(\chi \in \chi(G)\), there is a \(g \in G\), s.t. \(\chi = \chi_g\), where \(\chi_g\colon G \to \mathbb{C}^*, h \mapsto \prod_{j=1}^k \omega_{N_j}^{g_jh_j}\) is the characteristic induced by \(g\).
+            \item The set of characteristics of \(G\), \(\chi(G) \coloneqq \{\chi\colon G \to \mathbb{C}^* \mid \chi \text{ is a characteristic over } G\}\), equipped with the composition of maps, is a group.
+            \item The map \(G \hookdoubleheadrightarrow \chi(G), g \mapsto \chi_g\) is a group isomorphism.
+        \end{enumerate}
+    \end{lemma}
+
+    \section{Orthogonal Subgroups}
+
+    \begin{definition}
+        For \(H \subseteq G\) a subgroup of a group \(G\), we define its \emph{orthogonal subgroup} as
+        \begin{align}
+            H^\perp \coloneqq \{g \in G \mid \chi_g(H) = \{1\}\}
+        \end{align}
+    \end{definition}
+
+    \begin{lemma}
+        \begin{enumerate}[label=(\roman*)]
+            \item \(H^\perp \leq G\).
+        \end{enumerate}
+    \end{lemma}
+
+    \section{General Fourier Transform}
+
+    \begin{definition}
+        We define the \emph{Fourier Transform of the Group \(G\)} as
+        \begin{align}
+            F_G \coloneqq \frac{1}{|G|} \sum_{g, h \in G} \chi_g(h) \ketbra{g}{h}
+        \end{align}
+    \end{definition}
+
+    For \(G = \mathbb{Z}_N\), we thus have \(|G| = N\) and \(\chi_g(h) = e^{i2\pi\frac{g h}{N}}\), meaning that this corresponds to the Quantum Fourier Transform \(\text{QFT}_N\).
+
+    \begin{lemma}
+        The following statements are true.
+        \begin{enumerate}[label=(\roman*)]
+            \item We have \(F_G = \bigotimes_{j=1}^k F_{\mathbb{Z}_{N_j}}\) for a finite Abelian group \(G\) as in \draftcomment{red}{REF}.
+            \item \(F_G\) is unitary.
+            \item \(F_G\) is efficiently implementable.
+        \end{enumerate}
+    \end{lemma}
+
+    \begin{theorem}
+        Let \(G\) be a finite group and \(t \in \mathbb{N}\). Then for \(t + \lceil \log_2(|G|) \rceil\) uniformly randomly chosen elements \(g_1, ..., g_{t + \lceil \log_2(|G|) \rceil} \in G\), we have
+        \begin{align}
+            \Pr(\langle g_1, ..., g_{t + \lceil \log_2(|G|) \rceil} \rangle = G) \geq 1-\frac{1}{2^t}
+        \end{align}
+    \end{theorem}
+
+    \printbibliography{}
+\end{document}
