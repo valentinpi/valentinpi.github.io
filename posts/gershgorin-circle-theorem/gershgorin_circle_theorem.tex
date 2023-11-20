@@ -1,0 +1,401 @@
+\documentclass[10pt]{amsart}
+
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[regular]{newcomputermodern}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepgfplotslibrary{colormaps}
+\usepackage{physics}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, cd, quantikz, quotes, patterns}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+\usepackage[all]{hypcap}
+
+\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{gershgorin_circle_theorem.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
+
+\pgfplotsset{colormap/bluered}
+\pgfplotsset{colormap/hot2}
+\pgfplotsset{colormap/redyellow}
+
+\begin{document}
+    valentinpi \hfill Last Change: November 20, 2023
+
+    \section*{The Gershgorin Circle Theorem}
+
+    Let \(A \coloneqq (a_{ij})_{(i, j) \in [1, n]_{\mathbb{N}}^2} \in \mathbb{C}^{n \times n}\), \(n \in \mathbb{N}_{\geq 1}\), be a complex matrix. Our goal in these notes is to present a small technique when approximating the spectrum \(\sigma(A) = \{\lambda \in \mathbb{C} \mid \exists \, v \in \mathbb{C}^n\colon A v = \lambda v\}\) of an operator. This in turn gives approximations on \(\norm{H}\) for a Hamiltonian \(H \in H(n)\) under the operator norm: A Hamiltonian admits to a basis of eigenvectors by some eigenvalue-eigenstate pairs \((\varepsilon_1, \ket{\varepsilon_1}), ..., (\varepsilon_n, \ket{\varepsilon_n}) \in \mathbb{C} \times S(\mathbb{C}^n)\) after Gram-Schmidt diagonalization. For some \(\ket{\xi} \in S(\mathbb{C}^n)\), we thus have with the Parseval equality and Bessel inequality \(\norm{H\ket{\xi}}^2 = \sum_{i=1}^n |\varepsilon_i \braket{\xi}{\varepsilon_i}|^2 \leq \max_{i \in [1, n]_{\mathbb{N}}} |\varepsilon_i|^2\), so \(\norm{H} \leq \max_{i \in [1, n]_{\mathbb{N}}} |\varepsilon_i|\).
+
+    One approach to bounding the spectrum may be the following \cite[pp. 387-388]{Horn}: We interpret the eigenvalues as points in the complex plane \(\mathbb{C}\). Setting \(D \coloneqq \diag(a_{11}, ..., a_{nn})\) and \(B \coloneqq A-D\), we have \(A = D + B\). The eigenvalues of \(D\) are \(a_{11}, ..., a_{nn}\), enumerated with their respective algebraic multiplicities. Since the map \(M \mapsto \norm{(D + M)e_i}\) is continuous, we see that a small perturbation of \(D\) of form \(A_\varepsilon \coloneqq D + \varepsilon B\) with \(\varepsilon \in [0, 1]\) should slowly move \(a_{ii}\) along some path in \(\mathbb{C}\). The following criterion makes that idea precise and is due to the Russian mathematician Gershgorin/Geršgorin/Гершгорин.
+
+    \begin{figure}[!hbtp]
+        \begin{tikzpicture}[>=stealth, scale=1.5, semithick]
+            \tikzset{point/.style={circle, fill, inner sep=0pt, minimum size=1mm}};
+            \clip (-3.25, 3.25) rectangle (3.25, -3.25);
+            \coordinate (a11) at (-0.5, 2);
+            \coordinate (a22) at (2.5, 0.5);
+            \coordinate (a33) at (-2.75, -1);
+            \coordinate (a44) at (2, -1.5);
+            \coordinate (a55) at (1, 1);
+            \coordinate (a66) at (-0.5, -2);
+            \coordinate (eps1) at (1.5, 2.5);
+            \coordinate (eps2) at (-1.5, -1);
+            \coordinate (eps3) at (1.5, -2);
+            \coordinate (eps4) at (2.25, -1);
+            \coordinate (eps5) at (-0.5, 0.5);
+            \coordinate (eps6) at (1, 0);
+            \draw[dashed, fill=gray!5] (a11) circle (0.6cm);
+            \draw[dashed, fill=gray!5] (a22) circle (1.1cm);
+            \draw[dashed, fill=gray!5] (a33) circle (1.8cm);
+            \draw[dashed, fill=gray!5] (a44) circle (0.25cm);
+            \draw[dashed, fill=gray!5] (a55) circle (0.6cm);
+            \draw[dashed, fill=gray!5] (a66) circle (1.2cm);
+            \draw[->] (-3.25, 0) -- (3.25, 0);
+            \draw[->] (0, -3.25) -- (0, 3.25);
+            \draw[dashed, draw=gray!50] (a11) circle (0.6cm);
+            \draw[dashed, draw=gray!50] (a22) circle (1.1cm);
+            \draw[dashed, draw=gray!50] (a33) circle (1.8cm);
+            \draw[dashed, draw=gray!50] (a44) circle (0.25cm);
+            \draw[dashed, draw=gray!50] (a55) circle (0.6cm);
+            \draw[dashed, draw=gray!50] (a66) circle (1.2cm);
+            \foreach \ang in {0, 45, ..., 315}{
+                \draw[->, gray!50] ($(a11)+(\ang:0.60cm)$) -- ($(a11)+(\ang:0.60cm)+(\ang:0.15cm)$);
+                \draw[->, gray!50] ($(a22)+(\ang:1.10cm)$) -- ($(a22)+(\ang:1.10cm)+(\ang:0.15cm)$);
+                \draw[->, gray!50] ($(a33)+(\ang:1.80cm)$) -- ($(a33)+(\ang:1.80cm)+(\ang:0.15cm)$);
+                \draw[->, gray!50] ($(a44)+(\ang:0.25cm)$) -- ($(a44)+(\ang:0.25cm)+(\ang:0.15cm)$);
+                \draw[->, gray!50] ($(a55)+(\ang:0.60cm)$) -- ($(a55)+(\ang:0.60cm)+(\ang:0.15cm)$);
+                \draw[->, gray!50] ($(a66)+(\ang:1.20cm)$) -- ($(a66)+(\ang:1.20cm)+(\ang:0.15cm)$);
+            }
+            \node[below left] at (3.25, 0) {\(\text{Re}\)};
+            \node[below left] at (0, 3.25) {\(\text{Im}\)};
+            \node at (-3, 3) {\(\mathbb{C}\)};
+            \node[below=-1mm] at (a11) {\(v_1(0) = a_{11}\)};
+            \node[above right] at (a22) {\(a_{22}\)};
+            \node[above right] at (a33) {\(a_{33}\)};
+            \node[below right] at (a44) {\(a_{44}\)};
+            \node[right]       at (a55) {\(a_{55}\)};
+            \node[below right] at (a66) {\(a_{66}\)};
+            \node[right]       at (eps1) {\(v_1(1)\)};
+            \node[left]        at (eps2) {\(v_2(1)\)};
+            \node[right]       at (eps3) {\(v_3(1)\)};
+            \node[above right] at (eps4) {\(v_4(1)\)};
+            \node[left]        at (eps5) {\(v_5(1)\)};
+            \node[below]       at (eps6) {\(v_6(1)\)};
+            \draw[->] plot[looseness=2, smooth] coordinates { (a11) (-0.5, 2.5) (eps1) };
+            \draw[->] plot[looseness=2, smooth] coordinates { (a22) (1.5, 0.6) (1, 0.75) (0, -0.5) (-1, -0.25) (eps2) };
+            \draw[->] plot[looseness=2, smooth] coordinates { (a33) (-2, -2.5) (-1, -2.25) (0, -2.75) (eps3) };
+            \draw[->] (a44) -- (eps4);
+            \draw[->] plot[looseness=2, smooth] coordinates { (a55) (0.5, 1) (eps5) };
+            \draw[->] plot[looseness=2, smooth] coordinates { (a66) (0.5, -1.5) (0.25, -0.5) (eps6) };
+            \node[above left]  at (-0.5, 2.5)           {\(v_1(\varepsilon)\)};
+            \node[below left]  at (1.5, 0.6)            {\(v_2(\varepsilon)\)};
+            \node[left]        at (-2, -2.5)            {\(v_3(\varepsilon)\)};
+            \node[above left]  at ($(a44)!0.25!(eps4)$) {\(v_4(\varepsilon)\)};
+            \node[above right] at (0.5, 1)              {\(v_5(\varepsilon)\)};
+            \node[below right] at (0.5, -1.5)           {\(v_6(\varepsilon)\)};
+            \node[point, fill=SkyBlue] at (-0.5, 2.5) {};
+            \node[point, fill=SkyBlue] at (1.5, 0.6) {};
+            \node[point, fill=SkyBlue] at (-2, -2.5) {};
+            \node[point, fill=SkyBlue] at ($(a44)!0.25!(eps4)$) {};
+            \node[point, fill=SkyBlue] at (0.5, 1) {};
+            \node[point, fill=SkyBlue] at (0.5, -1.5) {};
+            \node[point, fill=Red] at (a11) {};
+            \node[point, fill=Red] at (a22) {};
+            \node[point, fill=Red] at (a33) {};
+            \node[point, fill=Red] at (a44) {};
+            \node[point, fill=Red] at (a55) {};
+            \node[point, fill=Red] at (a66) {};
+            \node[point, fill=Green] at (eps1) {};
+            \node[point, fill=Green] at (eps2) {};
+            \node[point, fill=Green] at (eps3) {};
+            \node[point, fill=Green] at (eps4) {};
+            \node[point, fill=Green] at (eps5) {};
+            \node[point, fill=Green] at (eps6) {};
+        \end{tikzpicture}
+        \caption{Visualizing sketch of moving spectrums for \(n = 6\), wlog. no crossings between eigenvalue curves and smooth curves of movement. \(v_i(\varepsilon) \in \mathbb{C}\) for \(i \in [1, 6]_{\mathbb{N}}\) denotes the path-corresponding \(i\)th eigenvalue of \(A_\varepsilon\) for \(\varepsilon \in [0, 1]\). Additionally, environments around the points \(a_{ii}\) are marked to signify the importance of continuity. When increasing \(\varepsilon\), the radius of each Гершгорин disc grows and at some point they each encompass their associated \(\varepsilon_i(1)\) value.}
+    \end{figure}
+
+    \begin{theorem}[Gershgorin Circle Theorem {\cite[pp. 387-389]{Horn}}] \label{gershgorin_circle_theorem}
+        Define \(r_i(A) \coloneqq \sum_{j \in [1, n]_{\mathbb{N}} \setminus \{i\}} |a_{ij}|\) to be the \(\ell_1\)-norm of the \(i\)-th row vector without its \(i\)th entry for a fixed \(i \in [1, n]_{\mathbb{N}}\). Furthermore, set \(G_i(A) \coloneqq \overline{B}(a_{ii}, r_i(A))\) to be the \(i\)th Gershgorin disc and let \(G(A) \coloneqq \bigcup_{i \in [1, n]_{\mathbb{N}}} G_i(A)\).
+        \begin{enumerate}[label=(\roman*), wide]
+            \item \label{gershgorin_circle_theorem_1} It holds, that
+            \begin{align}
+                \sigma(A) \subseteq G(A)
+            \end{align}
+            \item \label{gershgorin_circle_theorem_2} For \(k \in [0, n]_{\mathbb{N}}\) and \(I \subseteq [1, n]_{\mathbb{N}}\), \(|I| = k\), let \(G_I(A) \coloneqq \bigcup_{i \in I} G_i(A)\). If \(G_I(A) \cap G_{[1, n]_{\mathbb{N}} \setminus I}(A) = \emptyset\), then \(G_I(A)\) contains exactly \(k\) eigenvalues of \(A\), counted according to their algebraic multiplicities.
+        \end{enumerate}
+    \end{theorem}
+
+    We will need the following theorems from complex analysis.
+
+    \begin{theorem}[{Argument Principle \cite[p. 350]{Remmert}}] \label{argument_principle}
+        Let \(D \subseteq \mathbb{C}\) be a domain (i.e., open and nonempty), \(f\colon D \to \mathbb{C}\) be meromorphic with finitely many zeros and poles in \(D\) and \(\gamma\colon [0, 1] \to \mathbb{C}\) be simply closed and null homologous with no zeros or poles of \(f\) in \(\text{Im}(\gamma)\). Then
+        \begin{align}
+            \frac{1}{2 \pi i} \oint_\gamma \frac{f'}{f} = N - P
+        \end{align}
+        for the zero count \(N\) and pole count \(P\) of \(f\) in \(D\), counted with multiplicities and \(N, P \in \mathbb{N}\).
+    \end{theorem}
+
+    \begin{theorem}[{Integral Function Holomorphicity \cite[pp. 212-213]{Remmert}}] \label{two_variable_holomorphicity}
+        Let \(\gamma\colon [0, 1] \to \mathbb{C}\) be a piecewise differentiable path and \(f\colon \mathbb{C}^2 \to \mathbb{C}\) be continuous on \(\text{Im}(\gamma) \times D\) for a domain \(D \subseteq \mathbb{C}\), where \(\mathbb{C}^2\) is equipped with its metric topology. Also let \(f|_{\{\gamma(t)\} \times D}\) be holomorphic for any \(t \in [0, 1]\). Then
+        \begin{align}
+            g(z) \coloneqq \int_\gamma f(\zeta, z) d \zeta
+        \end{align}
+        is holomorphic in \(D\).
+    \end{theorem}
+
+    Some elaborations on this theorem from complex analysis follow, more can be found in any textbook on complex analysis, e.g. \cite{Remmert}.
+    \begin{itemize}[wide]
+        \item The space of complex numbers \(\mathbb{C}\) can be equipped with the natural norm, associated metric and topological structure from \(\mathbb{R}^2 \cong \mathbb{C}\). Continuity of functions is defined by that. Adding a point \(\infty\), a space \(\mathbb{C} \cup \{\infty\}\) can also be defined with a natural topology considering open sets with \(\infty\) contained as infinite.
+        \item A \emph{domain} is a nonempty, open subset \(D \subseteq \mathbb{C}\).
+        \item \emph{Holomorphic} functions are functions of form \(f\colon D \to \mathbb{C}\), s.t. for any \(x \in \mathbb{C}\), \(\lim_{z \to x} (f(z)-f(x))/(z-x)\) exists, i.e. they are complex differentiable, because the associated sequences in the definition are \(\mathbb{C}\)-sequences.
+        \item A \emph{pole} is a point \(c \in \mathbb{C}\), s.t. there is a \(\nu \in \mathbb{N}\), s.t. \(z \mapsto (z-c)^\nu f(z)\) can be holomorphically extended at \(c\).
+        \item \emph{Meromorphic} functions are pairs \((f, P(f))\), s.t. \(f\colon D \to \mathbb{C} \cup \{\infty\}\) is a function with the property that \(f|_{D \setminus P(f)}\) is holomorphic and \(P(f) \subseteq D\) is a \emph{discrete} set of poles of \(f\), i.e. \(\text{int}(P(f)) = \emptyset\).
+        \item Continuous maps of form \(\gamma\colon [0, 1] \to \mathbb{C}\) are called \emph{paths}. If \(\gamma(0) = \gamma(1)\), then we call the path \(\gamma\) \emph{closed}.
+        \item We define a \emph{path integral} using the natural component-wise definition of an integral for a complex function with values in \(\mathbb{R}\) as \(\oint_\gamma f = \int_{t=0}^1 (f \circ \gamma)(t) \dot{\gamma}(t) dt\). We further associate an \emph{index} \(\text{ind}_{\gamma}(z) = \frac{1}{2 \pi i} \oint_\gamma \frac{d \zeta}{\zeta - z}\), the \emph{winding number} of \(\gamma\) around \(z \not\in \text{Im}(\gamma)\), and an \emph{interior} \(\text{Int}(\gamma) = \{z \in \mathbb{C} \setminus \text{Im}(\gamma) \mid \text{ind}_\gamma(z) \neq 0\}\). We further call \(\gamma\) \emph{null homologous}, if \(\text{Int}(\gamma) \subseteq D\). Lastly, \(\gamma\) is called \emph{simply closed}, if \(\text{Int}(\gamma) \neq \emptyset\) and \(\text{ind}_{\gamma}(z) = 1\) for all \(z \in \text{Int}(\gamma)\). One example of the latter constitute any one-winded loops around a center point.
+    \end{itemize}
+
+    \begin{figure}[!hbtp]
+        \begin{tikzpicture}[>=stealth, semithick]
+            \tikzset{
+                point/.style={circle, fill, inner sep=0pt, minimum size=1mm}
+            }
+            \begin{axis}[
+                    domain   = -3:3,   % Domain
+                    y domain = -3:3,
+                    view     = {0}{90},  % Make it 2D
+                    colormap name   = bluered, % Colormap
+                    %point meta max  = 150, % Max and Min values
+                    %point meta min  = 0,
+                    ticks   = none,
+                    %unbounded coords = jump,
+                    %samples = 50,
+                    width   = 6cm,
+                    height  = 6cm,
+                    xmin=-3, xmax=3,
+                    ymin=-3, ymax=3,
+                    scale only axis,
+                    axis line style={draw=none},
+                ]
+                \addplot3[
+                    contour filled={number=20, labels=false}, semithick
+                ]{
+                    100*sqrt((1/sqrt((x^2-y^2+1)^2+4*x^2*y^2)*(x^2-y^2+1)-1/2)^2+4*x^2*y^2/((x^2-y^2+1)^2+4*x^2*y^2))
+                    %exp((x^2-y^2-1)/sqrt((x^2-y^2-1)^2+(2*x*y)^2))
+                };
+            \end{axis}
+            \draw[white] (3, 3) circle (2cm);
+            \draw[->, white] ($(3, 3)+(135:2cm)$) arc(135:180:2cm);
+            \node[white, point] (i) at (3, 4) {};
+            \node[white, point] (o) at (4, 3) {};
+            \node[white, point] (mi) at (3, 2) {};
+            \node[white, point] (mo) at (2, 3) {};
+            \node[white, below] at (i) {\(i\)};
+            \node[white, below right] at (o) {\(1\)};
+            \node[white, above] at (mi) {\(-i\)};
+            \node[white, above left] at (mo) {\(-1\)};
+            \node[white, left] at (1, 3) {\(\gamma\)};
+            \node[white, above] at (0, 6) {\((-3, 3) \times (-3, 3)i\)};
+        \end{tikzpicture}
+        \caption{Contour plot of \(|f|\) for the meromorphic function \((f\colon \mathbb{C} \to \mathbb{C} \cup \{\infty\}, z \mapsto \frac{1}{z^2+1}-\frac{1}{2}, \{-i, i\})\) in the domain \((-3, 3) \times (-3, 3)i\). Note that warmer colors mean higher values. With the null homologous simply closed loop \(\gamma\) winding around \(\overline{B}(0, 2)\), we have \(\oint_\gamma \frac{f'}{f} = 2 - 2 = 0\), since \(N = 2\) and \(P = 2\).}
+    \end{figure}
+
+    \begin{proof}
+        \begin{enumerate}[wide]
+            \item[\ref{gershgorin_circle_theorem_1}] Let \((\lambda, x)\) be an eigenpair of \(A\) with wlog. \(x \neq 0\). We show \(\lambda \in G(A)\). Let \(p \coloneqq \arg\max_{i \in \{1,...,n\}} |x_i|\), s.t. \(\norm{x}_\infty = |x_p|\). Writing out the \(p\)th entries in the equation \(Ax=\lambda x\) gives
+            \begin{align}
+                (\lambda-a_{pp})x_p = \sum_{i \in [1, n]_{\mathbb{N}} \setminus \{p\}} a_{pi} x_i
+            \end{align}
+            Using the triangle inequality and \(|x_i| \leq |x_p|\) for any \(i \in [1, n]_{\mathbb{N}}\), we obtain
+            \begin{align}
+                |\lambda-a_{pp}| |x_p| \leq r_p(A) |x_p|
+            \end{align}
+            i.e. \(\lambda \in G(A)\).
+            \item[\ref{gershgorin_circle_theorem_2}] %Enumerate \(I = \{i_1, ..., i_k\}\). By successively moving the rows \(i_1, ..., i_k\) into \(1, ..., k\) through permutations of form \(E_n - e_je_j^t - e_{i_j}e_{i_j}^t + e_je_{i_j}^t + e_{i_j}e_j^t\), \(j \in \{1, ..., n\}\) with left multiplication in front of \(A\) and then successively right multipliying with similar transformations to move the columns \(i_1, ..., i_k\) to \(1, ..., k\) respectively, we may assume that \(a_{jj} = a_{i_ji_j}\) for all \(j \in \{1, ..., n\}\) and that otherwise the row sums \(r_i(A)\), \(i \in \{1, ..., n\}\), stay the same, i.e. that \(I = \{1, ..., k\} \eqqcolon I_k\).
+            Recall the definitions of \(A\), \(D\), \(B\) and \(A_\varepsilon\) in the introduction. We have that the diagonals of \(A\) and \(A_{\varepsilon}\) coincide by definition and that \(r_i(A_\varepsilon) = r_i(\varepsilon A) = \varepsilon r_i(A)\) for any \(i \in [1, n]_{\mathbb{N}}\), giving with \ref{gershgorin_circle_theorem_1}, that
+            \begin{align}
+                \sigma(A_\varepsilon) \subseteq G_I(A_\varepsilon) \subseteq G_I(A) \cup G_{[1, n]_{\mathbb{N}} \setminus I}(A)
+            \end{align}
+            We will need the parameter \(\varepsilon\) in the following. Let \(\gamma\colon [0, 1] \to \mathbb{C}\) be a simply closed piecewise differentiable path surrounding \(G_I(A)\), disjoint from \(G_{[1, n]_{\mathbb{N}} \setminus I}\) and null homologous in a suitable domain encompassing \(G_I(A)\)\footnote{The argument here follows the authors of the proof from the citation and is fully elementary-geometric: Consider this finite count of discs and draw such a fitting line, which will be possible, because we may proceed inductively by starting at one disc, surrounding it almost fully and then drawing a line to a next disc and so on, in the end we arrive at the first disc, completing the path.}. Let \(p_\varepsilon\) be the characteristic polynomial of \(A_\varepsilon\) for some \(\varepsilon \in [0, 1]\). Since \(\sigma(A_\varepsilon) \cap \text{Im}(\gamma) = \emptyset\), we can apply \Cref{argument_principle}, s.t. we have for the zero count function \(N\colon [0, 1] \to \mathbb{N}\) of \(p_\varepsilon\) in \(G_I(A_\varepsilon)\), that
+            \begin{align}
+                N(\varepsilon) = \frac{1}{2 \pi i} \oint_\gamma \frac{p_\varepsilon'}{p_\varepsilon}
+            \end{align}
+            since \(p_\varepsilon\) is a meromorphic function with no poles and exactly \(n\) zeros in total, meaning that it has to have finitely many zeros in the domain which is encompassed by \(\gamma\). Note that \Cref{argument_principle} also accounts for the algebraic multiplicities of the roots. Applying \Cref{two_variable_holomorphicity}, we obtain, that \(N\) is thus a continuous integer-valued function, so it is constant. Since \(N(0) = k\), we thus have \(N(1) = k\), proving the theorem.
+        \end{enumerate}
+    \end{proof}
+
+    We shall now apply Гершгорин to a few specific problems, illustrating its possible use in the study of AQC algorithms. Recall for an AQC algorithm especially the rigorous adiabatic condition \cite[p. 7]{Albash}
+    \begin{align}
+        t_f \geq \frac{3}{\varepsilon}\max_{s \in [0, 1]} \max\left\{\evalat{\frac{m\norm{\dot{H}}}{\Delta^2}}{s}, \evalat{\frac{m\norm{\ddot{H}}}{\Delta^2}+\frac{7m^{3/2}\norm{\dot{H}}^2}{\Delta^3}}{s}\right\}
+    \end{align}
+    with \(t_f \in \mathbb{R}_{> 0}\) being the total evolution time, \(m\colon [0, 1] \to \mathbb{N}\) being the dimension of the current ground state space, \(H\colon [0, 1] \to H(n)\) being the Hamiltonian path, \(\Delta\colon [0, 1] \to \mathbb{R}_{> 0}\) being the ground state gap and \(\varepsilon \in \mathbb{R}_{> 0}\) being the projector error. Гершгорин can thus be used to estimate especially \(\min_{s \in [0, 1]} \Delta\), \(\norm{\dot{H}}\) and \(\norm{\ddot{H}}\), following the bounding technique with the largest eigenvalue from the introduction of this text. Furthermore, we observe that since a Hamiltonian has real diagonals and eigenvalues, that the Гершгорин discs correspond to intervals on the real line.
+
+    \begin{example}
+        For any diagonal matrix \(D \coloneqq \diag(a_1, ..., a_n)\) with \(a_1, ..., a_n \in \mathbb{C}\), we have \(G(A) = \{a_1, ..., a_n\}\), thus the union of the Гершгорин discs corresponds precisely to the spectrum \(\sigma(A)\).
+    \end{example}
+
+    \begin{example} \label{example_stochastic}
+        Suppose \(H = \begin{pmatrix}h_1\\\vdots\\h_n\end{pmatrix} \in H(n)\) is an \(s\)-sparse Hamiltonian, then we have for the row sums, that \(r_i(H) \leq s\norm{h_i}_\infty\) for any \(i \in [1, n]_{\mathbb{N}}\). A special case occurs when \(H\) is \emph{stochastic}, i.e. \(H \in [0, 1]^{n \times n}\) and \(r_i(H) = 1\) for all \(i \in [1, n]_{\mathbb{N}}\), since the individual Гершгорин discs become unit intervals and especially, \(G(H) \subseteq B(1/2, 3/2)\). In the latter case we thus have for an adiabatic process using a path of form \(s \mapsto (1-s)H_0 + sH_1\) with \(H_0, H_1 \in H(n)\) being stochastic and using Гершгорин, that \(\norm{\dot{H(s)}} \in O(1)\) and \(\norm{\ddot{H(s)}} = 0\) for any \(s \in [0, 1]\). The ground state gap \(\Delta\) may become arbitrarily small.
+    \end{example}
+
+    \begin{example}[{\cite[p. 10]{Albash}}]
+        Consider the Hamiltonian \(H_0 \coloneqq E_N - \ketbra{\phi}{\phi}\), \(N \coloneqq 2^n\), with \(\ket{\phi} \coloneqq H^{\otimes n}\ket{0}^{\otimes n}\) and \(H_1 \coloneqq \ketbra{m}{m}\), \(m \in [0, N-1]_{\mathbb{N}}\), as well as the usual linear non-catalystic interpolation path \(H\colon [0, 1] \to H(N), s \mapsto (1-s)H_0+sH_1\). Computing \(\norm{\dot{H(s)}}\), \(s \in [0, 1]\), to apply the rigorous adiabatic theorem in the analysis of the adiabatic Grover algorithm is a bit cumbersome, with \Cref{example_stochastic} we can first conclude \(\norm{H_0} \in O(1)\), as both \(E_N\) and \(\ketbra{\phi}{\phi}\) are stochastic, although this is not particularly useful. Using Гершгорин directly, we obtain
+        \begin{align}
+            \sigma(\dot{H(s)}) \subseteq G(\dot{H(s)}) = \overline{B}\left(\frac{1}{N}, \frac{N-1}{N}\right) \cup \overline{B}\left(\frac{N-1}{N}, \frac{N-1}{N}\right)
+        \end{align}
+        since
+        \begin{align}
+            \dot{H}(s) = \begin{pmatrix}
+                \frac{1}{N} & & \cdots &      & \frac{1}{N}\\
+                            & \ddots & &      &\\
+                \vdots      & & \frac{N-1}{N} & & \vdots\\
+                            & & & \ddots      &\\
+                \frac{1}{N} & & \cdots &      & \frac{1}{N}
+            \end{pmatrix}
+        \end{align}
+        Thus \(\max_{s \in [0, 1]} \norm{\dot{H(s)}} \leq 2\). For \(\Delta\) we can not use Гершгорин.
+    \end{example}
+
+    \begin{example}[{\cite[p. 2]{Nagaj}}]
+        Consider the Glued Trees catalystic Hamiltonian path
+        \begin{align}
+            H(s) = (1-s) H_0 + \sqrt{2} (1-s)sA + (1/\sqrt{8}) s H_1 \in H(2^{n+2})
+        \end{align}
+        with \(H_0 \coloneqq \ketbra{\alpha(v_l)}{\alpha(v_l)}\), \(A\) being an adjacency matrix of a glued tree graph \(G = (V, E)\) and \(H_r \coloneqq \ketbra{\alpha(v_r)}{\alpha(v_r)}\) with \(\alpha\colon V \to \{0, 1\}^{n+2}\) being an (injective) encoding function and \(v_l, v_r \in V\) being the left and rightmost vertices of the graph. \(A\) is \(3\)-sparse and thus \(\norm{\dot{H(s)}}, \norm{\ddot{H(s)}} \in O(1)\), as we may directly verify from the catalyst polynomial scalar.
+    \end{example}
+
+    \begin{example}[{\cite[pp. 12-13]{Albash}}]
+        We shall quickly demonstrate a rather nonstandard Hamiltonian path, where it is not trivial how to apply Гершгорин. Consider the Hamiltonian for the adiabatic Deutsch-Jozsa algorithm based on unitary interpolation
+        \begin{align}
+            H(s) = \tilde{U}_f(s)H_0\tilde{U}_f^\dagger(s), \tilde{U}_f(s) \coloneqq \exp\left(i\frac{\pi}{2}sU_f\right)
+        \end{align}
+        with \(U_f \in U(N)\), \(\ket{x} \mapsto (-1)^{f(x)}\ket{x}\) being the oracle for the function of discussion \(f\colon \{0, 1\}^n \to \{0, 1\}\).
+    \end{example}
+
+    We thus can make the following two observations:
+    \begin{itemize}[wide]
+        \item The values on the diagonal dictate the centers of the Гершгорин discs. If these values are large and the remainder row sums are low, the Hamiltonian paths may become more interesting, because in the examples discussed the energy change of the system has always been \(O(1)\).
+        \item We may also be able to approximate \(\Delta\) well, if the Гершгорин discs are all disjoint, by reducing that problem to the purely algorithmic geometric problem of finding the lowest distance that any pair of discs in a disc arrangement has.
+    \end{itemize}
+    We construct in the following a specific example for phase extraction from a specific Hamiltonian that utilizes this idea.
+
+    \begin{example} \label{circles_example}
+        Consider the Hamiltonians
+        \begin{align}
+            H_0 &\coloneqq \begin{pmatrix}
+                                                                      0 &           0 & \cdots & 0 & \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}\\
+                                                                      0 & \frac{1}{N} & \cdots & \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)} & 0\\
+                                                                 \vdots &      \vdots & \ddots & \vdots & \vdots\\
+                                                                      0 &  \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)} & \cdots & \frac{N-2}{N} & 0\\
+                    \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)} &           0 & \cdots & 0 & \frac{N-1}{N}
+            \end{pmatrix},\\
+            H_1 &\coloneqq \begin{pmatrix}
+                0 & \cdots & \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}e^{i\varphi}\\
+                \vdots & \ddots & \vdots\\
+                \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}e^{i\varphi} & \cdots & \frac{N-1}{N}
+            \end{pmatrix} \in H(N)
+        \end{align}
+        with \(H_1\) being defined in the same pattern as \(H_0\), where \(\varphi \in (-\pi, \pi]\) is some unknown phase, omitted entries are all zero besides the two diagonals and for which we again define the linear interpolation path \(H\colon [0, 1] \to H(N), s \mapsto (1-s)H_0+sH_1\). We also take \(n \geq 3\) s.t. \(\cos(2\pi/N) \in [0, 1)\) for \(\Delta > 0\), as we have for any \(s \in [0, 1]\), that
+        \begin{align}
+            G(H(s)) = \bigcup_{i=0}^{N-1} B\left(\frac{i}{N}, \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}\right)
+        \end{align}
+        s.t. we have
+        \begin{align}
+            \Delta > \frac{1}{N} - 2 \cdot \frac{1}{2N}\sqrt{1-\cos\left(\frac{2\pi}{N}\right)} = \frac{1}{N}\left(1-\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}\right) \in \Theta\left(\frac{1}{N}\right)
+        \end{align}
+        The Гершгорин discs are all disjoint, as seen in the example of \Cref{phase_approx_example_illustration}, justifying the choice of the coefficients in the mirrored diagonal. It is also clear by the previous examples that \(\norm{\dot{H}(s)}, \norm{\ddot{H}(s)} \in O(1)\) now for any \(s \in [0, 1]\), paving the way for an AQC algorithm, which is not efficient though due to the very low ground state gap. We may still attempt to bound the gap directly. Suppose \(n\) is not fixed and we are to bound \(\Delta \geq \varepsilon \in \mathbb{R}_{> 0}\), then
+        \begin{align}
+            \varepsilon > \frac{1}{N}\left(1-\sqrt{1-\cos\left(\frac{2\pi}{N}\right)}\right) \leadsto N^2-\frac{2}{\varepsilon}N+\frac{1}{\varepsilon^2}\cos\left(\frac{2\pi}{N}\right) \geq N^2-\frac{2}{\varepsilon}N+\frac{\sqrt{2}}{2\varepsilon^2} > 0
+        \end{align}
+        The roots of the relevant polynomial are
+        \begin{align}
+            \frac{1}{\varepsilon}\left(1\pm\sqrt{1-\frac{\sqrt{2}}{2}}\right) \in O(1/\varepsilon)
+        \end{align}
+        So to satisfy \(\Delta \geq \varepsilon\), we must have \(N \in \Theta(1/\varepsilon)\) or \(n \in \Theta(\log_2(1/\varepsilon))\). This only concerns the gap though, so a trivial choice of \(\varepsilon \in \Theta(1)\) would certainly lead to a fast, but uninteresting algorithm.
+
+        \begin{figure}[!hbtp]
+            \begin{tikzpicture}[>=stealth, scale=2, semithick]
+                \tikzset{point/.style={circle, fill, inner sep=0pt, minimum size=1mm}};
+                \node[below right] at (3.5, 0) {\(\mathbb{R}\)};
+                \draw[->] (-1, 0) -- (3.5, 0);
+                \def\n{7};
+                \def\npo{8};
+                \pgfmathsetmacro\smallradius{4*1/(2*\npo)*sqrt(1-cos(180/pi*2*pi/(\npo+1)))};
+                \foreach \ang in {0, ...,  \n}{
+                    \node[point] at ($(\ang/\npo*4-1/\npo*4, 0)$) {};
+                    \node[below=1mm] at ($(\ang/\npo*4-1/\npo*4, 0)$) {\(\frac{\ang}{\npo}\)};
+                    \node at ($(\ang/\npo*4-1/\npo*4-0.5*\smallradius, 0)$) {\([\)};
+                    \node at ($(\ang/\npo*4-1/\npo*4+0.5*\smallradius, 0)$) {\(]\)};
+                }
+                \draw[<->] ($(2/\npo*4-1/\npo*4+0.5*\smallradius, -0.05)$) -- ($(3/\npo*4-1/\npo*4-0.5*\smallradius, -0.05)$) node[below, pos=0.5] {\(\leq \Delta\)};
+            \end{tikzpicture}
+            \caption{Illustration of \(G(H(s))\) for \(n = 3\), \(\varphi = \pi/18\) (e.g., but can be arbitrary) and \(s \in [0, 1]\) arbitrary, but fixed, from \Cref{circles_example}.}
+            \label{phase_approx_example_illustration}
+        \end{figure}
+    \end{example}
+
+    \printbibliography{}
+\end{document}

@@ -74,7 +74,9 @@
 \newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
 
 \begin{document}
-    \section*{On the Search for Differential Characteristics} \hfill \hfill valentinpi, Last Change: November 7, 2023
+    valentinpi \hfill Last Change: November 20, 2023
+
+    \section*{On the Search for Differential Characteristics}
 
     In these notes, we introduce basic notions from differential cryptanalysis and discuss a new idea for a hybrid adiabatic-gatebased quantum algorithm for finding highly probable differential characteristics, as well as a counterexample for the existence of high probability differential characteristics with the Rijndael S-Box. Let \(m, n \in \mathbb{N}_{\geq 1}\) throughout.
 
@@ -168,7 +170,7 @@
         \label{fig:differential_characteristics}
     \end{figure}
     
-    Using differential characteristics, one can formulate the following general strategy for attacking a general cipher.
+    Using differential characteristics, one can formulate the following general strategy for attacking a general cipher, when neither a chosen plaintext nor chosen ciphertext attack are possible.
 
     {\centering\begin{minipage}{\linewidth}
         \vspace{-0.25cm}
@@ -176,10 +178,10 @@
             \caption{\textsc{General Differential Attack using Characteristics}}
             \label{algo:general_differential_attack_using_characteristics}
             \begin{algorithmic}[1]
-                \Require A function \(E\colon \{0, 1\}^n \times \{0, 1\}^k \to \{0, 1\}^m\), \(k \in \mathbb{N}_{\geq 1}\), with a characteristic \(\alpha \to_p^{E(\cdot, \hat{k})} \beta\) to an unknown key \(\hat{k}\) and \(p \gg 0\).
+                \Require A function \(E\colon \{0, 1\}^n \times \{0, 1\}^k \to \{0, 1\}^m\), \(k \in \mathbb{N}_{\geq 1}\), with a known characteristic \(\alpha \to_p^{E(\cdot, \hat{k})} \beta\) to an unknown key \(\hat{k}\) and \(p \gg 0\).
                 \Ensure A candidate for \(\hat{k}\).
                 \State Choose pairs \((x_1, y_1), ..., (x_{n_1}, y_{n_1}) \in \{0, 1\}^{2n}\), \(n_1 \in \mathbb{N}_{\geq 1}\), with \(x_i \oplus y_i = \alpha \, \forall \, i \in [1, n]_{\mathbb{N}}\).
-                \State Choose keys \(k_1, ..., k_{n_2} \in \{0, 1\}^k\), \(n_2 \in \mathbb{N}_{\geq 1}\), and count \(e_{k_i} \coloneqq |\{(x_j,y_j) \mid E(x_j, k_i) \oplus E(y_j, k_i) = E(x_j, k) \oplus E(y_j, k) = \beta\}|\) for each \(i \in [1, n_2]_{\mathbb{N}}\).
+                \State Choose keys \(k_1, ..., k_{n_2} \in \{0, 1\}^k\), \(n_2 \in \mathbb{N}_{\geq 1}\), and count \(e_{k_i} \coloneqq |\{(x_j,y_j) \mid E(x_j, k_i) \oplus E(y_j, k_i) = \beta\}|\) for each \(i \in [1, n_2]_{\mathbb{N}}\).
                 \State \Return \(k_d\), where \(d \coloneqq \arg\max_{i \in [1, n_2]_{\mathbb{N}}} e_{k_i}\).
             \end{algorithmic}
         \end{algorithm}
@@ -266,9 +268,9 @@
     \end{align}
     Thus
     \begin{align}
-        H_1 \coloneqq E_N-\ketbra{\phi}{\phi} = \sum_{j=0}^{N-1} (1-|\alpha_j|^2) \ketbra{j}{j}
+        H_1 \coloneqq E_N-\ketbra{\phi}{\phi} = \sum_{j=0}^{N-1} (1-|\alpha_j|^2) \ketbra{j}{j} - \sum_{\substack{i, j \in [0, N-1]_{\mathbb{N}}\\i \neq j}} \alpha_i\alpha_j^*\ketbra*{i}{j}
     \end{align}
-    We have \(\sigma(H_1) = \{1 - |\alpha_j|^2 \mid j \in \{0, 1\}^n\}\), thus the problem reduces to find the ground state of the Hamiltonian \(H_1\). We recall the necessary tools for such an adiabatic quantum algorithm: A proper initial Hamiltonian \(H_0\), an appropriate schedule \(A\) and possibly a catalyst Hamiltonian \(A\). Furthermore, one needs to find out how exactly to apply this algorithm to the problem from above, since there are still the first two registers in the state, so an observable encoding function \(\chi\) needs to be given to the algorithm in an appropriate form. Also, of course, the analysis wrt. the rigorous adiabatic theorem must be performed.
+    We are aiming at a spectrum \(\{1 - |\alpha_j|^2 \mid j \in \{0, 1\}^n\}\), hoping to find it here, and thus the problem reduces to find the ground state of the Hamiltonian \(H_1\). We recall the necessary tools for such an adiabatic quantum algorithm: A proper initial Hamiltonian \(H_0\), an appropriate schedule \(A\) and possibly a catalyst Hamiltonian \(A\). Furthermore, one needs to find out how exactly to apply this algorithm to the problem from above, since there are still the first two registers in the state, so an observable encoding function \(\chi\) needs to be given to the algorithm in an appropriate form. Also, of course, the analysis wrt. the rigorous adiabatic theorem must be performed.
 
     Returning to the problem of finding characteristics, our hybrid adiabatic-gatebased quantum algorithm, in the end, would need to measure wrt. the canonical basis to get the highest probable characteristic differences and then perform amplitude estimation with runtime e.g. \(O(\sqrt{N})\) \cite[pp. 19-20]{Brassard} to approximate its probability, assuming the knowledge of it is needed.
 
