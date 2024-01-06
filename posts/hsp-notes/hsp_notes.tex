@@ -1,0 +1,297 @@
+\documentclass[10pt]{amsart}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, cd, quantikz, quotes, patterns}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{hsp_notes.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+\newcommand{\onot}{\mathcal{O}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+    \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
+
+\begin{document}
+    valentinpi \hfill Last Change: January 6, 2024
+
+    \section*{Notes on Quantum Algorithms for the Finite HSP}
+
+    \section{Introduction} \phantom{} \label{introduction}
+
+    Given a finite group \((G, \circ)\) and a function \(f\colon G \to X\) for some suitable set \(X\) with the property, that \(f|_{gH}\) is constant and \(f|_{gH} = f|_{hH} \to g = h\) for \(g, h \in G\), where \(H < G\) is an unknown subgroup. The problem of finding a generator for \(H\) is called the \emph{Finite Hidden Subgroup Problem} (Finite HSP, FHSP). In these notes, we will review the generalization of the quantum algorithm for the Finite Abelian HSP to arbitrary finite groups, also known as \emph{Quantum Fourier Sampling} (QFS), and discuss its inefficiency regarding
+    %, give a small review of some existing results,
+    the issue of classical reconstructibility. We will also review the information-theoretical quantum solution by Ettinger, Hoyer and Knill.
+    % as well as discuss the subexponential Regev-Kuperberg algorithm for solving the \emph{Dihedral HSP} (DHSP).
+    Let \(n, m, k \in \mathbb{N}_{\geq 1}\) throughout.
+
+    \section{Representation Theory} \phantom{}
+
+    In the case of finite Abelian groups, we were able to employ a characterization theorem \cite[pp. 132-135]{Fischer}, which allowed the use of qudit registers for storing elements. With this characterization theorem and with the help of character theory, which in turn required the characterization\footnote{See the definition of induced characteristics.}, it was possible to develop a quantum Fourier transform for finite Abelian groups with useful properties relating to the notion of orthogonal group subsets. Most of these steps required the commutativity of the group operation \cite[pp. 17-20]{Lomont2004}. In the general case, we shall assume for these notes an \(\onot(\log_2(|G|))\)-complex encoding of group elements as the canonical basis elements of the Hilbert space \(\mathbb{C}^{|G|}\). The quantum algorithm for general finite HSPs requires another generalization of the QFT, based on representation theory, which is much different. We shall introduce the necessary definitions and facts here quickly. The following presentation of facts follows \cite[pp. 25-28]{Lomont2004}.
+
+    \begin{definition}[{\cite[pp. 25-26]{Lomont2004}}]
+        We define the following notions.
+        \begin{enumerate}[label=(\roman*), wide]
+            \item A \emph{representation} of a group \(G\) is a group homomorphism \(\rho\colon G \to \text{GL}(\mathbb{C}^{d_\rho})\), \(d_\rho \in \mathbb{N}\). We denote the \emph{set of all representations} as \(P(G)\).
+            \item A subspace \(V \subseteq \mathbb{C}^{d_\rho}\) is said to be \emph{invariant}, if \(\rho(g)V \subseteq V\) for any \(g \in G\).
+            \item If there are no invariant, nonzero and proper subspaces wrt. a representation \(\rho\), then \(\rho\) is said to be \emph{irreducible}.
+        \end{enumerate}
+    \end{definition}
+
+    We can always choose the trivial representation \(g \mapsto E_{d_\rho}\) for any \(g \in G\), allowing a zero-dimensional representation space, since any \(\mathbb{C}^{d_\rho}\) would be invariant in that case, but requiring irreducibility forces a proper non-trivial representation. In the following, when we speak of subspaces, we shall speak of subspaces \emph{up to an embedding}, i.e. when we reduce the general linear space for the values of a representation, we shall still talk of the reduced spaces as subspaces of \(\mathbb{C}^{d_\rho}\).
+
+    \begin{lemma}[{\cite[p. 6]{Fulton}}] \label{characteristics_decomposition_lemma}
+        A representation \(\rho \in P(G)\) with an invariant subspace \(0 \neq V_1 \subset \mathbb{C}^{d_\rho}\) admits to an invariant subspace \(0 \neq V_2 \subset \mathbb{C}^{d_\rho}\) with \(\mathbb{C}^{d_\rho} = V_1 \oplus V_2\).
+    \end{lemma}
+
+    \begin{corollary}[Decompositions of Representations]
+        For a representation \(\rho \in P(G)\), there are invariant subspaces \(V_1, ..., V_k \subseteq \mathbb{C}^{d_\rho}\) with irreducible representations \(\rho_i\colon G \to \text{GL}(V_i)\) for any \(i \in [1, k]_{\mathbb{N}}\), s.t. \(\mathbb{C}^{d_\rho} = \bigoplus_{i=1}^k V_i\) and \(\rho = \bigoplus_{i=1}^k \rho_i\).
+    \end{corollary}
+
+    Note that we use the linear-algebraic direct sum \(\bigoplus\) instead of the usual sums of sets and functions, meaning that for a collection of bases \(\{B_i \subseteq V_i\}_{1 \leq i \leq k}\), \(\bigcup_{i=1}^k B_i\) is a basis of \(\mathbb{C}^{d_\rho}\) via a natural embedding of the vectors of the subspaces. For \(\rho\) we look at the action of functions with this respect, giving the correctness of notation here. This result can be strengthened even further to the following result.
+
+    \begin{definition}[{\cite[p. 25]{Lomont2004}}]
+        Two representations \(\rho_1, \rho_2 \in P(G)\) are called \emph{isomorphic}, if \(\exists \; \varphi\colon \mathbb{C}^{d_{\rho_1}} \hookdoubleheadrightarrow \mathbb{C}^{d_{\rho_2}}\) with \(\rho_1(g) = \rho_2(g) \circ \varphi \; \forall g \in G\).
+    \end{definition}
+
+    \begin{theorem}[{\cite[p. 7]{Fulton}}] \label{characteristics_decomposition_theorem}
+        For any representation \(\rho \in P(G)\), there is a decomposition into invariant subspaces \(V_1, ..., V_k \subseteq \mathbb{C}\), unique up to isomorphism of distinct subgroups
+        \begin{align}
+            \mathbb{C}^{d_\rho} = \bigoplus_{i=1}^k V_i^{\oplus \alpha_i}
+        \end{align}
+        with \(\alpha_1, ..., \alpha_k \in \mathbb{N}_{\geq 1}\) and \(\rho = \bigoplus_{i=1}^k \rho_i^{\oplus \alpha_i}\) with \(\rho_i\colon G \to \text{GL}(V_i)\) being the respective irreducible representations.
+    \end{theorem}
+
+    The powers \(\alpha_1, ..., \alpha_k\) are used here to respect the fact that some spaces in a decomposition may be isomorphic. \Cref{characteristics_decomposition_theorem} also gives the fact, that there is always a \emph{complete} and \emph{finite} set of irreducible representations, i.e. one, s.t. the following decomposition is respected.
+
+    \begin{lemma}[{\cite[p. 17]{Fulton}}] \label{characteristics_decomposition_summation_lemma}
+        For a representation \(\rho \in P(G)\) and a decomposition \(\mathbb{C}^{d_\rho} = \bigoplus_{i=1}^k V_i^{\oplus \alpha_i}\) with \(\{\alpha_i\}_{1 \leq i \leq k} \subseteq \mathbb{N}_{\geq 1}\) into invariant subspaces \(\{V_i \subseteq \mathbb{C}^{d_\rho}\}_{1 \leq i \leq k}\) with irreducible representations respectively, we have
+        \begin{align}
+            |G| = \sum_{i=1}^k \dim(V_i)^2.
+        \end{align}
+    \end{lemma}
+
+    Note that \(\alpha_1, ..., \alpha_k\) not playing a role in the formula is not a contradiction\footnote{At least by intuition for the way it is written down in these notes here.}, as they mostly stem from possibly too large of a dimension \(d_\rho\). %A significant result of \Cref{characteristics_decomposition_summation_lemma} is the fact, that we can thus store a decomposed representation into a quantum register for group elements.
+
+    \begin{definition}[{\cite[p. 27]{Lomont2004}}]
+        Let \(G\) be a finite group, \(f\colon G \to \mathbb{C}\) a function and \(\rho\colon G \to \text{GL}(\mathbb{C}^{d_\rho})\) with \(d_\rho \in \mathbb{N}_{\geq 1}\) be an irreducible representation. Then the \emph{Fourier transform of} \(f\) \emph{wrt.} \(\rho\) (FT) is defined as
+        \begin{align}
+            \hat{f}(\rho) \coloneqq \sqrt{\frac{d_\rho}{|G|}} \sum_{g \in G} f(g)\rho(g).
+        \end{align}
+    \end{definition}
+
+    This is the definition of the general Fourier transform presented in the literature. In these notes we will not get deep into the intuition behind this definition besides a clear generalization wrt. the function values of characteristics as factors from the quantum fourier transform for finite Abelian groups \cite[p. 20]{Lomont2004}.
+
+    \phantom{}
+    
+    To finish this section, we will go over how the general FT can be expressed as a unitary matrix, reproducing \cite[pp. 27-28]{Lomont2004}. We fix an ordering \(G = \{g_1, ..., g_{|G|}\}\) and vectorize the function \(f\) by identifying
+    \begin{align}
+        v_f \coloneqq (f(g_1), ..., f(g_{|G|})) \in \mathbb{C}^{|G|}.
+    \end{align}
+    Take a complete set of irreducible representations and order it to \(\hat{P}'(G) \coloneqq \{\rho_1, ..., \rho_k\}\). Choose for each representation a basis, s.t. \(\hat{f}(\rho_i)\), \(1 \leq i \leq k\), is unitary. For that, we refer to \cite[p. 28]{Lomont2004}. We set
+    \begin{align}
+        v_{\hat{f}} \coloneqq (\hat{f}(\rho_1)_{11}, \hat{f}(\rho_1)_{12}, ..., \hat{f}(\rho_m)_{d_{\rho_m}d_{\rho_m}}) \in \mathbb{C}^{|G|}
+    \end{align}
+    due to \Cref{characteristics_decomposition_summation_lemma}. We further observe \(v_f = \sum_{g \in G} f(g) \ket{g}\). The transform then boilds down to the mapping \(v_f \mapsto v_{\hat{f}}\), which leads to the following definition. Note, that we denote with \(\ket{\rho, i, j} \in S(\mathbb{C}^{|G|})\) the canonical state describing the position \((i, j) \in [1, d_\rho]_{\mathbb{N}}^2\) wrt. some representation \(\rho \in P'(G)\).
+    \begin{definition}
+        For a finite group \(G\), the \emph{General Quantum Fourier Transform} (QFT) is defined as
+        \begin{align}
+            \text{QFT}_G \coloneqq \sum_{g \in G} \sum_{\rho \in P'(G)} \sum_{1 \leq i, j \leq d_\rho} \sqrt{\frac{d_\rho}{|G|}} \rho(g)_{ij} \ketbra{\rho, i, j}{g}.
+        \end{align}
+    \end{definition}
+
+    \begin{lemma}[{\cite[pp. 27-28]{Lomont2004}}] \label{qft_g_is_unitary_and_linear}
+        The map \(\text{QFT}_G\) for any finite group \(G\), if constructed as above, is a linear and unitary map.
+    \end{lemma}
+
+    %(for talk on 09.01.2024) For this talk, we will not prove the unitarity and linearity.
+    The citation for \Cref{qft_g_is_unitary_and_linear} is incomplete as it lacks the actual proof, but it gives the hint to look into \cite{Fulton}.
+
+    \textcolor{red}{DONE}
+
+    \section{The Generalized Finite Abelian HSP Algorithm} \phantom{}
+
+    We now discuss the generalization of the quantum algorithm for solving finite Abelian HSPs. The procedure is also called \emph{Quantum Fourier Sampling} (QFS) in literature. We present the algorithm as a schema, since in contrast to the aforementioned algorithm and the more general structure of non-Abelian groups we need to leave out some steps. We further assume access to some Hadamard matrix \(H_G \in U(|G|)\) with the action \(\ket{g_1} \mapsto 1/\sqrt{|G|} \sum_{g \in G} \ket{g}\), if \(g_1 \in G\) is the neutral element.
+
+    {\centering\begin{minipage}{\linewidth}
+        \vspace{-0.25cm}
+        \begin{algorithm}[H]
+            \caption{\textsc{Quantum Fourier Sampling Schema}}
+            \label{quantum_fourier_sampling_schema}
+            \begin{algorithmic}[1]
+                \Require A finite group \(G\) in some order \(G = \{g_1, ..., g_{|G|}\}\), with \(g_1\) being the neutral element, with an \(\onot(\log_2(|G|))\)-complex representation in a \(\mathbb{C}^{|G|}\)-based quantum register, a complete set of irreducible representations \(P'(G)\); omitting isomorphy; a function \(f\colon G \to X\) hiding a subgroup \(H \leq G\) as described in \Cref{introduction} with \(X \coloneqq \{0, 1\}^x\), \(x \in \mathbb{N}_{\geq 1}\) and an oracle \(U_f \in \mathbb{C}^{|G||X| \times |G||X|}\) with \(\ket{g}\ket{h} \mapsto \ket{g}\ket{h \oplus f(g)}\) for all \(g \in G, h \in X\).
+                \Ensure A generator \(\Gamma \subseteq G\) for \(H\).
+                \State \(\ket{\Phi} \coloneqq (H_G \otimes E_{|X|}) \ket{g_1}\ket{0} \in S(\mathbb{C}^{|G||X|})\) \label{quantum_fourier_sampling_schema_step_1}
+                \State \(\ket{\Phi} \gets U_f \ket{\Phi}\) \label{quantum_fourier_sampling_schema_step_2}
+                \State Measure \(\ket{\Phi}\) wrt. the observable \(\{\Span(\{\ket{g}\ket{x} \mid g \in G\}) \mid x \in X\}\) and observe an index \(x \in X\).
+                \State Drop the second register of \(\ket{\Phi} \eqqcolon \ket{\Psi}\ket{x}\) to obtain \(\ket{\Psi} \in S(\mathbb{C}^{|G|})\).
+                \State \(\ket{\Psi} \gets \text{QFT}_G \ket{\Psi}\)
+                \State Measure \(\ket{\Psi}\) wrt. the observable \(\{\Span(\{\ket{\rho, i, j} \mid 1 \leq i, j \leq d_\rho\}) \mid \rho \in P'(G)\}\) and observe a part of a representation \(\rho \in P'(G)\). \label{quantum_fourier_sampling_schema_step_6}
+                \State Collect some \(m\) representation parts \(\{\rho_i'\}_{1 \leq i \leq m}\) and construct a generator \(\Gamma \subseteq H\) for \(H\) using them.
+                \State \Return \(\Gamma\)
+            \end{algorithmic}
+        \end{algorithm}
+    \end{minipage}\par} \phantom{}
+
+    We quickly compute the result of \Cref{quantum_fourier_sampling_schema}. Steps \ref{quantum_fourier_sampling_schema_step_1} and \ref{quantum_fourier_sampling_schema_step_2} give the state
+    \begin{align}
+        \frac{1}{\sqrt{|G|}} \sum_{g \in G} \ket{g}\ket{f(g)} = \sqrt{\frac{|H|}{|G|}} \sum_{c \in T} \frac{1}{\sqrt{|H|}} \sum_{h \in H} \ket{ch}\ket{f(c)},
+    \end{align}
+    where \(T \subseteq G\) is some transversal wrt. \(H\), i.e. a set of representatives for the sets from the factor group \(G/H\). Measuring the second register and dropping it gives
+    \begin{align}
+        \frac{1}{\sqrt{|H|}} \sum_{h \in H} \ket{ch}
+    \end{align}
+    for some \(c \in T\). Applying \(\text{QFT}_G\) then gives the state
+    \begin{align}
+        \sum_{\rho \in P'(G)}\sum_{1 \leq i, j \leq d_\rho} \sqrt{\frac{d_\rho}{|G||H|}} \left(\sum_{h \in H} \rho(ch)\right)_{ij} \ket{\rho, i, j}.
+    \end{align}
+    Performing the measurement in step \ref{quantum_fourier_sampling_schema_step_6} then corresponds to measuring a part of a representation, as claimed.
+
+    \phantom{}
+
+    The construction of \(\text{QFT}_G\) and the construction of a generator of \(H\) from the representation parts are what Lomont presents as some of the main theoretical issues with the description and complexity of this algorithm \cite[pp. 29-30]{Lomont2004}:
+    \begin{enumerate}[wide]
+        \item The QFT must be efficiently implemented, which depends on multiple aspects. A complete set of representations must be explicitely given, and that depends on the group. There are a lot of results on existing groups, such as cyclic, symmetric, dihedral groups and others \cite[p. 29]{Lomont2004} \cite[pp. 3-4]{Chen2022}. Furthermore, the bases making the matrices of the irreducible representations in the complete set unitary can impact the efficiency of the implementation, as the example for symmetric groups demonstrates \cite[pp. 29-30]{Lomont2004}.
+        \item We obtain representation parts, from which we need to compute a generator for the hidden subgroup. This is generally difficult, as the dihedral group demonstrates. A small introduction to the characterization of subgroups of the dihedral group and some intuition on the hardness is given by one of the papers leading to the best known algorithm for the dihedral HSP in \cite{Kuperberg2004}, with the former on pp. 1-2.
+    \end{enumerate}
+
+    %PRESENT HERE CLASSIFICATION OF DIHEDRAL SUBGROUPS AND WHY RECONSTRUCTION IS DIFFICULT.
+
+    \section{An Information-Theoretical Solution to the Finite HSP} \phantom{}
+
+    Despite the issues of \Cref{quantum_fourier_sampling_schema}, a different quantum algorithm has been found, which proves, that it is information-theoretically possible to determine a hidden subgroup using a large quantum register with a possibly exponential algorithm. \Cref{information_theoretical_hsp_solver} is due to \cite[pp. 2-3]{Ettinger1999a}. Wrt. the setting for the HSP algorithm as in the input of \Cref{quantum_fourier_sampling_schema}, denote with \(U_{f, m}\) the modified oracle
+    \begin{align}
+        U_{f, m} \in \mathbb{C}^{|G|^m|X|^m \times |G|^m|X|^m}, \ket{g'_1, ..., g'_m}\ket{x_1, ..., x_m} \mapsto \ket{g'_1, ..., g'_m}\ket{x_1 \oplus f(g_1), ..., x_m \oplus f(g'_m)}.
+    \end{align}
+    Also denote for any \(G' \subseteq G\) the state \(\ket{G'} \coloneqq 1/\sqrt{|G'|}\sum_{g' \in G'} \ket{g'}\) and for some \(K \leq G\) and \(\{b_i\}_{1 \leq i \leq m} \subseteq G\) the ket \(\ket*{\Psi_K^{\{b_i\}_{1 \leq i \leq m}}} \coloneqq \bigotimes_{i=1}^m \ket{b_iK}\).
+
+    {\centering\begin{minipage}{\linewidth}
+        \vspace{-0.25cm}
+        \begin{algorithm}[H]
+            \caption{\textsc{Information Theoretical HSP Solver}}
+            \label{information_theoretical_hsp_solver}
+            \begin{algorithmic}[1]
+                \Require A finite group \(G\) in some order \(G = \{g_1, ..., g_{|G|}\}\), with \(g_1\) being the neutral element, with an \(\onot(\log_2(|G|))\)-complex representation in a \(\mathbb{C}^{|G|}\)-based quantum register, a function \(f\colon G \to X\) hiding a subgroup \(H \leq G\) as described in \Cref{introduction} with \(X \coloneqq \{0, 1\}^x\), \(x \in \mathbb{N}_{\geq 1}\) and an oracle \(U_f \in \mathbb{C}^{|G||X| \times |G||X|}\) with \(\ket{g}\ket{h} \mapsto \ket{g}\ket{h \oplus f(g)}\) for all \(g \in G, h \in X\).
+                \Ensure A generator \(\Gamma \subseteq G\) for \(H\).
+                \State Set \(m \coloneqq 4\log_2(|G|)+2\). \label{information_theoretical_hsp_solver_1}
+                \State \(\ket{\Phi} \coloneqq \ket{g_1}^{\otimes m}\ket{0}^{\otimes m} \in S(\mathbb{C}^{|G|^m|X|^m})\)
+                \State \(\ket{\Phi} \gets (H_{|G|}^{\otimes m} \otimes E_{|X|}^{\otimes m})\ket{\Phi}\)
+                \State \(\ket{\Phi} \gets U_{f, m} \ket{\Phi}\)
+                \State Measure \(\ket{\Phi}\) wrt. the observable \(\{\Span(\{\ket{g'_1, ..., g'_m}\ket{x_1, ..., x_m} \mid g'_1, ..., g'_m \in G\}) \mid x_1, ..., x_m \in X\}\) and observe an index \(X' \in X^m\).
+                \State Drop the second register of \(\ket{\Phi} \eqqcolon \ket{\Psi}\ket{X'}\) to obtain \(\ket{\Psi} \in S(\mathbb{C}^{|G|^m})\). \label{information_theoretical_hsp_solver_6}
+                \State \(\Gamma \coloneqq \emptyset\)
+                \For{\(i \in \{1, ..., |G|\}\)} \label{information_theoretical_hsp_solver_8}
+                    \State Let \(\mathcal{H}_{\langle g_i \rangle} \coloneqq \Span(\{\ket*{\Psi_{\langle g_i \rangle}^{\{b_j\}_{1 \leq j \leq m}}} \mid \{b_j\}_{1 \leq j \leq m} \subseteq G\})\).
+                    \State Measure \(\ket{\Psi}\) wrt. the observable \(\{\mathcal{H}_{\langle g_i \rangle}, \mathcal{H}_{\langle g_i \rangle}^\perp\}\) and obtain an index \(z \in \{0, 1\}\) in this order. \label{information_theoretical_hsp_solver_10}
+                    \If{\(z = 0\)}
+                        \State \(\Gamma \gets \Gamma \cup \{g_i\}\) \label{information_theoretical_hsp_solver_12}
+                    \EndIf
+                \EndFor
+                \State \Return \(\Gamma\)
+            \end{algorithmic}
+        \end{algorithm}
+    \end{minipage}\par} \phantom{}
+
+    We quickly analyze this algorithm. The steps \ref{information_theoretical_hsp_solver_1} to \ref{information_theoretical_hsp_solver_6} give a state
+    \begin{align}
+        \bigotimes_{i=1}^m \ket{a_iH}
+    \end{align}
+    for some \(a_1, ..., a_m \in G\). Let \(P_{\langle g_i \rangle}\) be the canonical projector onto \(\mathcal{H}_{\langle g_i \rangle}\) for any \(i \in [1, m]_{\mathbb{N}}\) and analogously \(P_{\langle g_i \rangle}^\perp\) be the canonical projector onto \(\mathcal{H}_{\langle g_i \rangle}^\perp\). We look at the measurement in step \ref{information_theoretical_hsp_solver_10}. Defining \(\ket{\Psi_0} \coloneqq \ket{\Psi}\) for the state in step \ref{information_theoretical_hsp_solver_6}, we can set unnormalized states
+    \begin{align}
+        \ket{\Psi_i} \coloneqq \begin{cases}
+            P_{\langle g_i \rangle}\ket{\Psi_{i-1}} & g_i \in H\\
+            P_{\langle g_i \rangle}^\perp\ket{\Psi_{i-1}} & g_i \neq H
+        \end{cases}
+    \end{align}
+    for any \(i \in [1, |G|]_{\mathbb{N}}\). We then have the following Lemma.
+    \begin{lemma}[{\cite[pp. 3-4]{Ettinger1999a}}]
+        For any \(i \in [1, |G|]_{\mathbb{N}}\), it holds, that
+        \begin{align}
+            \braket{\Psi_i}{\Psi_i} \rangle \geq 1 - \frac{2i}{2^{m/2}} \geq 1 - \frac{1}{|G|}.
+        \end{align}
+    \end{lemma}
+    We can summarize the result as a Theorem.
+    \begin{theorem}
+        \Cref{information_theoretical_hsp_solver} solves the problem of determining a generator for an arbitrary FHSP using \(\onot(|G|)\) measurements and \(\onot(\log_2(|G|))\) oracle calls with a probability of at least \(1 - 1/|G|\).
+    \end{theorem}
+    Whilst the algorithm uses a subexponential number of oracle calls, the number of measurement it requires lies between \(1\) and \(|G|\) with the minimal example being any cyclic group and the maximal example requiring a group, s.t., e.g., every generator has \(O(|G|)\) elements. It could be improved by using characterizations of generators of the group to systematically cross out group elements from the testing loop from step \ref{information_theoretical_hsp_solver_8} to step \ref{information_theoretical_hsp_solver_12}, as suggested in \cite[p. 3]{Ettinger1999a}.
+
+    % NOTE: I will talk about this a different time, since this would load the presentation too much.
+    %\section{The Regev-Kuperberg Algorithm for the DHSP} \phantom{}
+
+    %\cite{Kuperberg2004} \cite{Regev2004}
+
+    \section{Some Further Notes} \phantom{}
+
+    We further list some more intruiging results on these problems.
+    \begin{itemize}[wide]
+      \item Besides the reduction of the SVP to the DHSP, there is also a reduction of the graph isomorphism to the symmetric HSP, see \cite[pp. 61-64]{Lomont2004}.
+      \item Gogioso and Kissinger \cite{Gogioso2017} have modelled the quantum algorithm for Finite Abelian HSPs using abstract diagrams and proved the correctness. Figure (5.2) in \cite[p. 12]{Gogioso2017} illustrates the main proof diagram. Some notes on infinite HSPs, which may get attacked in the future by quantum computers under employment of quantum states modelled using infinite-dimensional Hilbert spaces such as \(\mathcal{L}_2(\mathbb{R})\), can also be found \cite[p. 19]{Gogioso2017}.
+    \end{itemize}
+
+    %\nocite{*}
+
+    \printbibliography{}
+\end{document}
