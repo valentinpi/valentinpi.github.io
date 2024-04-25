@@ -1,0 +1,317 @@
+\documentclass[10pt, hyperref={hidelinks}]{beamer}
+
+%\usepackage{algorithm}
+%\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[ngerman]{babel}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+%\usepackage{changepage}
+\usepackage{enumitem}
+%\usepackage{fancyhdr}
+%\usepackage{fontspec}
+%\usepackage{fullpage}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, cd, quantikz, quotes, patterns}
+%\usepackage{titlesec}
+\usepackage{wasysym}
+
+% Oh, templates can customize different aspects of a presentation?!
+\setbeamertemplate{theorems}[numbered]
+
+%\usepackage{tikz-cd}
+
+%\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+\usecolortheme{dove}
+
+%\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+%\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+%\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{convex_analysis_subdifferentials_and_the_finite_dimensional_real_situation_presentation.bib}
+
+%\theoremstyle{definition}
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{definition}{Definition}
+%\theoremstyle{remark}
+%\newtheorem{problem}[theorem]{Problem}
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{remark}[theorem]{Remark}
+%\newtheorem{observation}[theorem]{Observation}
+%\newtheorem{example}[theorem]{Example}
+%\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
+
+\title{Presentation Notes on: Further Properties of Subdifferentials and The Situation in \(\mathbb{R}^n\)}
+
+\author{valentinpi\\\phantom{}\\\textsc{Seminar on Convex Analysis}\\Freie Universität Berlin\\Summer Term 2023}
+
+\date{July 25, 2023}
+
+\begin{document}
+    \frame{\titlepage}
+
+    \begin{frame}
+        \frametitle{Recap}
+
+        \pause
+    
+        Let \(X, Y\) be locally convex topological vector spaces, \(n \in \mathbb{N}_{\geq 1}\) and \(f\colon X \to \overline{\mathbb{R}}\).
+
+        \pause
+        Recall:
+        \begin{itemize}
+            \item Effective domain, epigraph of a function.
+            \pause
+            \item Convexity of sets and functions.
+            \pause
+            \item \(f\) is proper, if \(-\infty < f \neq \infty\).
+            \pause
+            \item \(x^* \in X^*\) is a subgradient of \(f\) at \(x \in X\), if \(f(z-x) \geq f(x) + \langle x^*, z-x \rangle \, \forall \, z \in X\).
+            \pause
+            \item The set of all subgradients is the subdifferential \(\partial f(x)\).
+        \end{itemize}
+        \pause
+        So far: Definition, characterization, Moreau-Rockefellar.
+        
+        \pause
+        Today: More properties, some for \(X = \mathbb{R}^n\).
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Recap: Important General Characterizations}
+
+        \begin{theorem}[{\cite[pp. 170-171]{IoffeTihomirov}}] \label{proper_convex_continuity_boundedness_equivalence}
+            Let \(f\) be proper and convex. Then the following statements are equivalent.
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \(f\) is bounded on a neighborhood of \(x \in X\).
+                \item \(f\) is continuous at \(x\).
+            \end{enumerate}
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Recap: Important General Characterizations}
+
+        \begin{theorem}[{\cite[pp. 193-199]{IoffeTihomirov}}] \label{convex_subdifferential_characterizations}
+            Let \(f\) be convex. Then the following statements are equivalent.
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \(x^* \in \partial f(x)\).
+                \item \(f(z) \geq f(x) + \langle x^*, z-x \rangle \, \forall \, z \in X\).
+                \item \(f(x)+f^*(x^*) = \langle x^*, x \rangle\)
+                \item \label{convex_subdifferential_characterizations_4} \(f'(x, y) = \sup_{x^* \in \partial f(x)} \langle x^*, y \rangle \geq \langle x^*, y \rangle \, \forall \, y \in X\), i.e. \(x^* \in \partial f'(x; 0) = \partial f(x) = \text{dom}(f'(x; \cdot)^*)\), if \(f\) is additionally proper.
+            \end{enumerate}
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Recap: Important General Characterizations}
+    
+        \begin{theorem}[{Infimum Form \cite[pp. 194-195]{IoffeTihomirov}}]
+            Let \(f\) be proper and convex. Then \(f'(x; \cdot)\) is well defined for any \(x \in \text{dom}(f)\), convex, proper and for any \(y \in X\)
+            \begin{align*}
+                f'(x; y) = \inf_{\lambda \in \mathbb{R}_{> 0}} \frac{f(x+\lambda y)-f(x)}{\lambda}
+            \end{align*}
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{A Chain Rule}
+
+        \pause
+        \begin{theorem}[{\cite[p. 201]{IoffeTihomirov}}]
+            Let \(\Lambda \in L(X, Y)\) and \(f\colon Y \to \overline{\mathbb{R}}\) be a function.
+            \pause
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \label{compat_with_operator_theorem_1} For any \(x \in X\), we have
+                \begin{align*}
+                    \partial (f\Lambda)(x) \supseteq \Lambda^*\partial f(\Lambda x)
+                \end{align*}
+                \pause
+                \item \label{compat_with_operator_theorem_2} If \(f\) is convex and proper on \(X\), as well as continuous at a point in \(\text{Im}(\Lambda)\), then for any \(x \in X\)
+                \begin{align*}
+                    \partial (f\Lambda)(x) = \Lambda^*\partial f(\Lambda x) \label{compat_with_operator_theorem_eq_2}
+                \end{align*}
+            \end{enumerate}
+        \end{theorem}
+        \pause
+        \begin{figure}[!hbtp]
+            \begin{tikzpicture}[>=stealth, semithick]
+                \node (0) at (0, 0) {\(X\)};
+                \node[below=1cm of 0] (1) {\(Y\)};
+                \node[right=1cm of 1] (2) {\(\mathcal{P}(Y^*)\)};
+                \node[right=1cm of 2] (3) {\(\mathcal{P}(X^*)\)};
+                \draw[->] (0) -- (1) node[left, pos=0.5] {\(\Lambda\)};
+                \draw[->] (1) -- (2) node[below, pos=0.5] {\(\partial f\)};
+                \draw[->] (2) -- (3) node[below, pos=0.5] {\(\Lambda^*\)};
+                \draw[->] (0) -- (3) node[above right, pos=0.5] {\(\partial (f\Lambda)\)};
+            \end{tikzpicture}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{A Chain Rule: Helper Theorems}
+        \pause
+        \begin{theorem}[{\cite[pp. 195-196]{IoffeTihomirov}}] \label{point_directional_derivative_continuity_theorem}
+            Let \(f\colon X \to \overline{\mathbb{R}}\) be a proper, convex function, which is continuous on \(\emptyset \neq U \subseteq X\) and \(x \in X\) be fixed.
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \label{point_directional_derivative_continuity_theorem_1} If \(|f'(x; \bar{x})| < \infty\) for \(\bar{x} \in X\) with \(x+\bar{x} \in U\), then \(f'(x; \cdot)\) is continuous on \(K_{U \setminus \{x\}} \setminus \{0\}\) or \(K_{U \setminus \{x\}}\).
+                \item \label{point_directional_derivative_continuity_theorem_2} If \(f\) is continuous at \(x\), then \(f'(x; \cdot)\) is finite and continuous on \(X\).
+            \end{enumerate}
+        \end{theorem}
+        \pause
+        \begin{theorem}[{\cite[p. 179, p. 183]{IoffeTihomirov}}] \label{adjoint_calculation_rule}
+            Let \(\Lambda \in L(X, Y)\) and \(f\colon Y \to \overline{\mathbb{R}}\) be a convex function, continuous at a point in \(\Im(\Lambda)\). Then \((f\Lambda)^* = \Lambda^* f^*\) and for each \(x^* \in \text{dom}((f\Lambda)^*)\), there is a \(y^* \in Y^*\) with \(x^* = \Lambda^*y^*\) and \((f\Lambda)^*(x^*) = f^*(y^*)\).
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{The Supremum Function of Convex Functions is Convex}
+
+        \pause
+    
+        \begin{lemma} \label{supremum_convexity_lemma}
+            Let \(\{f_s\colon X \to \overline{\mathbb{R}}\}_{s \in S}\), with \(S\) an index set, be a family of convex functions and \(\hat{f}\colon X \to \overline{\mathbb{R}}, x \mapsto \sup_{s \in S} f(x)\). Then \(\hat{f}\) is convex.
+        \end{lemma}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Supremum Function Subdifferential}
+        
+        \pause
+
+        \begin{theorem}[{\cite[pp. 201-204]{IoffeTihomirov}}] \label{supremum_theorem}
+            Let \(S\) be a compact topological space and \(f\colon S \times X \to \overline{\mathbb{R}}\), s.t. for any \((s, x) \in S \times X\), \(f|_{\{s\} \times X}\) is convex and proper, and that \(f|_{S \times \{x\}}\) is upper semicontinuous. Let \(f_s \coloneqq f|_{\{s\} \times X}\) and set
+            \begin{align*}
+                \hat{f}\colon X \to \overline{\mathbb{R}}, x \mapsto \sup_{s \in S} f_s(x) \text{ and } S_0\colon X \to \mathcal{P}(S), x \mapsto \{s \in S \mid f_s(x) = \hat{f}(x)\}.
+            \end{align*}
+            \pause
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \label{supremum_theorem_1} For any \(x \in X\)
+                \begin{align*}
+                    \overline{\text{conv}}\left(\bigcup_{s \in S_0(x)} \partial f_s(x)\right) \subseteq \partial \hat{f}(x)
+                \end{align*}
+                \pause
+                \item \label{supremum_theorem_2} If for all \(s \in S\), \(f_s\) is continuous at a point \(x_0 \in X\), then
+                \begin{align*}
+                    \overline{\text{conv}}\left(\bigcup_{s \in S_0(x_0)} \partial f_s(x_0)\right) = \partial \hat{f}(x_0)
+                \end{align*}
+            \end{enumerate}
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Supremum Function Subdifferential: Helper Separation Theorem}
+
+        \pause
+    
+        \begin{theorem}[{\cite[pp. 164-165]{IoffeTihomirov}}] \label{separation_theorem}
+            Let \(A \subseteq X\) be closed, convex and let \(x \notin A\). Then there exists a functional \(x^* \in X^*\), s.t. \(\langle x^*, y\rangle \leq \langle x^*, x \rangle - \varepsilon\) for a fixed \(\varepsilon \in \mathbb{R}_{> 0}\) and any \(y \in A\), strongly separating \(A\) and \(\{x\}\).
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Subdifferentials in \(\mathbb{R}^n\): Existence}
+
+        \pause
+    
+        \begin{theorem}[{\cite[p. 204]{IoffeTihomirov}}]
+            Let \(f\colon \mathbb{R}^n \to \overline{\mathbb{R}}\) be proper and convex. Then \(f\) is subdifferentiable in \(\text{ri}(\text{dom}(f))\).
+        \end{theorem}
+
+        \pause
+
+        \phantom{}
+
+        One helper theorem is needed.
+
+        \phantom{}
+
+        \pause
+
+        \begin{lemma}[{\cite[p. 188]{IoffeTihomirov}}] \label{proper_convex_continuity_lemma}
+            Let \(f\colon \mathbb{R}^n \to \overline{\mathbb{R}}\) be convex and proper.
+            \begin{enumerate}[label=(\roman*), wide]
+                \item \label{proper_convex_continuity_lemma_1} \(f\) is continuous with respect to \(\text{aff}({\text{dom}(f)})\) on \(\text{ri}(\text{dom}(f))\).
+                \item \label{proper_convex_continuity_lemma_2} \(f^*\) is proper.
+            \end{enumerate}
+        \end{lemma}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Subdifferentials in \(\mathbb{R}^n\): Representation}
+
+        \pause
+
+        \begin{theorem}[{\cite[pp. 204-205]{IoffeTihomirov}}] \label{finite_dim_representation_theorem}
+            Let \(X, S, f, f_s, \hat{f}, S_0, x_0\) for \(X = \mathbb{R}^n\) and any \(s \in S\) be defined as in the setting of \Cref{supremum_theorem} \ref{supremum_theorem_2}. Then every \(y \in \partial \hat{f}(x_0)\) can be represented as a convex combination of form
+            \begin{align*}
+                y = \sum_{i=1}^r \alpha_i y_i
+            \end{align*}
+            with \(r \in \mathbb{N}\), \(1 \leq r \leq n+1\), \(\sum_{i=1}^r \alpha_i = 1\) and \(s_i \in S_0(x_0)\), \((\alpha_i, y_i) \in \mathbb{R}_{>0} \times \partial f_{s_i}(x_0)\) for any \(i \in \mathbb{N}\), \(1 \leq i \leq r\).
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Subdifferentials in \(\mathbb{R}^n\): Representation - Helper Theorems}
+
+        \pause
+        
+        \begin{lemma}[{\cite[pp. 185-186]{IoffeTihomirov}}] \label{finite_dim_caratheodory_corollary}
+            Let \(A \subseteq \mathbb{R}^n\) be bounded and closed. Then \(\text{conv}(A) = \overline{\text{conv}}(A)\).
+        \end{lemma}
+
+        \pause
+        
+        \begin{lemma}[{\cite[p. 199]{IoffeTihomirov}}] \label{subdifferential_boundedness}
+            For a proper convex function \(f\colon X \to \overline{\mathbb{R}}\), which is continuous at a point \(x_0\), \(\partial f(x_0)\) is non-empty, weakly\({}^*\) bounded and weakly\({}^*\) compact.
+        \end{lemma}
+
+        \pause
+        
+        \begin{lemma} \label{s_zero_s_zero_compact_lemma}
+            Let \(X, S, f, f_s, \hat{f}, S_0, x_0\) be defined as in the setting of \Cref{supremum_theorem} \ref{supremum_theorem_2}. Then \(S_0(x_0)\) is compact.
+        \end{lemma}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{References}
+
+        \printbibliography{}
+    \end{frame}
+\end{document}
