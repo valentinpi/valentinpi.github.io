@@ -6,7 +6,7 @@ Arnims Dramen
 [ ] Mißverständnisse. Ein Lustspiel (40 S.)
 [ ] Die Vertreibung der Spanier aus Wesel im Jahre 1629. Schauspiel in drei Handlungen (56 S.)
 [ ] Das Loch, oder das wiedergefundene Paradies. Ein Schattenspiel (51 S.)
-[/] Herr Hanrei und Maria vom langen Markte. Ein Pickelheringsspiel (36 S.)
+[x] Herr Hanrei und Maria vom langen Markte. Ein Pickelheringsspiel (36 S.)
 [x] Der wunderthätige Stein. Ein Hanswurstspiel (18 S.)
 [ ] Jemand und Niemand. Ein Trauerspiel (32 S.)
 [ ] Die Appelmänner. Ein Puppenspiel (86 S.)
@@ -19,6 +19,6 @@ Arnims Dramen
 [/] Markgraf Carl Philipp von Brandenburg. Trauerspiel in drei Aufzügen (111 S.)
 [ ] Die Gleichen. Schauspiel in sechs Aufzügen (266 S.)
 
-Fortschritt (10.10.2024): 1/5/18 (Fertig/Fertig oder in Bearbeitung/Total)
+Fortschritt (10.10.2024): 2/5/18 (Fertig/Fertig oder in Bearbeitung/Total)
 
 Quelle: SW5, 6, 16, 18, 19, 20.
