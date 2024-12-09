@@ -8,7 +8,7 @@ Arnims Dramen
 [ ] Das Loch, oder das wiedergefundene Paradies. Ein Schattenspiel (51 S.)
 [x] Herr Hanrei und Maria vom langen Markte. Ein Pickelheringsspiel (36 S.)
 [x] Der wunderthätige Stein. Ein Hanswurstspiel (18 S.)
-[ ] Jemand und Niemand. Ein Trauerspiel (32 S.)
+[/] Jemand und Niemand. Ein Trauerspiel (32 S.)
 [ ] Die Appelmänner. Ein Puppenspiel (86 S.)
 [ ] Die Capitulation von Oggersheim. Heroisches Lustspiel in drei Aufzügen (129 S.)
 [ ] Halle und Jerusalem. Studentenspiel und Pilgerabenteuer (403 S.)
@@ -19,6 +19,6 @@ Arnims Dramen
 [/] Markgraf Carl Philipp von Brandenburg. Trauerspiel in drei Aufzügen (111 S.)
 [ ] Die Gleichen. Schauspiel in sechs Aufzügen (266 S.)
 
-Fortschritt (10.10.2024): 2/5/18 (Fertig/Fertig oder in Bearbeitung/Total)
+Fortschritt (11.10.2024): 2/6/18 (Fertig/Fertig oder in Bearbeitung/Total)
 
 Quelle: SW5, 6, 16, 18, 19, 20.
