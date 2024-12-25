@@ -4,7 +4,7 @@ Arnims Dramen
 [ ] Der Auerhahn. Eine Geschichte in vier Handlungen (162 S.)
 [ ] Das Frühlingsfest. Ein Nachspiel (34 S.)
 [ ] Mißverständnisse. Ein Lustspiel (40 S.)
-[ ] Die Vertreibung der Spanier aus Wesel im Jahre 1629. Schauspiel in drei Handlungen (56 S.)
+[/] Die Vertreibung der Spanier aus Wesel im Jahre 1629. Schauspiel in drei Handlungen (56 S.)
 [ ] Das Loch, oder das wiedergefundene Paradies. Ein Schattenspiel (51 S.)
 [x] Herr Hanrei und Maria vom langen Markte. Ein Pickelheringsspiel (36 S.)
 [x] Der wunderthätige Stein. Ein Hanswurstspiel (18 S.)
