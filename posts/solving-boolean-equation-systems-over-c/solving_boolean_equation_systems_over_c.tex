@@ -1,0 +1,110 @@
+\documentclass[10pt]{amsart}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{thmtools}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, cd, quantikz, quotes, patterns}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{solving_boolean_equation_systems_over_c.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+    \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newcommand{\draftcomment}[2]{\textcolor{#1}{#2}}
+
+\begin{document}
+    \section*{Solving Boolean Equation Systems over \(\mathbb{C}\)} \hfill \hfill valentinpi, Last Change: \today{}
+
+    \phantom{}
+
+    The following notes are based on \cite{Chen_2021}. Let \(X = \{x_1, ..., x_n\}\) be a set of variables and \(\mathcal{F} = \{f_1, ..., f_r\} \subseteq \mathbb{F}_2[X]\) be a set of Boolean multivariate polynomials with \(n, r \in \mathbb{N}_{\geq 1}\). We assume all polynomials have no redundant terms and omit the explicit indexing in the following. Denote by \(\mathbb{V}_F(\mathcal{F}) = \bigcap_{i=1}^r f_i|_F^F{}^{-1}(0)\) the \emph{variety} of \(\mathcal{F}\) over a field \(F\), where \(f_i|_F^F\colon F \to F\) is the polynomial function over \(F\) associated with \(f_i\) and \(t_i \in \mathbb{N}_{\geq 1}\) the number of (monomial) summands in \(f_i\) for each \(i\).
+
+    \phantom{}
+
+    The overall goal is to solve \(\mathcal{F}\) over \(\mathbb{F}_2\) by solving it over \(\mathbb{C}\). In general, \(\mathbb{V}_{\mathbb{F}_2}(\mathcal{F}) \neq \mathbb{V}_{\mathbb{C}}(\mathcal{F})\). For instance, for the system \(\mathcal{F} = \{x_1x_2\}\), we have \(\mathbb{V}_{\mathbb{F}_2}(\mathcal{F}) = \{(0, 0), (0, 1), (1, 0)\} \neq \mathbb{C} \times \{0\} \cup \{0\} \times \mathbb{C} = \mathbb{V}_{\mathbb{C}}(\mathcal{F})\).
+
+    \phantom{}
+
+    The first step is to restrict the variables in the solution to \(\mathbb{F}_2\). Thus, consider the system \(\mathcal{F} \cup \{x_i^2-x_i\}_i\). Over \(\mathbb{C}\), the added polynomials suffice \(x_i^2-x_i = x_i(x_i-1)\) for each \(i\), so the solution has to restrict the variables to \(0\) or \(1\).
+
+    \phantom{}
+
+    However, this is not sufficient. Consider the system \(\mathcal{F} = x_1^2+x_1x_2\). We have \(\mathbb{V}_{\mathbb{F}_2}(\mathcal{F}) = \{(0, 0), (0, 1), (1, 1)\}\), but \(\mathbb{V}_{\mathbb{C}}(\mathcal{F} \cup \{x_1^2-x_1, x_2^2-x_2\}) = \{(0, 0), (0, 1)\}\). So we adjust the general system by introducing
+    \begin{align}
+        C(f_i) \coloneqq \prod_{k=f_i|_{\mathbb{F}_2}^{\mathbb{F}_2}(0)}^{\lfloor t_i/2 \rfloor} (f_i-2k)
+    \end{align}
+    for each \(i\) and letting
+    \begin{align}
+        C(\mathcal{F}) \coloneqq \{C(f_i)\}_i.
+    \end{align}
+    \begin{lemma}[{\cite[p. 23]{Chen_2021}}]
+        We have \(\mathbb{V}_{\mathbb{F}_2}(\mathcal{F}) = \mathbb{V}_{\mathbb{C}}(C(\mathcal{F}))\).
+    \end{lemma}
+    \begin{proof}
+        \((\subseteq)\) Let \(f_i = \sum_{k=1}^{t_i} m_{ik}\) with monomials \(m_{ik} \in \mathbb{F}_2[X]\), \(i\) be arbitrarily chosen, and \(a \in \mathbb{V}_{\mathbb{F}_2}(\mathcal{F})\). Thus \(f_i|_{\mathbb{C}}^{\mathbb{C}}(a) \in [f_i|_{\mathbb{F}_2}^{\mathbb{F}_2}(0), t_i]_{\mathbb{N}} \cap 2\mathbb{N}\), implying \(C(f_i)(a) = 0\).
+
+        \((\supseteq)\) On the other hand, let \(i\) be arbitrary and \(a \in \mathbb{V}_{\mathbb{C}}(C(\mathcal{F}))\). Then \(f_i|_{\mathbb{C}}^{\mathbb{C}}(a) = 2k\) for a \(k \in [f_i|_{\mathbb{F}_2}^{\mathbb{F}_2}(0), \lfloor t_i/2 \rfloor]_{\mathbb{N}}\), so \(a \in \mathbb{V}_{\mathbb{F}_2}(\mathcal{F})\).
+    \end{proof}
+
+    \printbibliography{}
+\end{document}

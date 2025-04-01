@@ -1,0 +1,192 @@
+\documentclass[10pt, leqno]{amsart}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[backend=biber, citestyle=numeric-comp, bibstyle=ieee]{biblatex}
+\usepackage{changepage}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage{marvosym}
+\usepackage{mathtools}
+\usepackage[]{mdframed}
+\usepackage{physics}
+\usepackage{tabularx}
+\usepackage[skins]{tcolorbox}
+\usepackage{thmtools}
+
+\usepackage{tikz-3dplot}
+\usetikzlibrary{angles, calc, cd, quantikz, quotes, patterns}
+\usepackage{titlesec}
+\usepackage{wasysym}
+
+\usepackage{tikz-cd}
+
+\usepackage{bookmark}
+\usepackage[nameinlink]{cleveref}
+
+\titleformat{\section}[runin]{\normalsize\bfseries}{\thesection}{1em}{}[]
+\titleformat{\subsection}[runin]{\normalsize\bfseries}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[runin]{\normalsize\bfseries}{\thesubsubsection}{1em}{}[]
+
+\addbibresource{handout.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{conjecture}{Conjecture}[section]
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\renewcommand{\qedsymbol}{\(\blacksquare\)}
+
+\setlength{\parindent}{0pt}
+
+\renewcommand{\theequation}{\arabic{equation}}
+\renewcommand{\thetheorem}{\arabic{theorem}}
+
+\DeclareMathOperator{\controrot}{CR}
+\DeclareMathOperator{\expectation}{E}
+\DeclareMathOperator{\gf}{GF}
+\DeclareMathOperator{\qft}{QFT}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\defect}{def}
+\DeclareMathOperator{\swapgate}{SWAP}
+\DeclareMathOperator{\che}{CHE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\diag}{diag}
+
+\newcommand{\djk}{\delta_{j, k}}
+\newcommand{\tlk}{\tilde{\lambda_k}}
+
+\newcommand{\evalat}[2]{\left.{#1}\middle|\right._{#2}}
+
+% SOURCE: https://tex.stackexchange.com/questions/296151/double-head-and-hook-arrow
+\newcommand{\hookdoubleheadrightarrow}{%
+  \hookrightarrow\mathrel{\mspace{-15mu}}\rightarrow
+}
+
+\newtcolorbox{edgebox}{enhanced, colback=white, frame code={%
+\draw[very thin] (frame.north west) -- ($(frame.north west) + ( 0.5, 0)$);
+\draw[very thin] (frame.north west) -- ($(frame.north west) + (0, -0.5)$);
+\draw[very thin] (frame.south east) -- ($(frame.south east) + (-0.5, 0)$);
+\draw[very thin] (frame.south east) -- ($(frame.south east) + (0,  0.5)$);
+}}
+
+\AtEveryBibitem{%
+  \clearfield{journaltitle}%
+  \clearfield{date}%
+  \clearfield{volume}%
+  \clearfield{pages}%
+  \clearfield{publisher}%
+  \clearfield{number}%
+  \clearfield{journaltitle}%
+}
+
+\newcommand{\commentcmd}[1]{}
+
+\newcommand{\draftcommenttodo}{\textcolor{red}{ TODO }}
+\newcommand{\draftcommentdone}{\textcolor{green}{ DONE }}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+\begin{document}
+    \pagenumbering{gobble}
+
+    \begin{mdframed}
+        \textsc{Seminar on Measure and Integration Theory} \hfill valentinpi\\
+        Freie Universität Berlin \hfill February 18, 2025\\
+        Winter Term 2024-25
+    \end{mdframed}
+
+    \section*{Presentation Handout on: Measure Decomposition Theorems} \phantom{}
+    
+    For this presentation, we used mainly \cite[pp. 71-76, pp. 113-118]{Fonseca}, but also \cite{Fonseca} as a whole and \cite{Axler,Elstrodt}.
+
+    \section{Decomposition Theorems for Measures} \phantom{}
+    
+    Throughout this document, assume that \((X, \mathfrak{M})\) is a measurable space.
+
+    \begin{definition} \label{def:basics_on_measure_relations}
+        Let \(\mu, \nu\colon \mathfrak{M} \to [0, \infty]\) be two measures. We define the following three set functions:
+        \begin{align}
+            \nu_{ac}&\colon \mathfrak{M} \to [0, \infty], E \mapsto \max\left\{\int_E u \, d\mu \, \middle\vert \, u\colon X \to [0, \infty] \text{ measurable} \land \int_{E'} u \, d\mu \leq \nu(E') \, \forall \, \mathfrak{M} \ni E' \subseteq E\right\}\\
+            \nu_s&\colon \mathfrak{M} \to [0, \infty], E \mapsto \max\{\nu(E') \mid \mathfrak{M} \ni E' \subseteq E, \mu(E') = 0\} \\
+            \nu_d&\colon \mathfrak{M} \to [0, \infty], E \mapsto \max\{\nu(E') \mid \mathfrak{M} \ni E' \subseteq E, \mu(E'') = \infty \, \forall \, \mathfrak{M} \in E'' \subseteq E', \nu(E'') > 0\}
+        \end{align}
+    \end{definition}
+
+    \begin{theorem}[Lebesgue Decomposition Theorem] \label{thm:lebesgue_decomposition_theorem}
+        Let \(\mu, \nu\colon \mathfrak{M} \to [0, \infty]\) be two measures and \(\mu\) \(\sigma\)-finite.
+        \begin{enumerate}[label=(\roman*), wide]
+            \item \label{thm:lebesgue_decomposition_theorem_1} Then
+            \begin{align}
+                \nu = \nu_{ac} + \nu_s.
+            \end{align}
+            \item \label{thm:lebesgue_decomposition_theorem_2} If \(\nu\) is \(\sigma\)-finite, then \(\nu_s \perp \mu\) and the decomposition is unique.
+        \end{enumerate}
+    \end{theorem}
+
+    \begin{theorem}[De Giorgis Theorem]
+        Let \(\mu, \nu\colon \mathfrak{M} \to [0, \infty]\) be two measures. Then
+        \begin{align}
+            \nu = \nu_{ac} + \nu_s + \nu_d.
+        \end{align}
+    \end{theorem}
+
+    \section{Decomposition Theorems for Signed Measures} \phantom{}
+
+    Let \(\lambda\colon \mathfrak{M} \to [-\infty, \infty]\) be a signed measure.
+
+    \begin{lemma} \label{lem:existence_of_positive_subset}
+        Let \(E \in \mathfrak{M}\) with \(\lambda(E) \in (0, \infty)\). Then there exists a positive \(\mathfrak{M} \ni F \subseteq E\).
+    \end{lemma}
+
+    \begin{theorem}[Hahn Decomposition Theorem] \label{thm:hahn_decomposition}
+        Any measurable space \((X, \mathfrak{M})\) can be decomposed as \(X = X^+ \cup X^-\), where \(X^+ \subseteq X\) is positive and \(X^- \subseteq X\) is negative.
+    \end{theorem}
+
+    \begin{theorem}[Jordan Decomposition Theorem] \label{thm:jordan_decomposition}
+        There exists a unique pair \((\lambda^+, \lambda^-)\) of measures with \(\lambda^+ \perp \lambda^-\), one being finite and \(\lambda = \lambda^+ - \lambda^-\).
+    \end{theorem}
+
+    \begin{theorem}[Signed Lebesgue Decomposition Theorem]
+        Let \(\lambda\colon \mathfrak{M} \to [-\infty, \infty]\) be a signed measure and \(\mu\colon \mathfrak{M} \to [0, \infty]\) be a \(\sigma\)-finite measure.
+        \begin{enumerate}[label=(\roman*), wide]
+            \item \label{thm:lebesgue_decomposition_thm_1} There are signed measures \(\lambda_{ac}, \lambda_s\colon X \to [-\infty, \infty]\) and a measurable function \(u\colon X \to [-\infty, \infty]\) with
+            \begin{align}
+                \lambda = \lambda_{ac} + \lambda_s, \lambda_{ac} \ll \mu \text{ and } \lambda_{ac}(\cdot) = \int_{\cdot} u \, d\mu.
+            \end{align}
+            \item \label{thm:lebesgue_decomposition_thm_2} If \(\lambda\) is \(\sigma\)-finite, then \(\lambda_s \perp \mu\) and the decomposition is unique.
+        \end{enumerate}
+    \end{theorem}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \begin{tabular}{C{4cm}|C{3cm}}
+            Decomposition & Summary \\\hline
+            Hewitt-Yosida \cite[pp. 8-9]{Fonseca} & \(\mu = \mu_p + \mu_c\)\\
+            Atomic \cite[pp. 13-16]{Fonseca} & \(\mu = \mu_1 + \mu_2\)\\
+            Lebesgue & \(\nu = \nu_{ac} + \nu_s\)\\
+            De Giorgi & \(\nu = \nu_{ac} + \nu_s + \nu_d\)\\
+            Hahn & \(X = X^+ \cup X^-\)\\
+            Jordan & \(\lambda = \lambda^+ - \lambda^-\)\\
+            Signed Lebesgue & \(\lambda = \lambda_{ac} + \lambda_s\)
+        \end{tabular}
+    \end{minipage}
+
+    \printbibliography{}
+\end{document}
