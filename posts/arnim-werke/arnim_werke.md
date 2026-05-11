@@ -6,10 +6,10 @@ Achim von Arnim (1781-1831) war einer der bedeutendsten Vertreter der Heidelberg
 
 | Titel | Jahr | Verfügbarkeit einer modernen Auflage | Referenzen |
 |---|---|---|---|
-| Hollin's Liebeleben | 1802
-| Ariel's Offenbarungen | 1804
-| Die Gräfin Dolores | 1810 | ✅
-| Die Kronenwächter | 1817 (Teil 1) und 1854 (Teil 2, unveröffentlicht) | ✅
+| Hollin's Liebeleben | 1802 | ✅ | [1]
+| Ariel's Offenbarungen | 1804 | ❌ | Kommentiert von 1912
+| Die Gräfin Dolores | 1810 | ✅ | [1]
+| Die Kronenwächter | 1817 (Teil 1) und 1854 (Teil 2, unveröffentlicht) | ✅ | [2]
 
 ## Erzählungen
 
@@ -47,11 +47,42 @@ Achim von Arnim (1781-1831) war einer der bedeutendsten Vertreter der Heidelberg
 | Schaubühne (Sammlung) | 1813 | ❌
 | Die Gleichen | 1819 | ❌
 | Die Päpstin Johanna (unveröffentlicht) | 1846 | ❌
+| Markgraf Karl Philipp von Brandenburg | | 
+| Der echte und falsche Waldemar | | 
+| Glinde | | 
+| Der Stralauer Fischzug | | 
+| Herr Hanrei und Maria vom langen Markte | | 
+| Der wunderthätige Stein | | 
+| Jemand und Niemand | | 
+| Die Appelmänner | | 
+| Die Capitulation von Oggersheim | | 
+| Jann's erster Dienst | | 
+| Das Frühlingsfest | | 
+| Mißverständnisse | | 
+| Die Vertreibung der Spanier aus Wesel im Jahre 1629 | | 
 
 ## Gedichte
+
+## Fragmente
+
+| Titel |
+|---|
+| Selbstmord-Fragment |
 
 Die umfangreichste Ausgabe der Gedichte ...
 
 [1] [Online](https://books.google.de/books?id=6IFdAAAAcAAJ&printsec=frontcover&hl=de&source=gbs_ge_summary_r&cad=0#v=onepage&q&f=false)
+
+[2] Achim von Arnim: Werke 1 Hollins Liebeleben / Gräfin Dolores, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60010-7
+
+[3] Achim von Arnim: Werke 2 Die Kronenwächter, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60020-6
+
+[4] Achim von Arnim: Werke 3 Erzählungen 1802-1817, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60030-5
+
+[5] Achim von Arnim: Werke 4 Erzählungen 1818-1830, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60040-4
+
+[6] Achim von Arnim: Werke 5 Gedichte, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60050-3
+
+[7] Achim von Arnim: Werke 6 Schriften, Deutscher Klassiker Verlag, Insel/Suhrkamp, Frankfurt am Main, ISBN-13: 978-3-618-60200-2
 
 Sämtliche Links zuletzt aufgerufen am 12.04.2024 um 00:42.
